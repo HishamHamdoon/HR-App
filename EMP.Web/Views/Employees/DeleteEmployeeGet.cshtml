@@ -1,0 +1,46 @@
+﻿@using EMP.Web.Views.ViewModels
+@model EmployeeVM
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white text-center fw-bold">
+                    Confirm Delete
+                </div>
+                <div class="card-body text-center">
+                    <p class="fs-5 text-muted">
+                        Are you sure you want to delete the following employee?
+                    </p>
+
+                    <div class="mb-3 p-3 border rounded bg-light text-start">
+                        <p><strong>ID:</strong> @Model.Id</p>
+                        <p><strong>Name:</strong> @Model.Name</p>
+                        <p><strong>Email:</strong> @Model.Email</p>
+                        <p><strong>Department:</strong> @Model.DepartmentName</p>
+                        <p><strong>Job Title:</strong> @Model.JobTitleTitle</p>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <form asp-controller="Employees" asp-action="Deleteemployee" method="post">
+                            <input type="hidden"  asp-for="@Model.Id" />
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="bi bi-trash"></i> Yes, Delete
+                            </button>
+                        </form>
+
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary px-4">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

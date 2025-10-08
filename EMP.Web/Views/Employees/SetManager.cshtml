@@ -1,0 +1,39 @@
+﻿@using EMP.Web.Models.Dtos
+@using EMP.Web.Views.ViewModels
+@model PagedEmployeesVM
+<div class="modal fade" id="setManagerModal" tabindex="-1" aria-labelledby="setManagerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="setManagerModalLabel">
+                    <i class="fa fa-user-tie me-2"></i> Assign Manager
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-controller="Departments" asp-action="SetManager" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="ManagerId" class="form-label">Select Employee</label>
+                        <select class="form-select" id="ManagerId" name="ManagerId" required>
+                            <option value="">-- Choose Employee --</option>
+                            @foreach (var employee in Model.Employees)
+                            {
+                                    <option value="@employee.Id">@employee.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary rounded-pill">
+                        <i class="fa fa-check me-1"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

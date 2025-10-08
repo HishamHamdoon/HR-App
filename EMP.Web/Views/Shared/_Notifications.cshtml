@@ -1,0 +1,35 @@
+﻿
+@{
+    var success = TempData["success"] as string;
+    var error = TempData["error"] as string;
+    var info = TempData["Info"] as string;
+    var warning = TempData["warning"] as string;
+}
+
+<script type="text/javascript">
+    $(function () {
+    @* Success *@
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <text>toastr.success("@success");</text>
+    }
+
+    @* Error *@
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <text>toastr.error("@error");</text>
+    }
+
+    @* Info *@
+    @if (!string.IsNullOrEmpty(info))
+    {
+        <text>toastr.info("@info");</text>
+    }
+
+    @* Warning *@
+    @if (!string.IsNullOrEmpty(warning))
+    {
+        <text>toastr.warning("@warning");</text>
+    }
+    });
+</script>

@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4 mb-4">Dashboard</h1>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 text-white bg-primary">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Total Employees</h5>
+                        <h2>@ViewBag.Employees </h2>
+                    </div>
+                    <i class="fa fa-users fa-3x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 text-white bg-success">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Active Leaves</h5>
+                        <h2>@ViewBag.ActiveLeaves</h2>
+                    </div>
+                    <i class="fa fa-calendar-days fa-3x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 text-white bg-warning">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Departments</h5>
+                        <h2>@ViewBag.Departments</h2>
+                    </div>
+                    <i class="fa fa-building fa-3x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 text-white bg-danger">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Pending Approvals</h5>
+                        <h2>@ViewBag.Pending</h2>
+                    </div>
+                    <i class="fa fa-hourglass-half fa-3x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0"><i class="fa fa-chart-line me-2"></i>Leave Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="leavesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0"><i class="fa fa-chart-pie me-2"></i>Employee Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="employeeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <a asp-controller="Employees" asp-action="Index" class="text-decoration-none">
+                <div class="card shadow-sm border-0 rounded-3 text-center py-4 hover-card">
+                    <i class="fa fa-users fa-2x mb-2 text-primary"></i>
+                    <h6>Manage Employees</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Leaves" asp-action="Index" class="text-decoration-none">
+                <div class="card shadow-sm border-0 rounded-3 text-center py-4 hover-card">
+                    <i class="fa fa-calendar-days fa-2x mb-2 text-success"></i>
+                    <h6>Manage Leaves</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="LeavesType" asp-action="Index" class="text-decoration-none">
+                <div class="card shadow-sm border-0 rounded-3 text-center py-4 hover-card">
+                    <i class="fa fa-list fa-2x mb-2 text-warning"></i>
+                    <h6>Leave Types</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Departments" asp-action="Index" class="text-decoration-none">
+                <div class="card shadow-sm border-0 rounded-3 text-center py-4 hover-card">
+                    <i class="fa fa-building fa-2x mb-2 text-danger"></i>
+                    <h6>Departments</h6>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sample Leave Statistics Chart
+        const ctxLeaves = document.getElementById('leavesChart').getContext('2d');
+        new Chart(ctxLeaves, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Leaves Taken',
+                    data: [12, 19, 14, 20, 18, 22],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        // Sample Employee Distribution Chart
+        const ctxEmployees = document.getElementById('employeeChart').getContext('2d');
+        new Chart(ctxEmployees, {
+            type: 'doughnut',
+            data: {
+                labels: ['HR', 'Finance', 'IT', 'Sales', 'Marketing'],
+                datasets: [{
+                    label: 'Departments',
+                    data: [10, 15, 25, 20, 18],
+                    backgroundColor: [
+                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d'
+                    ]
+                }]
+            },
+            options: { responsive: true }
+        });
+    </script>
+    <style>
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+}

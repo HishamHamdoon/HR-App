@@ -1,0 +1,101 @@
+﻿@model EmployeeVM
+@using EMP.Web.Views.ViewModels
+@{
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a class="btn btn-outline-secondary" asp-controller="Employees" asp-action="Index">
+            <i class="fa fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Employee Details Card -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-gradient bg-primary text-white text-center py-3 rounded-top">
+            <h4 class="mb-0"><i class="fa fa-id-badge me-2"></i>Employee Details</h4>
+        </div>
+
+        <div class="card-body px-5 py-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-hashtag me-1"></i> Employee ID</p>
+                    <h6 class="fw-bold">@Model.Id</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-user me-1"></i> Name</p>
+                    <h6 class="fw-bold">@Model.Name</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-envelope me-1"></i> Email</p>
+                    <h6 class="fw-bold">@Model.Email</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-phone me-1"></i> Phone</p>
+                    <h6 class="fw-bold">@Model.Phone</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-building me-1"></i> Department</p>
+                    <span class="badge bg-info fs-6">@Model.DepartmentName</span>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-briefcase me-1"></i> Job Title</p>
+                    <span class="badge bg-success fs-6">@Model.JobTitleTitle</span>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted mb-1"><i class="fa fa-flag me-1"></i> Nationality</p>
+                    <span class="badge bg-warning text-dark fs-6">@Model.CountryName</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-between py-3 px-4">
+            <a class="btn btn-outline-primary" asp-controller="Employees" asp-action="Edit" asp-route-employeeId="@Model.Id">
+                <i class="fa fa-pencil-alt"></i> Edit
+            </a>
+            @Html.AntiForgeryToken()
+            <input hidden value="@Model.Id" />
+
+            <a class="btn btn-outline-primary" asp-action="Terminate">
+                <i class="fa fa-pencil-alt"></i> Terminate
+            </a>
+            <form asp-controller="Employees" asp-action="DeleteEmployee" method="post"
+                  onsubmit="return confirm('Are you sure you want to delete this employee?');">
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fa fa-trash"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+                                   function terminateEmployee(employeeId) {
+            console.log("EmployeeId:", employeeId);
+
+            $.ajax({
+                url: '/Employees/Terminate', // Must match your controller name exactly
+                type: 'POST',
+                data: { employeeId: employeeId }, // Form-encoded, NOT JSON
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        $("#row-" + employeeId).fadeOut();
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.error("AJAX Error:", xhr);
+                    alert("Request failed: " + xhr.status);
+                }
+            });
+        }
+
+
+
+    </script>
+}

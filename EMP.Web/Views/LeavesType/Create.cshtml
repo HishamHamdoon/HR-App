@@ -1,0 +1,60 @@
+﻿@using Emp.Web.Dtos
+@model CreateLeaveTypesDto
+
+@{
+    ViewData["Title"] = "Create Leave Type";
+        Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">Create Leave Type</h2>
+
+<form asp-action="CreatePost" method="post" class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Note" class="form-label"></label>
+        <input asp-for="Note" class="form-control" />
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MaxDays" class="form-label"></label>
+        <input asp-for="MaxDays" type="number" class="form-control" />
+        <span asp-validation-for="MaxDays" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MinDays" class="form-label"></label>
+        <input asp-for="MinDays" type="number" class="form-control" />
+        <span asp-validation-for="MinDays" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 form-check mt-4">
+        <input asp-for="IsAttachmentRequired" class="form-check-input" type="checkbox" />
+        <label asp-for="IsAttachmentRequired" class="form-check-label"></label>
+    </div>
+
+    <div class="col-md-6 form-check mt-4">
+        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+        <label asp-for="IsActive" class="form-check-label"></label>
+    </div>
+
+    <div class="col-12 mt-3">
+        <button type="submit" class="btn btn-success">
+            <i class="fa fa-save"></i> Save
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fa fa-arrow-left"></i> Back
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

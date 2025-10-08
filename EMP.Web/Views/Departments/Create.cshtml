@@ -1,0 +1,43 @@
+﻿@using Emp.Web.Dtos
+@model DepartmentDto
+
+@{
+    ViewData["Title"] = "Create Department";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Create Department</h4>
+        </div>
+
+        <form asp-action="Create" method="post" class="card-body row g-3">
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Enter department name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Location" class="form-label"></label>
+                <input asp-for="Location" class="form-control" placeholder="Enter department name" />
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+           
+
+            <div class="col-12 text-end mt-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-save"></i> Save
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

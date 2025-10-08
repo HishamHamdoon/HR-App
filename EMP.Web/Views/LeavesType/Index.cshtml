@@ -1,0 +1,106 @@
+﻿@using EMP.Web.Models.Dtos
+@model PaggedLeavTypeVM
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary">
+        <i class="fa-solid fa-list"></i> Leave Types
+    </h2>
+    <a asp-action="Create" class="btn btn-success">
+        <i class="fa fa-plus"></i> Add New Leave Type
+    </a>
+</div>
+
+@if (Model != null && Model.LeaveTypes.Any())
+{
+    <table class="table table-striped table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Note</th>
+                <th>Max Days</th>
+                <th>Min Days</th>
+                <th>Attachment Required</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.LeaveTypes)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Note</td>
+                    <td>@item.MaxDays</td>
+                    <td>@item.MinDays</td>
+                    <td>
+                        @if (item.IsAttachmentRequired)
+                        {
+                            <span class="badge bg-warning text-dark">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">No</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactive</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <a asp-controller="LeavesType" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Details">
+                                <i class="fa fa-info-circle"></i>
+                            </a>
+                            <form asp-controller="LeavesType" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                        onclick="return confirm('Are you sure you want to delete this leave type?');">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning text-center p-4 rounded-3 shadow-sm">
+        <i class="fa-solid fa-triangle-exclamation fa-lg"></i> No leave types found!
+    </div>
+}
+
+<!-- Pagination Controls -->
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+            </li>
+        }
+
+        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+        </li>
+    </ul>
+</nav>

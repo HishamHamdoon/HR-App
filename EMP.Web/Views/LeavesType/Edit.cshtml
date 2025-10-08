@@ -1,0 +1,79 @@
+﻿@using Emp.Web.Dtos
+@model UpdateLeaveTypesDto
+
+@{
+    ViewData["Title"] = "Edit Leave Type";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fa fa-edit"></i> Edit Leave Type</h3>
+        </div>
+        <div class="card-body">
+            <form asp-controller="LeavesType" asp-action="Edit" method="post" class="row g-3">
+                <input type="hidden" asp-for="Id" />
+
+                <!-- Name -->
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label fw-bold">Leave Type Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="Enter leave type name" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <!-- Note -->
+                <div class="col-md-6">
+                    <label asp-for="Note" class="form-label fw-bold">Note</label>
+                    <textarea asp-for="Note" class="form-control" rows="4" placeholder="Enter note or description"></textarea>
+                    <span asp-validation-for="Note" class="text-danger"></span>
+                </div>
+
+                <!-- Max Days -->
+                <div class="col-md-6">
+                    <label asp-for="MaxDays" class="form-label fw-bold">Maximum Days</label>
+                    <input asp-for="MaxDays" type="number" class="form-control" placeholder="Enter maximum days allowed" />
+                    <span asp-validation-for="MaxDays" class="text-danger"></span>
+                </div>
+
+                <!-- Min Days -->
+                <div class="col-md-6">
+                    <label asp-for="MinDays" class="form-label fw-bold">Minimum Days</label>
+                    <input asp-for="MinDays" type="number" class="form-control" placeholder="Enter minimum days allowed" />
+                    <span asp-validation-for="MinDays" class="text-danger"></span>
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="col-md-6 form-check mt-4">
+                    <input asp-for="IsAttachmentRequired" class="form-check-input" type="checkbox" id="attachmentCheck" />
+                    <label asp-for="IsAttachmentRequired" class="form-check-label fw-bold" for="attachmentCheck">
+                        Attachment Required
+                    </label>
+                </div>
+
+                <div class="col-md-6 form-check mt-4">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" id="activeCheck" />
+                    <label asp-for="IsActive" class="form-check-label fw-bold" for="activeCheck">
+                        Active
+                    </label>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-12 mt-4 d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-save"></i> Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

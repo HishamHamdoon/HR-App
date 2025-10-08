@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Utility\SD.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.7.1" />
+    <PackageReference Include="Util.Localization" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emp.Api\Emp.Api.csproj" />
+    <ProjectReference Include="..\Emp.Models\Emp.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\EmployeeService\" />
+    <Folder Include="wwwroot\uploads\leaves\" />
+  </ItemGroup>
+
+</Project>

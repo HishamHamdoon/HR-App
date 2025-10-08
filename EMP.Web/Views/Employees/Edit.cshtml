@@ -1,0 +1,113 @@
+﻿@using EMP.Web.Views.ViewModels
+@using Emp.Web.Models.Dtos
+@model EmployeeFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Employee";
+
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fa fa-user-edit me-2"></i>Edit Employee</h4>
+            <a asp-action="Index" class="btn btn-light btn-sm">
+                <i class="fa fa-arrow-left"></i> Back
+            </a>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post" class="row g-3">
+                <input type="hidden" asp-for="Employee.Id" />
+
+                <!-- Personal Information -->
+                <h5 class="text-primary">Personal Information</h5>
+                <div class="col-md-6">
+                    <label asp-for="Employee.Name" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.Name" class="form-control" placeholder="Enter full name" />
+                    <span asp-validation-for="Employee.Name" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Email" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.Email" class="form-control" placeholder="Enter email address" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Phone" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.Phone" class="form-control" placeholder="Enter phone number" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Address" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.Address" class="form-control" placeholder="Enter address" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Employee.BirthDate" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.BirthDate" type="date" class="form-control" />
+                </div>
+
+                <!-- Job Information -->
+                <h5 class="text-primary mt-4">Job Information</h5>
+                <div class="col-md-4">
+                    <label asp-for="Employee.HireDate" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.HireDate" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Employee.LeavingDate" class="form-label fw-bold"></label>
+                    <input asp-for="Employee.LeavingDate" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.DepartmentId" class="form-label fw-bold">Department</label>
+                    <select asp-for="Employee.DepartmentId" asp-items="@(new SelectList(Model.Departments, "Id", "Name",Model.Employee.DepartmentId))" class="form-select">
+                        <option value="">-- Select Department --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.SectionId" class="form-label fw-bold">Section</label>
+                    <select asp-for="Employee.SectionId" asp-items="@(new SelectList(Model.Sections, "Id", "Name",Model.Employee.SectionId))" class="form-select">
+                        <option value="">-- Select Section --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.JobTitleId" class="form-label fw-bold">Job Title</label>
+                    <select asp-for="Employee.JobTitleId" asp-items="@(new SelectList(Model.JobTitles, "Id", "Title",Model.Employee.JobTitleId))" class="form-select">
+                        <option value="">-- Select Job Title --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.CountryId" class="form-label fw-bold">Country</label>
+                    <select asp-for="Employee.CountryId" asp-items="@(new SelectList(Model.Countries, "Id", "Name",Model.Employee.CountryId))" class="form-select">
+                        <option value="">-- Select Country --</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div class="col-12 form-check mt-3">
+                    <input asp-for="Employee.IsActive" class="form-check-input" />
+                    <label asp-for="Employee.IsActive" class="form-check-label fw-bold"></label>
+                </div>
+
+                <!-- Actions -->
+                <div class="col-12 mt-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="fa fa-save"></i> Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fa fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

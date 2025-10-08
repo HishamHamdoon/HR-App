@@ -1,0 +1,12 @@
+﻿@using Emp.Web.Models.Dtos
+@model CountryDto
+@{
+    Layout = "_AdminLayout";
+}
+<h2>Delete country</h2>
+<p>Are you sure you want to delete @Model.Name</p>
+<form asp-action="DeletePost" asp-controller="Countries" method="post">
+    <input type="hidden" asp-for="@Model.Id" />
+    <input type="submit" value="Delete" class="btn btn-danger"/>
+    <a asp-action="Index" asp-controller="Countries" class="btn btn-primary"> Cancel</a>
+</form>

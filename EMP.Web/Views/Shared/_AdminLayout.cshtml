@@ -1,0 +1,171 @@
+﻿@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EMP.Web</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/EMP.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/toastr.js/toastr.min.css" />
+
+    <style>
+        .nav-link.active {
+            font-weight: bold;
+            background-color: #0d6efd;
+            color: white !important;
+            border-radius: 5px;
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+            margin-left: -250px;
+        }
+
+        #sidebar-wrapper {
+            min-width: 250px;
+            max-width: 250px;
+            transition: margin 0.3s ease;
+        }
+
+        #page-content-wrapper {
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        .sidebar-heading {
+            font-size: 1.25rem;
+        }
+
+        .bg-hover:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-toggle::after {
+            margin-left: 0.35em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="border-end bg-white" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fw-bold text-primary">
+                <i class="fas fa-user-tie me-2"></i> HR Admin
+            </div>
+            <div class="list-group list-group-flush">
+                <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Home" ? "nav-link active" : "")">
+                    <i class="fa fa-home me-2"></i> Dashboard
+                </a>
+                <a asp-controller="Employees" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Employees" ? "nav-link active" : "")">
+                    <i class="fa fa-users me-2"></i> Employees
+                </a>
+                <a asp-controller="Leaves" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Leaves" ? "nav-link active" : "")">
+                    <i class="fa fa-calendar-days me-2"></i> Leaves
+                </a>
+                <a asp-controller="LeavesType" asp-action="Index" class="list-group-item list-group-item-action @(controller == "LeavesType" ? "nav-link active" : "")">
+                    <i class="fa fa-list me-2"></i> Leave Types
+                </a>
+                <a asp-controller="Departments" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Departments" ? "nav-link active" : "")">
+                    <i class="fa fa-building me-2"></i> Departments
+                </a>
+                <a asp-controller="JobTitles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "JobTitles" ? "nav-link active" : "")">
+                    <i class="fa fa-briefcase me-2"></i> Job Titles
+                </a>
+                <a asp-controller="Countries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Countries" ? "nav-link active" : "")">
+                    <i class="fa fa-globe me-2"></i> Countries
+                </a>
+                <a asp-controller="Salaries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Salaries" ? "nav-link active" : "")">
+                    <i class="fa fa-dollar-sign me-2"></i> Salaries
+                </a>
+                <a asp-controller="Reports" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Reports" ? "nav-link active" : "")">
+                    <i class="fa fa-chart-line me-2"></i> HR Reports
+                </a>
+                <a asp-controller="Roles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Roles" ? "nav-link active" : "")">
+                    <i class="fa fa-user-shield me-2"></i> Roles & Permissions
+                </a>
+                    <!-- Logout button at bottom -->
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {    <form asp-controller="Account" asp-action="Logout" method="post" class="w-100">
+
+                            <a  class="list-group-item list-group-item-action text-start border-0 bg-transparent w-100">
+                            <button style="border:0px;background-color:white" type="submit"><i class="fa fa-sign-out-alt me-2"></i>Logout</button>
+                        </a>
+                   </form>
+                    }
+
+            </div>
+          
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="d-flex flex-column">
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="sidebarToggle"><i class="fa fa-bars"></i></button>
+
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-user-circle me-1"></i> @User.Identity?.Name 
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"> <i class="fa fa-user-circle me-1">&nbsp;&nbsp;</i>Profile</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fa fa-sign-out-alt me-2"></i> Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
+                                }
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Body -->
+            <main class="container-fluid py-4 px-4 flex-grow-1">
+                @RenderBody()
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-light text-center py-3 border-top">
+                &copy; @DateTime.Now.Year HR App. All rights reserved.
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/toastr.js/toastr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_Notifications")
+
+    <script>
+        document.getElementById("sidebarToggle")?.addEventListener("click", function () {
+            document.getElementById("wrapper")?.classList.toggle("toggled");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+﻿@using Emp.Web.Dtos
+@model List<ViewLeaveDto>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Employee Dashboard";
+
+
+    // Dummy data
+    var employeeName = @User.Identity?.Name;
+    var pendingLeaves = Model.Count(p =>
+        p.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase));
+    var approvedLeaves = Model.Where(p => p.Status == "Approved").Count();
+    var rejectedLeaves = Model.Count(p => 
+        p.Status.Equals("Rejected", StringComparison.OrdinalIgnoreCase));
+    // var upcomingTasks = Model.Where(p => p.Status == "PENDING").Count();
+
+    var recentLeaves = new[]
+    {
+    new { LeaveName = "Annual Leave", StartDate = DateTime.Now.AddDays(-5), EndDate = DateTime.Now.AddDays(-3), Status = "Approved", Note = "Vacation" 
+},
+    new { LeaveName = "Sick Leave", StartDate = DateTime.Now.AddDays(-2), EndDate = DateTime.Now.AddDays(-1), Status = "Pending", Note = "Flu" },
+    new { LeaveName = "Casual Leave", StartDate = DateTime.Now.AddDays(1), EndDate = DateTime.Now.AddDays(1), Status = "Rejected", Note = "Personal" }
+};
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Welcome, @employeeName!</h1>
+    <hr />
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 my-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Leaves</h5>
+                    <p class="card-text display-6">@pendingLeaves</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Approved Leaves</h5>
+                    <p class="card-text display-6">@approvedLeaves</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected Leaves</h5>
+                    <p class="card-text display-6">@rejectedLeaves</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Tasks</h5>
+                    <p class="card-text display-6">6</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leaves Table -->
+    <div class="card shadow-sm my-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fa fa-calendar-days me-2"></i> Recent Leaves</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        @foreach (var leave in Model)
+                        {
+                        @if (Model.Any())
+                        {
+                            <tr>
+                                <td>@leave.LeaveName</td>
+                                <td>@leave.StartDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@leave.EndDate?.ToString("dd-MMM-yyyy")</td>
+                                <td>
+                                    @if (leave.Status == "Approved")
+                                    {
+                                        <span class="badge bg-success">@leave.Status</span>
+                                    }
+                                    else if (leave.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning">@leave.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@leave.Status</span>
+                                    }
+                                </td>
+                                <td>@leave.Note</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <p class="alert alert-danger">There is no Leaves</p>
+                            </tr>
+                        }
+                    }
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Links / Actions -->
+    <div class="row g-4 my-4">
+        <div class="col-md-3">
+            <a asp-action="Create" asp-controller="Leaves" class="btn btn-outline-primary w-100 py-3">
+                <i class="fa fa-plus me-2"></i> Apply Leave
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-success w-100 py-3">
+                <i class="fa fa-list me-2"></i> My Leaves
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-warning w-100 py-3">
+                <i class="fa fa-tasks me-2"></i> My Tasks
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-action="Profile" asp-controller="Account" class="btn btn-outline-info w-100 py-3">
+                <i class="fa fa-user me-2"></i> My Profile
+            </a>
+        </div>
+    </div>
+</div>

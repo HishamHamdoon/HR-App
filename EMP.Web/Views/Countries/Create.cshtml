@@ -1,0 +1,36 @@
+﻿@using Emp.Web.Models.Dtos
+@model CountryDto
+@{
+    Layout = "_AdminLayout";
+}
+<div class="card">
+    <div class="card-header">
+        Create new country
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" asp-controller="Countries">
+            <div class="form-group">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Code"></label>
+                <input asp-for="Code" class="form-control"  />
+            </div>
+            <div class="form-check">
+                <label asp-for="IsDeleted"></label>
+                <input asp-for="IsDeleted" class="form-check-input"  />
+            </div>
+            <div class="form-check">
+                <label asp-for="IsActive"></label>
+                <input asp-for="IsActive" class="form-check-input"  />
+            </div>
+            <div class="card-footer">
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" />
+                    <button class="btn btn-danger" asp-controller="Countries" asp-action="Index">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

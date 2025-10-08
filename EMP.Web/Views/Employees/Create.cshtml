@@ -1,0 +1,130 @@
+﻿@using EMP.Web.Views.ViewModels
+@using Emp.Web.Models.Dtos
+@using Emp.Web.Dtos.Auth
+@model RegisterDto
+
+@{
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Create New Employee</h2>
+
+    <form asp-action="CreateNewEmployee" method="post" class="needs-validation" novalidate>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">Personal Information</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Employee.Name" class="form-label"></label>
+                    <input asp-for="Employee.Name" class="form-control" />
+                    <span asp-validation-for="Employee.Name" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Email" class="form-label"></label>
+                    <input asp-for="Employee.Email" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Phone" class="form-label"></label>
+                    <input asp-for="Employee.Phone" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.Address" class="form-label"></label>
+                    <input asp-for="Employee.Address" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.BirthDate" class="form-label"></label>
+                    <input asp-for="Employee.BirthDate" class="form-control" type="date" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">Job Information</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Employee.HireDate" class="form-label"></label>
+                    <input asp-for="Employee.HireDate" class="form-control" type="date" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.LeavingDate" class="form-label"></label>
+                    <input asp-for="Employee.LeavingDate" class="form-control" type="date" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.DepartmentId" class="form-label">Department</label>
+                    <select asp-for="Employee.DepartmentId" asp-items="@(new SelectList(Model.Departments, "Id", "Name"))" class="form-select" id="DepartmentId">
+                        <option value="">-- Select Department --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.SectionId" class="form-label">Section</label>
+                    <select asp-for="Employee.SectionId" asp-items="@(new SelectList(Model.Sections, "Id", "Name"))" class="form-select" id="SectionId">
+                        <option value="">-- Select Section --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.JobTitleId" class="form-label">Job Title</label>
+                    <select asp-for="Employee.JobTitleId" asp-items="@(new SelectList(Model.JobTitles, "Id", "Title"))" class="form-select">
+                        <option value="">-- Select Job Title --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Employee.CountryId" class="form-label">Country</label>
+                    <select asp-for="Employee.CountryId" asp-items="@(new SelectList(Model.Countries, "Id", "Name"))" class="form-select">
+                        <option value="">-- Select Country --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 form-check mt-3">
+                    <input asp-for="Employee.IsActive" class="form-check-input" />
+                    <label asp-for="Employee.IsActive" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-success">Save Employee</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.getElementById("DepartmentId").addEventListener("change", function () {
+            const departmentId = this.value;
+            const sectionDropdown = document.getElementById("SectionId");
+            sectionDropdown.innerHTML = '<option value="">-- Select Section --</option>';
+
+            if (!departmentId) return;
+
+            fetch(`/Departments/GetSectionsByDepartment?departmentId=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(section => {
+                        const option = document.createElement("option");
+                        option.value = section.id;
+                        option.text = section.name;
+                        sectionDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error fetching sections:", error));
+        });
+    </script>
+
+    @await Html.PartialAsync("_Notifications")
+}

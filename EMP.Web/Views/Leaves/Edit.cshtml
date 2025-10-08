@@ -1,0 +1,63 @@
+﻿@model Emp.Web.Dtos.UpdateLeaveDto
+@{
+    Layout = "_AdminLayout";
+}
+
+<div class="card shadow-lg border-0 rounded-3">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+            <i class="fa-solid fa-edit"></i> Edit Leave
+        </h4>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <div class="card-body">
+            <input type="hidden" asp-for="Id" />
+
+            @* <div class="mb-3"> *@
+            @*     <label asp-for="EmployeeName"  class="form-label">Employee</label> *@
+            @*     <input asp-for="EmployeeName" disabled class="form-control" readonly /> *@
+            @* </div> *@
+
+            @* <div class="mb-3"> *@
+            @*     <label asp-for="LeaveName" class="form-label">Leave Type</label> *@
+            @*     <input asp-for="LeaveName" disabled class="form-control" readonly /> *@
+            @* </div> *@
+
+            @* <div class="mb-3"> *@
+            @*     <label asp-for="StartDate" class="form-label">Start Date</label> *@
+            @*     <input asp-for="StartDate" disabled type="date" class="form-control" /> *@
+            @* </div> *@
+
+            @* <div class="mb-3"> *@
+            @*     <label asp-for="EndDate" class="form-label">End Date</label> *@
+            @*     <input asp-for="EndDate" disabled type="date" class="form-control" /> *@
+            @* </div> *@
+            <div class="mb-3"> 
+                <label asp-for="Note" class="form-label">End Date</label> 
+               <textarea asp-for="Note"  type="date" class="form-control" ></textarea> 
+             </div>
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label">Status</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="Pending" >Pending</option>
+                    <option value="Approved" >Approved</option>
+                    <option value="Rejected" >Rejected</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="card-footer text-end">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="fa fa-save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+@section Scripts{
+    <partial name="_Notifications" />
+}

@@ -1,0 +1,110 @@
+﻿@using Emp.Web.Dtos
+@model PagedLeavesVM
+@{
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Leaves Management</h2>
+    <a asp-action="Create" asp-controller="Leaves" class="btn btn-success">
+        <i class="fa fa-plus"></i> Create New Leave
+    </a>
+</div>
+
+@if (Model.Leaves.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr class="bg-dark text-white">
+                <th>#</th>
+                <th>Name</th>
+                <th>Leave</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Manager</th>
+                <th>Status</th>
+                <th>No of Days</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Leaves)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.EmployeeName</td>
+                    <td>@item.LeaveName</td>
+                    <td>@item.StartDate.ToString("dd-MM-yyyy")</td>
+                    <td>@item.EndDate?.ToString("dd-MM-yyyy")</td>
+                    <td>@(item.ManagerName != null ? item.ManagerName : "N/A")</td>
+                    <td>@item.Status</td>
+                    <td>
+                        @{
+                            if (item.EndDate.HasValue)
+                            {
+                                var days = (item.EndDate.Value - item.StartDate).Days + 1;
+                                @days
+                            }
+                            else
+                            {
+                                @:N/A
+                            }
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-info" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@item.Id">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            <a class="btn btn-outline-primary" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@item.Id">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            @if (!string.IsNullOrEmpty(item.FilePath))
+                            {
+                                var path = "https://localhost:7026/" + @item.FilePath;
+                                @* <a   href="@item.FilePath"  target="_blank" class="btn btn-outline-secondary"> *@
+                                <a href="@item.FilePath" target="_blank" class="btn btn-outline-secondary">
+                                    <i class="fa fa-paperclip"></i>
+                                </a>
+                            }
+                            <form asp-action="Delete" asp-route-leaveId="@item.Id" method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete this record?')">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning">No leaves found.</div>
+}
+
+<!-- Pagination Controls -->
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+            </li>
+        }
+
+        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+        </li>
+    </ul>
+    <!-- Show total records -->
+    <div class="text-center mt-2">
+        <span>Showing @Model.PageSize of  @Model.TotalCount of  leaves</span>
+    </div>
+</nav>

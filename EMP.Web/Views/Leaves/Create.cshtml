@@ -1,0 +1,93 @@
+﻿@using System.Security.Claims
+@model Emp.Web.Dtos.CreateLeaveDto
+@{
+    Layout = "_AdminLayout";
+
+}
+<div class="card shadow-lg border-0 rounded-3">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+            <i class="fa-solid fa-plus-circle"></i> Create Leave
+        </h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+           
+            <div class="form-group">
+                <label asp-for="LeavesTypeId">Leaves Type</label>
+                <select asp-for="LeavesTypeId"  asp-items="@(new SelectList(Model.LeavesTypes, "Id", "Name"))" class="form-control">
+                    <option value="">-- Select Leave TypeId --</option>
+                </select>
+            </div>
+            @{
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (role != "Admin")
+                {
+                    <div class="form-group">
+                        <label asp-for="EmployeeId">Employee</label>
+                        <select asp-for="EmployeeId" asp-items="@(new SelectList(Model.Employees, "Id", "Name"))" class="form-control">
+                            <option value="">-- Select Employee --</option>
+                        </select>
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="EmployeeId" value="@ViewBag.EmployeeId" type="hidden" />
+                }
+            }
+           
+
+            @* <select asp-for="LeavesTypeId" class="form-select" *@
+            @*         asp-items="@(ViewBag.LeavesTypes != null *@
+            @* ? new SelectList(ViewBag.LeavesTypes, "Id", "Name") *@
+            @* : new SelectList(Enumerable.Empty<SelectListItem>()))"> *@
+            @*     <option value="">-- Select Leave Type --</option> *@
+            @* </select> *@
+
+            <div class="mb-3">
+                <label asp-for="StartDate" class="form-label"></label>
+                <input asp-for="StartDate" class="form-control" type="date" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="EndDate" class="form-label"></label>
+                <input asp-for="EndDate" class="form-control" type="date" />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label  class="form-label">Manager</label>
+                <input type="hidden" asp-for="ManagerId" value="@ViewBag.ManagerId" />
+
+                <!-- Read-only field just for display -->
+                <input type="text" value="@ViewBag.ManagerId" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Note" class="form-label"></label>
+                <textarea asp-for="Note" class="form-control" rows="3" placeholder="Optional note..."></textarea>
+                <span asp-validation-for="Note" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Attachment" class="form-label">Upload Attachment</label>
+                <input asp-for="Attachment" type="file" class="form-control" />
+            </div>
+            <input asp-for="FilePath" type="hidden" />
+
+            <div class="text-end">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left"></i> Back
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-save"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

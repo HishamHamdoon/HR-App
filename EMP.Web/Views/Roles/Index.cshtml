@@ -1,0 +1,44 @@
+﻿@* @using static EMP.Web.Controllers.RolesController *@
+@model List<string>
+
+@{
+    ViewData["Title"] = "Roles";
+    Layout = "_AdminLayout";
+}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Roles</h2>
+        <a asp-action="Create" class="btn btn-primary">Create New Role</a>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Role Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count(); i++)
+                {
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@Model.ElementAt(i)</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-name="@Model.ElementAt(i)" class="btn btn-sm btn-warning">Edit</a>
+                            <a asp-action="Delete" asp-route-name="@Model.ElementAt(i)" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No roles found.
+        </div>
+    }

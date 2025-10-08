@@ -1,0 +1,59 @@
+﻿@using Emp.Web.Dtos
+@model TerminationDto
+
+@{
+    ViewData["Title"] = "Terminate Employee";
+    Layout = "_AdminLayout"; //or your layout
+}
+
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white text-center">
+                <h4>Terminate Employee</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-controller="Employees" asp-action="Terminate">
+                    <input hidden asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="TerminationType" class="form-label fw-bold">Termination Type</label>
+                        <select asp-for="TerminationType" class="form-select">
+                            <option value="">Select Type</option>
+                            <option value="Termination">Termination</option>
+                            <option value="Resignation">Resignation</option>
+                        </select>
+                        <span asp-validation-for="TerminationType" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TerminationReason" class="form-label fw-bold">Reason</label>
+                        <textarea asp-for="TerminationReason" class="form-control" rows="4" placeholder="Enter reason for termination"></textarea>
+                        <span asp-validation-for="TerminationReason" class="text-danger"></span>
+                    </div>
+
+                    @{
+                        var employeeList = ViewBag.Employees as List<Emp.Api.Models.Employee> ?? new List<Emp.Api.Models.Employee>();
+                        var selectedEmployeeId = Model?.EmployeeId; // This handles null Model
+                    }
+                    <label asp-for="EmployeeId" class="form-label fw-bold">Employee</label>
+                    <select asp-for="EmployeeId" asp-items="@(new SelectList(employeeList, "Id", "Name", selectedEmployeeId))" class="form-select">
+                        <option value="">-- Select Employee --</option>
+                    </select>
+                    <span asp-validation-for="EmployeeId" class="text-danger"></span>
+
+                    <div class="mb-3">
+                        <label asp-for="DateTerminated" class="form-label fw-bold">Termination Date</label>
+                        <input asp-for="DateTerminated" type="date" disabled value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control" />
+                        <span asp-validation-for="DateTerminated" class="text-danger"></span>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger px-4">Terminate Employee</button>
+                        <a asp-controller="Employees" asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

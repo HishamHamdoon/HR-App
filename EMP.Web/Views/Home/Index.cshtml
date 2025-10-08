@@ -1,0 +1,46 @@
+﻿@*@model IEnumerable<Country>
+@using Emp.Api.Models
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
+
+<h1>@Localizer["Greeting"]</h1>
+@{
+    ViewData["Title"] = "Home Page";
+}
+<h1>@ViewBag.Message</h1>
+
+<i class="fa fa-plus"></i>
+<a asp-controller="Home" asp-action="Createemployee" class="btn btn-success mb-3">+ Add New employee</a>
+@if (TempData["Success"]!= null)
+{
+    <p class="alert alert-success">@TempData["Success"]</p>
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var employee in Model)
+        {
+            <tr>
+                <td>@employee.Id</td>
+                <td>@employee.Name</td>
+                <td>@employee.Code</td>
+                <td>
+                    <a class="btn btn-primary" asp-controller="Home" asp-action="Editemployee" asp-route-id="@employee.Id">Edit</a>
+
+                    <form asp-controller="Home" asp-action="Deleteemployee" method="post" style="display:inline;"
+                          onsubmit="return confirm('Are you sure you want to delete this employee?');">
+                        <input type="hidden" name="id" value="@employee.Id" />
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>*@

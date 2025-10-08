@@ -1,0 +1,68 @@
+﻿@using EMP.Web.Models.Dtos
+@model List<LeaveByManagerDto>
+
+@{
+    ViewData["Title"] = "Leaves By Manager";
+    Layout = "_AdminLayout";
+}
+
+<div class="card shadow-lg border-0 rounded-3 mt-3">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Leaves for Manager</h4>
+    </div>
+    <div class="card-body">
+        @if (Model != null && Model.Any())
+        {
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Note</th>
+                        <th>Action
+
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var leave in Model)
+                    {
+                        <tr>
+                            <td>@leave.Id</td>
+                            <td>@leave.EmployeeName</td>
+                            <td>@leave.LeaveType</td>
+                            <td>@leave.StartDate</td>
+                            <td>@leave.EndDate</td>
+                            <td>@leave.Status</td>
+                            <td>@leave.Note</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-outline-info" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@leave.Id">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    <a class="btn btn-outline-primary" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@leave.Id">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-leaveId="@leave.Id" method="post"
+                                          onsubmit="return confirm('Are you sure you want to delete this record?')">
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-info">No leaves found for this manager.</div>
+        }
+    </div>
+</div>

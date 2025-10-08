@@ -1,0 +1,40 @@
+﻿@using EMP.Web.Models.Dtos
+@model SalaryDto
+
+@{
+    ViewData["Title"] = "Salary Details";
+    Layout = "_AdminLayout";
+
+}
+
+    <h2>Salary Details</h2>
+    <hr />
+
+    <dl class="row">
+        <dt class="col-sm-3">Employee</dt>
+        <dd class="col-sm-9">@Model.EmployeeName</dd>
+
+        <dt class="col-sm-3">Basic Salary</dt>
+        <dd class="col-sm-9">@Model.BasicSalary.ToString("C")</dd>
+
+        <dt class="col-sm-3">Allowances</dt>
+        <dd class="col-sm-9">@Model.Allowances.ToString("C")</dd>
+
+        <dt class="col-sm-3">Deductions</dt>
+        <dd class="col-sm-9">@Model.Deductions.ToString("C")</dd>
+
+        <dt class="col-sm-3">Net Salary</dt>
+        <dd class="col-sm-9 fw-bold">@Model.NetSalary.ToString("C")</dd>
+
+        <dt class="col-sm-3">Effective Date</dt>
+        <dd class="col-sm-9">@Model.EffectiveDate.ToString("yyyy-MM-dd")</dd>
+    </dl>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fa fa-arrow-left"></i> Back
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fa fa-edit"></i> Edit
+        </a>
+    </div>
