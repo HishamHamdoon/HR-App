@@ -1,14 +1,6 @@
-﻿using Azure;
-using Emp.Web.Dtos.Auth;
-using EMP.Web.Services.IServices;
-using EMP.Web.Views.ViewModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using EMP.Web.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Linq;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace EMP.Web.Controllers
 {
@@ -17,28 +9,22 @@ namespace EMP.Web.Controllers
     {
         private readonly IRoleService _roleService;
 
-        public RolesController(
-            IRoleService roleService)
+        public RolesController(IRoleService roleService)
         {
             _roleService = roleService;
         }
         public async Task<IActionResult> Index()
         {
             var responseString = await _roleService.GetAllRolesAsync(); // assume this returns JSON string
-
             //var rolesResponse = JsonConvert.DeserializeObject<ApiResponse<List<RoleDto>>>(responseString.Result.ToString());
             var rolesResponse = JsonConvert.DeserializeObject<ApiResponse<List<string>>>(responseString.Result.ToString());
-
             if (rolesResponse != null && rolesResponse.IsSuccess && rolesResponse.Result != null)
             {
                 return View(rolesResponse.Result); // ✅ This is List<RoleDto>
             }
-
             return View(new List<RoleDto>());
         }
-
-
-        // ✅ Create (GET)
+        //Create (GET)
         public IActionResult Create()
         {
             return View();
@@ -48,14 +34,8 @@ namespace EMP.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(string roleName)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return View(roleName);
-            //}
-
+            
             var response = await _roleService.CreateRoleAsync(roleName); // Call service to create
-
-
             if (response != null && response.IsSuccess)
             {
                 return RedirectToAction(nameof(Index));
@@ -64,8 +44,7 @@ namespace EMP.Web.Controllers
             ModelState.AddModelError("", "Failed to create role");
             return View(roleName);
         }
-
-        // ✅ Create (POST)
+        //Create (POST)
         //[HttpPost]
         //[ValidateAntiForgeryToken]
         //public async Task<IActionResult> Create(string roleName)

@@ -25,8 +25,6 @@ namespace EMP.Web.Services
                 ApiType = SD.ApiType.Post,
                 Url = $"https://localhost:7031/api/Roles",
                 Data=roleName
-                
-
             });
         }
 
