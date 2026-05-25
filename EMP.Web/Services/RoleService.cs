@@ -23,7 +23,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = $"https://localhost:7031/api/Roles",
+                Url = $"{SD.ApiBaseUrl}/api/Roles",
                 Data=roleName
             });
         }
@@ -33,7 +33,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Roles"
+                Url = $"{SD.ApiBaseUrl}/api/Roles"
 
             });
         }

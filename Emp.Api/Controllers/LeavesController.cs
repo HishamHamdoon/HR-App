@@ -5,11 +5,13 @@ using Emp.Api.Dtos.Leave;
 using Emp.Api.Models;
 using Emp.Api.Services.IServices;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class LeavesController : ControllerBase
@@ -132,12 +134,27 @@ namespace Emp.Api.Controllers
                     .ToList();
                 return response;
             }
-            Leave leaveModel = _mapper.Map<Leave>(createLeaveDto);
-
-            if (createLeaveDto.EmployeeId != null)
+            // Validate the employee exists (no-tracking existence check to avoid loading the graph).
+            var employeeExists = await _dbContext.Employees.AnyAsync(e => e.Id == createLeaveDto.EmployeeId);
+            if (!employeeExists)
             {
-                var employee = await _dbContext.Employees.FindAsync(createLeaveDto.EmployeeId);
+                response.IsSuccess = false;
+                response.Message = "Selected employee was not found.";
+                response.Result = null;
+                return response;
             }
+
+            Leave leaveModel = _mapper.Map<Leave>(createLeaveDto);
+            leaveModel.Status = Emp.Api.Utility.SD.Pending;
+
+            // A manager id of 0 (no manager assigned / none selected) must be NULL, not an invalid FK.
+            if (leaveModel.ManagerId is null or 0
+                || !await _dbContext.Employees.AnyAsync(e => e.Id == leaveModel.ManagerId))
+            {
+                leaveModel.ManagerId = null;
+            }
+
+            leaveModel.Note ??= string.Empty;
 
             _dbContext.Leaves.Add(leaveModel);
             await _dbContext.SaveChangesAsync();
@@ -159,10 +176,21 @@ namespace Emp.Api.Controllers
                 leaveModel.FilePath = "https://placeholde.co/600x400";
             }
             _dbContext.Update(leaveModel);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             response.IsSuccess = true;
             response.Message = "Leave created successfully";
-            response.Result = leaveModel;
+            // Return a flat projection — never the tracked entity (its navigation graph causes serialization cycles).
+            response.Result = new
+            {
+                leaveModel.Id,
+                leaveModel.EmployeeId,
+                leaveModel.LeavesTypeId,
+                leaveModel.ManagerId,
+                leaveModel.Status,
+                leaveModel.StartDate,
+                leaveModel.EndDate,
+                leaveModel.FilePath
+            };
             return response;
         }
 
@@ -235,6 +263,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="id">leave id parameter</param>
         /// <returns>should return ResponseDto object which contains deleted leave </returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> DeleteLeave(int id)
         {
@@ -245,7 +274,7 @@ namespace Emp.Api.Controllers
                 _dbContext.Leaves.Remove(targetLeave);
                 await _dbContext.SaveChangesAsync();
                 response.IsSuccess = true;
-                response.Result = targetLeave;
+                response.Result = new { targetLeave.Id };
                 response.Message = "Leave deleted successfully";
                 return response;
             }
@@ -336,6 +365,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="updateLeaveDto">ResponseDto object</param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<ResponseDto> LeaveAction(UpdateLeaveDto updateLeaveDto)
         {
@@ -385,6 +415,7 @@ namespace Emp.Api.Controllers
             }
             
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("get-leaves-by-managerId/{managerId}")]
         public async Task<ResponseDto> GetLeavesByManagerAsync(int managerId)
         {
@@ -407,16 +438,9 @@ namespace Emp.Api.Controllers
                     })
                     .ToListAsync();
 
-                if (leavesResponse.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = leavesResponse;
-                }
-                else
-                {
-                    response.IsSuccess = false;
-                    response.Message = "No leaves found for this manager.";
-                }
+                response.IsSuccess = true;
+                response.Result = leavesResponse;
+                response.Message = "";
             }
             catch (Exception ex)
             {
@@ -426,6 +450,57 @@ namespace Emp.Api.Controllers
             }
             return response;
         }
+        /// <summary>
+        /// Returns leave balance per leave type for an employee:
+        /// entitlement (MaxDays) minus approved days taken in the current year.
+        /// </summary>
+        [HttpGet("balance/{employeeId}")]
+        public async Task<ResponseDto> GetLeaveBalance(int employeeId)
+        {
+            var response = new ResponseDto();
+            try
+            {
+                var year = DateTime.UtcNow.Year;
+                var leaveTypes = await _dbContext.LeavesTypes
+                    .Where(t => t.IsActive)
+                    .ToListAsync();
+
+                var approved = await _dbContext.Leaves
+                    .Where(l => l.EmployeeId == employeeId
+                                && l.Status == "Approved"
+                                && l.EndDate.HasValue
+                                && l.StartDate.Year == year)
+                    .Select(l => new { l.LeavesTypeId, l.StartDate, l.EndDate })
+                    .ToListAsync();
+
+                var balances = leaveTypes.Select(t =>
+                {
+                    var taken = approved
+                        .Where(a => a.LeavesTypeId == t.Id)
+                        .Sum(a => Services.LeaveCalculations.DaysInclusive(a.StartDate, a.EndDate!.Value));
+                    return new
+                    {
+                        LeaveTypeId = t.Id,
+                        LeaveType = t.Name,
+                        Entitlement = t.MaxDays,
+                        Taken = taken,
+                        Remaining = Services.LeaveCalculations.Remaining(t.MaxDays, taken)
+                    };
+                }).ToList();
+
+                response.Result = balances;
+                response.IsSuccess = true;
+                response.Message = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                response.Result = null;
+            }
+            return response;
+        }
+
         [HttpPost("TestUpload")]
         public async Task<IActionResult> TestUpload(IFormFile file)
         {

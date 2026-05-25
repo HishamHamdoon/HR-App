@@ -18,11 +18,13 @@ QuestPDF.Settings.License = LicenseType.Community;
 // Add localization services
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-SD.EmployeeAPIUrl = builder.Configuration["ApiUrls:EmployeeApi"];
-SD.DepartmentAPIUrl = builder.Configuration["ApiUrls:DepartmentApi"];
-SD.SectionsAPIUrl = builder.Configuration["ApiUrls:SectionsApi"];
-SD.JobTitleAPIUrl = builder.Configuration["ApiUrls:JobTitleApi"];
-SD.CountriesAPIUrl = builder.Configuration["ApiUrls:CountriesApi"];
+// Single API host from config; all endpoint URLs are derived from it.
+SD.ApiBaseUrl = (builder.Configuration["ApiUrls:BaseUrl"] ?? "https://localhost:7031").TrimEnd('/');
+SD.EmployeeAPIUrl = $"{SD.ApiBaseUrl}/api/Employee";
+SD.DepartmentAPIUrl = $"{SD.ApiBaseUrl}/api/Department";
+SD.SectionsAPIUrl = $"{SD.ApiBaseUrl}/api/Sections";
+SD.JobTitleAPIUrl = $"{SD.ApiBaseUrl}/api/JobTitle";
+SD.CountriesAPIUrl = $"{SD.ApiBaseUrl}/api/Countries";
 
 // Localization setup
 builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -127,7 +129,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Employees}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 //app.RunMigrations(); // optional: migration method
 app.Run();

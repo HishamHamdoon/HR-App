@@ -28,41 +28,9 @@ namespace Emp.Api.Services.JobServices
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                        var employees = await dbContext.Employees
-                            .Include(e => e.Salary)
-                            .ToListAsync(stoppingToken);
-
-                        foreach (var emp in employees)
-                        {
-                            if (emp.Salary == null) continue;
-
-                            bool exists = await dbContext.Payrolls.AnyAsync(
-                                p => p.EmployeeId == emp.Id && p.SalaryMonth == firstDayOfMonth,
-                                stoppingToken);
-
-                            if (!exists)
-                            {
-                                var payroll = new Payroll
-                                {
-                                    EmployeeId = emp.Id,
-                                    SalaryId = emp.Salary.Id,
-                                    GrossSalary = emp.Salary.BasicSalary + emp.Salary.Allowances,
-                                    Deductions = emp.Salary.Deductions,
-                                    NetSalary = emp.Salary.NetSalary,
-                                    SalaryMonth = firstDayOfMonth,
-                                    GeneratedAt = DateTime.UtcNow,
-                                    IsPaid = false
-                                };
-
-                                dbContext.Payrolls.Add(payroll);
-                            }
-                        }
-
-                        await dbContext.SaveChangesAsync(stoppingToken);
+                        var created = await Services.PayrollGenerator.GenerateForMonthAsync(dbContext, firstDayOfMonth, stoppingToken);
+                        _logger.LogInformation("Payroll job executed at {time}; {count} record(s) created.", DateTime.UtcNow, created);
                     }
-
-                    _logger.LogInformation("✅ Payroll job executed at {time}", DateTime.UtcNow);
                 }
                 catch (Exception ex)
                 {

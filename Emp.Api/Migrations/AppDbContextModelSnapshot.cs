@@ -116,7 +116,7 @@ namespace Emp.Api.Migrations
                     b.Property<int>("JobTitleId")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("LeavingDate")
+                    b.Property<DateOnly?>("LeavingDate")
                         .HasColumnType("date");
 
                     b.Property<int?>("ManagerId")
@@ -498,16 +498,10 @@ namespace Emp.Api.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmployeeId1")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("EmployeeId1")
-                        .IsUnique()
-                        .HasFilter("[EmployeeId1] IS NOT NULL");
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
 
                     b.ToTable("Salaries");
                 });
@@ -782,14 +776,10 @@ namespace Emp.Api.Migrations
             modelBuilder.Entity("Emp.Models.Salary", b =>
                 {
                     b.HasOne("Emp.Api.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Emp.Api.Models.Employee", null)
                         .WithOne("Salary")
-                        .HasForeignKey("Emp.Models.Salary", "EmployeeId1");
+                        .HasForeignKey("Emp.Models.Salary", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Employee");
                 });

@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
 using Emp.Api.Data;
 using Emp.Api.Dtos;
-using Emp.Api.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class SetupController : ControllerBase
@@ -30,12 +30,9 @@ namespace Emp.Api.Controllers
             try
             {
                 var employees = _dbContext.Employees.Select(x => new { x.Id, x.Name }).ToList();
-                if (employees.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = employees;
-                    response.Message = "";
-                }
+                response.IsSuccess = true;
+                response.Result = employees;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)
@@ -71,7 +68,7 @@ namespace Emp.Api.Controllers
                     })
                     .ToList(); // ✅ safe for serialization
 
-                response.IsSuccess = leaveTypes.Any();
+                response.IsSuccess = true;
                 response.Result = leaveTypes;
                 response.Message = "";
             }
@@ -95,13 +92,10 @@ namespace Emp.Api.Controllers
             var response = new ResponseDto();
             try
             {
-                var departments =  _dbContext.Departments.Select(x => new { x.Id, x.Name }).ToList();
-                if (departments.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = departments;
-                    response.Message = "";
-                }
+                var departments = _dbContext.Departments.Select(x => new { x.Id, x.Name }).ToList();
+                response.IsSuccess = true;
+                response.Result = departments;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)
@@ -123,12 +117,9 @@ namespace Emp.Api.Controllers
             try
             {
                 var sections = _dbContext.Sections.Select(x => new { x.Id, x.Name }).ToList();
-                if (sections.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = sections;
-                    response.Message = "";
-                }
+                response.IsSuccess = true;
+                response.Result = sections;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)
@@ -149,13 +140,10 @@ namespace Emp.Api.Controllers
             var response = new ResponseDto();
             try
             {
-                var countries =  _dbContext.Countries.Select(x => new { x.Id, x.Name }).ToList();
-                if (countries.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = countries;
-                    response.Message = "";
-                }
+                var countries = _dbContext.Countries.Select(x => new { x.Id, x.Name }).ToList();
+                response.IsSuccess = true;
+                response.Result = countries;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)
@@ -176,13 +164,10 @@ namespace Emp.Api.Controllers
             var response = new ResponseDto();
             try
             {
-                var jobTitles =  _dbContext.JobTitles.Select(x => new { x.Id, x.Title }).ToList();
-                if (jobTitles.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = jobTitles;
-                    response.Message = "";
-                }
+                var jobTitles = _dbContext.JobTitles.Select(x => new { x.Id, x.Title }).ToList();
+                response.IsSuccess = true;
+                response.Result = jobTitles;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)

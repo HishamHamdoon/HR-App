@@ -17,7 +17,7 @@ namespace Emp.Api.Models
         public bool IsActive { get; set; }
         public DateOnly BirthDate { get; set; }
         public DateOnly HireDate { get; set; }
-        public DateOnly LeavingDate { get; set; }
+        public DateOnly? LeavingDate { get; set; }
 
         public int  DepartmentId{ get; set; }
         [ForeignKey("DepartmentId")]

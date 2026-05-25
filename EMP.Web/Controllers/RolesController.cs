@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace EMP.Web.Controllers
 {
-    //[Authorize(Roles = "Admin")] // Only Admins can manage roles
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class RolesController : Controller
     {
         private readonly IRoleService _roleService;
@@ -15,14 +15,27 @@ namespace EMP.Web.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var responseString = await _roleService.GetAllRolesAsync(); // assume this returns JSON string
-            //var rolesResponse = JsonConvert.DeserializeObject<ApiResponse<List<RoleDto>>>(responseString.Result.ToString());
-            var rolesResponse = JsonConvert.DeserializeObject<ApiResponse<List<string>>>(responseString.Result.ToString());
-            if (rolesResponse != null && rolesResponse.IsSuccess && rolesResponse.Result != null)
+            var response = await _roleService.GetAllRolesAsync();
+
+            if (response?.IsSuccess != true || response.Result is null)
             {
-                return View(rolesResponse.Result); // ✅ This is List<RoleDto>
+                if (!string.IsNullOrWhiteSpace(response?.Message))
+                {
+                    TempData["error"] = response.Message;
+                }
+                return View(new List<string>());
             }
-            return View(new List<RoleDto>());
+
+            // API wraps the inner role-service response, so the payload is { IsSuccess, Result: [...] }.
+            try
+            {
+                var inner = JsonConvert.DeserializeObject<ApiResponse<List<string>>>(Convert.ToString(response.Result));
+                return View(inner?.Result ?? new List<string>());
+            }
+            catch
+            {
+                return View(new List<string>());
+            }
         }
         //Create (GET)
         public IActionResult Create()

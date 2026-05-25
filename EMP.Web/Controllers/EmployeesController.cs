@@ -13,6 +13,7 @@ using System.Text;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class EmployeesController : BaseController
     {
         private readonly ILogger<HomeController> _logger;
@@ -126,113 +127,73 @@ namespace EMP.Web.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Create(Emp.Web.Dtos.Auth.RegisterDto employee)
+        public async Task<IActionResult> Create()
         {
-            var vm = new EmployeeFormViewModel
+            var employee = new Emp.Web.Dtos.Auth.RegisterDto
             {
-                Employee = new Employee() // ensures not null
+                Employee = new Employee()
             };
-            var departments = await _setupService.GetDepartmentsList();
-            var countriesList = await _setupService.GetCountriesList();
-            var sectionData = await _setupService.GetSectionsList();
-            var jobTitlesList = await _setupService.GetJobTitleesList();
-            if (jobTitlesList.Result != null)
-            {
-                var jobTitles = JsonConvert.DeserializeObject<List<JobTitle>>(Convert.ToString(jobTitlesList.Result));
-                if (jobTitles != null)
-                {
-                    employee.JobTitles = jobTitles;
-                }
-                else
-                {
-                    employee.JobTitles = new List<JobTitle>();
-                }
-            }
 
-            var countries = JsonConvert.DeserializeObject<List<Country>>(Convert.ToString(countriesList.Result));
-            if (countries != null)
-            {
-                employee.Countries = countries;
-            }
-            else
-            {
-                employee.Countries = new List<Country>();
-            }
-            var sections = JsonConvert.DeserializeObject<List<Section>>(Convert.ToString(sectionData.Result));
-            if (countries != null)
-            {
-                employee.Sections = sections;
-            }
-            else
-            {
-                employee.Sections = new List<Section>();
-            }
+            employee.Departments = await LoadDropdownAsync<Emp.Api.Models.Department>(_setupService.GetDepartmentsList);
+            employee.Countries = await LoadDropdownAsync<Country>(_setupService.GetCountriesList);
+            employee.Sections = await LoadDropdownAsync<Section>(_setupService.GetSectionsList);
+            employee.JobTitles = await LoadDropdownAsync<JobTitle>(_setupService.GetJobTitleesList);
 
-            var departmentList = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(departments.Result));
-            if (departmentList != null)
-            {
-                employee.Departments = departmentList;
-            }
-            else
-            {
-                employee.Departments = new List<Emp.Api.Models.Department>();
-            }
+            return View(employee);
+        }
 
-            return View(employee); // shows the form
+        private static async Task<List<T>> LoadDropdownAsync<T>(Func<Task<Emp.Web.Models.Dtos.ResponseDto>> call)
+        {
+            var response = await call();
+            if (response?.IsSuccess != true || response.Result is null)
+            {
+                return new List<T>();
+            }
+            try
+            {
+                return JsonConvert.DeserializeObject<List<T>>(Convert.ToString(response.Result)) ?? new List<T>();
+            }
+            catch
+            {
+                return new List<T>();
+            }
         }
         [HttpPost]
         public async Task<IActionResult> CreateNewEmployee(Emp.Web.Dtos.Auth.RegisterDto registerDto)
         {
-            if (!ModelState.IsValid)
+            if (registerDto.Employee is null)
             {
-                //Emp.Web.Models.Dtos.EmployeeCreateDto employee = new()
-                //{
-                //    Email = registerDto.Employee.Email,
-                //    BirthDate = registerDto.Employee.BirthDate,
-                //    Address = registerDto.Employee.Address,
-                //    CountryId = registerDto.Employee.CountryId,
-                //    DepartmentId = registerDto.Employee.DepartmentId,
-                //    HireDate = registerDto.Employee.HireDate,
-                //    IsActive = registerDto.Employee.IsActive,
-                //    JobTitleId = registerDto.Employee.JobTitleId,
-                //    LeavingDate = registerDto.Employee.LeavingDate,
-                //    ManagerId = registerDto.Employee.ManagerId,
-                //    Name = registerDto.Employee.Name,
-                //    Phone = registerDto.Employee.Phone,
+                TempData["error"] = "No employee data was submitted.";
+                return RedirectToAction("Create");
+            }
 
+            var registerObj = new Emp.Web.Dtos.Auth.RegisterDto
+            {
+                Email = registerDto.Employee.Email,
+                Name = registerDto.Employee.Name,
+                Phone = registerDto.Employee.Phone,
+                PhoneNumber = registerDto.Employee.Phone,
+                Address = registerDto.Employee.Address,
+                BirthDate = registerDto.Employee.BirthDate,
+                HireDate = registerDto.Employee.HireDate,
+                LeavingDate = registerDto.Employee.LeavingDate,
+                IsActive = registerDto.Employee.IsActive,
+                CountryId = registerDto.Employee.CountryId,
+                DepartmentId = registerDto.Employee.DepartmentId,
+                JobTitleId = registerDto.Employee.JobTitleId,
+                // Password is optional — leave blank and the API applies the default (P@ssw0rd).
+                Password = string.IsNullOrWhiteSpace(registerDto.Password) ? string.Empty : registerDto.Password
+            };
 
-                //};
-                if (registerDto.Password is null)
-                {
-                    registerDto.Password = "P@ssw0rd";
-                }
-                Emp.Web.Dtos.Auth.RegisterDto registerobj = new()
-                {
-                    Email = registerDto.Employee.Email,
-                    BirthDate = registerDto.Employee.BirthDate,
-                    Address = registerDto.Employee.Address,
-                    CountryId = registerDto.Employee.CountryId,
-                    DepartmentId = registerDto.Employee.DepartmentId,
-                    HireDate = registerDto.Employee.HireDate,
-                    IsActive = registerDto.Employee.IsActive,
-                    JobTitleId = registerDto.Employee.JobTitleId,
-                    LeavingDate = registerDto.Employee.LeavingDate,
-                    //ManagerId = registerDto.Employee.ManagerId,
-                    Name = registerDto.Employee.Name,
-                    Phone = registerDto.Employee.Phone,
-                    Password = registerDto.Password,
-                    ManagerId = 1013,
-                    PhoneNumber = "0123456789"//registerDto.Phone,
-                };
-                //var response = await _employeeService.CreateEmployeeAsync(employee);
-                var response = await _authService.RegisterAsync(registerobj);
-                TempData["Success"] = response.Message;
+            var response = await _authService.RegisterAsync(registerObj);
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = response.Message ?? "Employee created successfully.";
                 return RedirectToAction("Index");
             }
-            else
-            {
-                return View(registerDto);
-            }
+
+            TempData["error"] = response?.Message ?? "Failed to create employee.";
+            return RedirectToAction("Create");
         }
         public async Task<IActionResult> ActiveDeActiveEmployee(int employeeId)
         {
@@ -270,7 +231,7 @@ namespace EMP.Web.Controllers
             var json = System.Text.Json.JsonSerializer.Serialize(model.Employee);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("https://localhost:7031/api/Employee", content);
+            var response = await _httpClient.PostAsync($"{Emp.Web.Utility.SD.ApiBaseUrl}/api/Employee", content);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -2,12 +2,14 @@
 using Emp.Api.Dtos;
 using Emp.Api.Dtos.Auth;
 using Emp.Api.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace Emp.Api.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class RolesController : ControllerBase

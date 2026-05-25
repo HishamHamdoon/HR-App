@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
@@ -152,6 +153,7 @@ namespace Emp.Api.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ResponseDto> Post([FromBody] EmployeeCreateDto createDto)
         {
@@ -223,6 +225,7 @@ namespace Emp.Api.Controllers
 
         //    return NoContent();
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPut("update-employee/{id}")]
         public async Task<ResponseDto> Put(int id, [FromBody] EmployeeUpdateDto employeeUpdateDto)
         {
@@ -271,6 +274,7 @@ namespace Emp.Api.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> Delete(int id)
         {
@@ -337,6 +341,7 @@ namespace Emp.Api.Controllers
         //    return NoContent();
 
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPatch("UpdateDepartment/{id}")]
         public async Task<ResponseDto> UpdateDepartment(int id, int depId)
         {
@@ -403,6 +408,7 @@ namespace Emp.Api.Controllers
         //    return response;
 
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPatch("terminate/{id}")]
         public async Task<ResponseDto> EmployeeTermination(int id, [FromBody] TerminationDto terminationRequest)
         {
@@ -516,6 +522,7 @@ namespace Emp.Api.Controllers
         }
         */
         //set Manager
+        [Authorize(Roles = "Admin")]
         [HttpPatch("SetManager")]
         public async Task<IActionResult> SetManager(int employeeId, int managerId)
         {
@@ -567,6 +574,7 @@ namespace Emp.Api.Controllers
             }
         }
         //set department's manager
+        [Authorize(Roles = "Admin")]
         [HttpPatch("SetDepartmentManager")]
         public async Task<IActionResult> SetDepartmentManager(int departmentId, int managerId)
         {
@@ -598,6 +606,7 @@ namespace Emp.Api.Controllers
                 return StatusCode(500, "An error occurred while setting the department manager.");
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("active-deactive-employee/{employeeId}")]
         public async Task<ResponseDto> ActiveDeActiveEmployee(int employeeId)
         {
@@ -674,6 +683,53 @@ namespace Emp.Api.Controllers
                 return response;
             }
         }
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        [Route("/dashboard-charts")]
+        public async Task<ResponseDto> GetDashboardCharts()
+        {
+            var response = new ResponseDto();
+            try
+            {
+                // Leaves per month for the last 6 months (by StartDate).
+                var firstMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(-5);
+                var rawLeaves = await _dbContext.Leaves
+                    .Where(l => l.StartDate >= firstMonth)
+                    .Select(l => new { l.StartDate.Year, l.StartDate.Month })
+                    .ToListAsync();
+
+                var leavesPerMonth = new List<object>();
+                for (int i = 0; i < 6; i++)
+                {
+                    var m = firstMonth.AddMonths(i);
+                    var count = rawLeaves.Count(x => x.Year == m.Year && x.Month == m.Month);
+                    leavesPerMonth.Add(new { Label = m.ToString("MMM"), Count = count });
+                }
+
+                // Employees per department.
+                var employeesPerDepartment = await _dbContext.Employees
+                    .Where(e => e.Department != null)
+                    .GroupBy(e => e.Department.Name)
+                    .Select(g => new { Label = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                response.Result = new
+                {
+                    LeavesPerMonth = leavesPerMonth,
+                    EmployeesPerDepartment = employeesPerDepartment
+                };
+                response.IsSuccess = true;
+                response.Message = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                response.Result = null;
+            }
+            return response;
+        }
+
         [HttpGet("GetManagerName/{employeeId}")]
         public async Task<ResponseDto?> GetManagerName(int employeeId)
         {

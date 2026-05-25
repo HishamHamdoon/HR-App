@@ -120,96 +120,102 @@ namespace EMP.Web.Controllers
         public async Task<IActionResult> Create()
         {
             var dto = new Emp.Web.Dtos.CreateLeaveDto();
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;//.Select(c => c.Value.ToUpper()).ToList();
-            var admin = "Admin";
-           
 
-            //if (!roles.Contains(admin))
-            //{
-            if (User.IsInRole("Employee"))
+            // Employee applies for themselves: lock to their own id and show their manager.
+            if (!User.IsInRole("Admin"))
             {
-
-                // Not admin: force employee id from claim
                 var empIdClaim = User.FindFirst("EmployeeId")?.Value;
-                if (!string.IsNullOrEmpty(empIdClaim))
+                if (!string.IsNullOrEmpty(empIdClaim) && int.TryParse(empIdClaim, out var empId))
                 {
-                    dto.EmployeeId = int.Parse(empIdClaim);
-                    ViewBag.EmployeeId = dto.EmployeeId;
-                    var manager = await _employeeService.GetEmployeeAsync(int.Parse(empIdClaim));
-                    var managerId = await _employeeService.GetEmployeeAsync(int.Parse(empIdClaim));
-                    var managerName = await _employeeService.GetManagerNameAsync(int.Parse(empIdClaim));
-                    ViewBag.ManagerId= managerName.Result;
-                    //dto.ManagerId=ViewBag.m
-
-                }
-            }
-            else if(role?.ToString()==admin)
-            {
-                //// ✅ Get employees (list directly, no ToString/extra deserialize if already List<Employee>)
-                //var employeeList = await _setupService.GetEmployeesList();
-                //if (employeeList != null && employeeList.Result != null)
-                //{
-                //    try
-                //    {
-                //        // If Result is already a JArray or stringified JSON, force it into List<Employee>
-                //        var emps = JsonConvert.DeserializeObject<List<Employee>>(employeeList.Result.ToString());
-                //        dto.Employees = emps ?? new List<Employee>();
-                //    }
-                //    catch
-                //    {
-                //        dto.Employees = new List<Employee>();
-                //    }
-                //}
-            }
-            // ✅ Get employees (list directly, no ToString/extra deserialize if already List<Employee>)
-            var employeeList = await _setupService.GetEmployeesList();
-            if (employeeList != null && employeeList.Result != null)
-            {
-                try
-                {
-                    // If Result is already a JArray or stringified JSON, force it into List<Employee>
-                    var emps = JsonConvert.DeserializeObject<List<Employee>>(employeeList.Result.ToString());
-                    dto.Employees = emps ?? new List<Employee>();
-                }
-                catch
-                {
-                    dto.Employees = new List<Employee>();
+                    dto.EmployeeId = empId;
+                    ViewBag.EmployeeId = empId;
+                    var (managerId, managerName) = await GetEmployeeManagerAsync(empId);
+                    dto.ManagerId = managerId ?? 0;
+                    ViewBag.ManagerName = managerName;
                 }
             }
 
-            // ✅ Get leave types
-            var leaveTypesList = await _setupService.GetLeaveTypesList();
-            if (leaveTypesList != null && leaveTypesList.Result != null)
-            {
-                try
-                {
-                    var leavesTypes = JsonConvert.DeserializeObject<List<LeavesType>>(leaveTypesList.Result.ToString());
-                    dto.LeavesTypes = leavesTypes ?? new List<LeavesType>();
-                }
-                catch
-                {
-                    dto.LeavesTypes = new List<LeavesType>();
-                }
-            }
-
+            await PopulateLeaveDropdownsAsync(dto);
             return View(dto);
+        }
+
+        /// <summary>Returns (managerId, managerName) for an employee. Used by the admin leave form cascade.</summary>
+        private async Task<(int? ManagerId, string ManagerName)> GetEmployeeManagerAsync(int employeeId)
+        {
+            try
+            {
+                var resp = await _employeeService.GetEmployeeAsync(employeeId);
+                if (resp?.IsSuccess == true && resp.Result is not null)
+                {
+                    var emp = JsonConvert.DeserializeObject<EMP.Web.Views.ViewModels.EmployeeVM>(Convert.ToString(resp.Result));
+                    if (emp is not null)
+                    {
+                        return (emp.ManagerId, string.IsNullOrEmpty(emp.Manager) ? "—" : emp.Manager);
+                    }
+                }
+            }
+            catch { /* fall through */ }
+            return (null, "—");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetEmployeeManager(int employeeId)
+        {
+            var (managerId, managerName) = await GetEmployeeManagerAsync(employeeId);
+            return Json(new { managerId, managerName });
+        }
+
+        private async Task PopulateLeaveDropdownsAsync(Emp.Web.Dtos.CreateLeaveDto dto)
+        {
+            dto.Employees = await LoadDropdownAsync<Employee>(_setupService.GetEmployeesList);
+            dto.LeavesTypes = await LoadDropdownAsync<LeavesType>(_setupService.GetLeaveTypesList);
+        }
+
+        private static async Task<List<T>> LoadDropdownAsync<T>(Func<Task<ResponseDto>> call)
+        {
+            var response = await call();
+            if (response?.IsSuccess != true || response.Result is null)
+            {
+                return new List<T>();
+            }
+            try
+            {
+                return JsonConvert.DeserializeObject<List<T>>(Convert.ToString(response.Result)) ?? new List<T>();
+            }
+            catch
+            {
+                return new List<T>();
+            }
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Create(Emp.Web.Dtos.CreateLeaveDto dto,IFormFile? attachment)
+        public async Task<IActionResult> Create(Emp.Web.Dtos.CreateLeaveDto dto, IFormFile? attachment)
         {
+            // Employee role: id + manager come from the claim/server, not the form.
+            if (!User.IsInRole("Admin"))
+            {
+                var empIdClaim = User.FindFirst("EmployeeId")?.Value;
+                if (!string.IsNullOrEmpty(empIdClaim) && int.TryParse(empIdClaim, out var empId))
+                {
+                    dto.EmployeeId = empId;
+                    ViewBag.EmployeeId = empId;
+                    var (managerId, managerName) = await GetEmployeeManagerAsync(empId);
+                    dto.ManagerId = managerId ?? 0;
+                    ViewBag.ManagerName = managerName;
+                }
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Employees = await _employeeService.GetEmployeesAsync(1,10);
-                ViewBag.LeaveTypes = await _leaveTypeService.GetLeavesTypeAsync();
+                await PopulateLeaveDropdownsAsync(dto);
                 return View(dto);
             }
-            
 
             var response = await _leavService.CreateLeaveAsync(dto);
 
-            if (response.IsSuccess && response.Result!=null)
+            if (response.IsSuccess && response.Result != null)
             {
                 TempData["success"] = "Leave created successfully!";
                 if (User.IsInRole("Employee"))
@@ -220,6 +226,7 @@ namespace EMP.Web.Controllers
             }
 
             TempData["error"] = response.Message ?? "Something went wrong!";
+            await PopulateLeaveDropdownsAsync(dto);
             return View(dto);
         }
         [Authorize(Roles="Employee")]

@@ -1,65 +1,50 @@
-﻿@model UserProfileViewModel
+@model UserProfileViewModel
 @{
     ViewData["Title"] = "Profile";
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
+    var name = Model?.Employee?.Name ?? Model?.Name ?? "User";
 }
 
-<div class="row justify-content-center mt-4">
-    <div class="col-lg-8 col-md-10">
-        <div class="card shadow border-0 rounded-3">
-            <div class="card-header bg-gradient bg-primary text-white text-center py-4">
-                <h3 class="mb-0">👤 User Profile</h3>
+<div class="mb-6">
+    <h4 class="mb-0">My Profile</h4>
+</div>
+
+<div class="row g-6">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded-circle bg-label-primary" style="font-size:1.5rem;">
+                        @(string.IsNullOrEmpty(name) ? "U" : name.Substring(0,1).ToUpper())
+                    </span>
+                </div>
+                <h5 class="mb-0">@name</h5>
+                <span class="badge bg-label-primary mt-2">@Model?.Role</span>
+                <p class="text-body-secondary mt-2 mb-0">Employee ID: @Model?.EmployeeId</p>
             </div>
-            <div class="card-body px-4 py-5">
-                <div class="text-center mb-5">
-                    <i class="fa fa-user-circle fa-7x text-secondary"></i>
-                    <h4 class="mt-3">@Model.Employee.Name</h4>
-                    <p class="text-muted mb-0">@Model.Role</p>
-                    <small class="text-muted">Employee ID: @Model.EmployeeId</small>
-                </div>
+        </div>
+    </div>
 
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">📧 Email</label>
-                            <div>@Model.Email</div>
-                        </div>
-                    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Details</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Email</dt>
+                    <dd class="col-sm-8 fw-medium">@Model?.Email</dd>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">📞 Phone</label>
-                            <div>@Model.Employee.Phone</div>
-                        </div>
-                    </div>
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Phone</dt>
+                    <dd class="col-sm-8 fw-medium">@Model?.Employee?.Phone</dd>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">🏢 Department</label>
-                            <div>@Model.Employee.DepartmentName</div>
-                        </div>
-                    </div>
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Department</dt>
+                    <dd class="col-sm-8"><span class="badge bg-label-info">@Model?.Employee?.DepartmentName</span></dd>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">👔 Manager</label>
-                            <div>@Model.Employee.Manager</div>
-                        </div>
-                    </div>
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Manager</dt>
+                    <dd class="col-sm-8 fw-medium">@(string.IsNullOrEmpty(Model?.Employee?.Manager) ? "—" : Model.Employee.Manager)</dd>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">🌍 Nationality</label>
-                            <div>@Model.Employee.CountryName</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center mt-5">
-                    <a asp-controller="Account" asp-action="EditProfile" class="btn btn-lg btn-outline-primary px-4">
-                        ✏️ Edit Profile
-                    </a>
-                </div>
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Country</dt>
+                    <dd class="col-sm-8"><span class="badge bg-label-warning">@Model?.Employee?.CountryName</span></dd>
+                </dl>
             </div>
         </div>
     </div>

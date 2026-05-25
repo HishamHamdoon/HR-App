@@ -20,7 +20,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = "https://localhost:7031/api/Auth/login/",
+                Url = $"{SD.ApiBaseUrl}/api/Auth/login/",
                 Data= loginRequest
             });
         }

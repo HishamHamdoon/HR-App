@@ -16,6 +16,7 @@ using System.Text.Json;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class LeavesTypeController : BaseController
     {
         private readonly ILogger<HomeController> _logger;
@@ -66,15 +67,24 @@ namespace EMP.Web.Controllers
             }
             else
             {
-                TempData["error"] = "Something went wrong!";
-                return View(new List<LeaveTypesViewDto>());
+                if (!string.IsNullOrWhiteSpace(response?.Message))
+                {
+                    TempData["error"] = response.Message;
+                }
+                return View(new PaggedLeavTypeVM
+                {
+                    LeaveTypes = new List<LeaveTypesViewDto>(),
+                    CurrentPage = page,
+                    PageSize = pageSize,
+                    TotalCount = 0
+                });
             }
         }
 
 
         public async Task<IActionResult> Index1()
         {
-            var response = await _httpClient.GetAsync("https://localhost:7031/api/Employee");
+            var response = await _httpClient.GetAsync($"{Emp.Web.Utility.SD.ApiBaseUrl}/api/Employee");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
@@ -134,20 +144,19 @@ namespace EMP.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Stay on Create view if validation fails
-                return View(createLeaveTypesDto);
+                return View("Create", createLeaveTypesDto);
             }
 
             var response = await _leavesTypeService.CreateLeavesTypeAsync(createLeaveTypesDto);
 
             if (response != null && response.IsSuccess)
             {
-                TempData["Success"] = response.Message;
+                TempData["success"] = response.Message;
                 return RedirectToAction(nameof(Index));
             }
 
             TempData["error"] = response?.Message ?? "Something went wrong while creating leave type.";
-            return View(createLeaveTypesDto);
+            return View("Create", createLeaveTypesDto);
         }
         [HttpGet]
         public async Task<IActionResult> Edit(int id)

@@ -7,6 +7,7 @@ namespace EMP.Web.Services.IServices
         Task<ResponseDto> GetCountriesAsync();
         Task<ResponseDto> GetCountryAsync(int id);
         Task<ResponseDto> CreateCountryAsync(CountryDto countryDto);
+        Task<ResponseDto> UpdateCountryAsync(CountryDto countryDto);
         Task<ResponseDto> DeleteCountryAsync(int id);
 
     }

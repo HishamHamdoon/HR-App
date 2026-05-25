@@ -13,9 +13,9 @@ using System.Diagnostics.Metrics;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class CountriesController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
@@ -31,19 +31,10 @@ namespace Emp.Api.Controllers
         public async Task<ActionResult<ResponseDto>> Get()
         {
             var _response = new ResponseDto();
-            var counries = await _dbContext.Countries.Where(a=>a.IsDeleted==false).ToListAsync();
-            if (counries.Any())
-            {
-                _response.Result = _mapper.Map<List<CountryCreateDto>>(counries);
-                _response.IsSuccess = true;
-                _response.Message = "Countries retrieved successfully.";
-            }
-            else
-            {
-                _response.Result = null;
-                _response.IsSuccess = false;
-                _response.Message = "No countries found.";
-            }
+            var counries = await _dbContext.Countries.Where(a => a.IsDeleted == false).ToListAsync();
+            _response.Result = _mapper.Map<List<CountryCreateDto>>(counries);
+            _response.IsSuccess = true;
+            _response.Message = "Countries retrieved successfully.";
             return Ok(_response);
         }
 
@@ -69,6 +60,7 @@ namespace Emp.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ResponseDto> Post([FromBody] CountryCreateDto createDto)
         {
@@ -95,6 +87,7 @@ namespace Emp.Api.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ResponseDto> Put(int id, [FromBody] CountryCreateDto countryUpdateDto)
         {
@@ -129,6 +122,7 @@ namespace Emp.Api.Controllers
 
 
         // DELETE api/<CountriesController>/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> Delete(int id)
         {

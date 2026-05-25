@@ -7,26 +7,20 @@
 }
 
 <script type="text/javascript">
-    $(function () {
-    @* Success *@
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof toastr === "undefined") { return; }
     @if (!string.IsNullOrEmpty(success))
     {
         <text>toastr.success("@success");</text>
     }
-
-    @* Error *@
     @if (!string.IsNullOrEmpty(error))
     {
         <text>toastr.error("@error");</text>
     }
-
-    @* Info *@
     @if (!string.IsNullOrEmpty(info))
     {
         <text>toastr.info("@info");</text>
     }
-
-    @* Warning *@
     @if (!string.IsNullOrEmpty(warning))
     {
         <text>toastr.warning("@warning");</text>

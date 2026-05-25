@@ -2,6 +2,7 @@
 using Emp.Api.Dtos;
 using Emp.Api.Dtos.Auth;
 using Emp.Api.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,6 +43,7 @@ namespace Emp.Api.Controllers
         //    if (token == null) return Unauthorized("Invalid credentials");
         //    return Ok(token);
         //}
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<string>> Register([FromBody] RegisterDto model)
         {
@@ -66,6 +68,7 @@ namespace Emp.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto model)
         {
@@ -97,6 +100,7 @@ namespace Emp.Api.Controllers
                
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("role/assign")]
         public async Task<IActionResult> AssignRole(CreateRoleDto model)
         {

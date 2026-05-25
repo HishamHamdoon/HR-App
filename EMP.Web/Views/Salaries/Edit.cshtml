@@ -1,64 +1,59 @@
-﻿@using EMP.Web.Models.Dtos
+@using EMP.Web.Models.Dtos
 @model SalaryDto
-
 @{
     ViewData["Title"] = "Edit Salary";
-    Layout = "_AdminLayout";
-
+    Layout = "_VuexyLayout";
 }
 
-    <h2>Edit Salary</h2>
-    <hr />
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">Edit Salary</h4>
+    <a asp-action="Index" class="btn btn-label-secondary"><i class="icon-base ti tabler-arrow-left me-1"></i> Back</a>
+</div>
 
-    <form asp-action="Edit" method="post">
-        <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="EmployeeId" />
-
-        <div class="mb-3">
-            <label asp-for="EmployeeName" class="form-label"></label>
-            <input asp-for="EmployeeName" class="form-control" readonly />
-            <span asp-validation-for="EmployeeName" class="text-danger"></span>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" method="post" class="row g-5">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="EmployeeId" />
+                    <div class="col-md-6">
+                        <label asp-for="EmployeeName" class="form-label">Employee</label>
+                        <input asp-for="EmployeeName" class="form-control" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EffectiveDate" class="form-label">Effective Date</label>
+                        <input asp-for="EffectiveDate" type="date" class="form-control" />
+                        <span asp-validation-for="EffectiveDate" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="BasicSalary" class="form-label">Basic Salary</label>
+                        <input asp-for="BasicSalary" class="form-control" />
+                        <span asp-validation-for="BasicSalary" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Allowances" class="form-label">Allowances</label>
+                        <input asp-for="Allowances" class="form-control" />
+                        <span asp-validation-for="Allowances" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Deductions" class="form-label">Deductions</label>
+                        <input asp-for="Deductions" class="form-control" />
+                        <span asp-validation-for="Deductions" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NetSalary" class="form-label">Net Salary</label>
+                        <input asp-for="NetSalary" class="form-control" readonly />
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-label-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success"><i class="icon-base ti tabler-device-floppy me-1"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label asp-for="BasicSalary" class="form-label"></label>
-            <input asp-for="BasicSalary" class="form-control" />
-            <span asp-validation-for="BasicSalary" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Allowances" class="form-label"></label>
-            <input asp-for="Allowances" class="form-control" />
-            <span asp-validation-for="Allowances" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Deductions" class="form-label"></label>
-            <input asp-for="Deductions" class="form-control" />
-            <span asp-validation-for="Deductions" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="NetSalary" class="form-label"></label>
-            <input asp-for="NetSalary" class="form-control" readonly />
-            <span asp-validation-for="NetSalary" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="EffectiveDate" class="form-label"></label>
-            <input asp-for="EffectiveDate" type="date" class="form-control" />
-            <span asp-validation-for="EffectiveDate" class="text-danger"></span>
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fa fa-arrow-left"></i> Back
-            </a>
-            <button type="submit" class="btn btn-success">
-                <i class="fa fa-save"></i> Save Changes
-            </button>
-        </div>
-    </form>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

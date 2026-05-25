@@ -1,36 +1,40 @@
-﻿@using Emp.Web.Models.Dtos
+@using Emp.Web.Models.Dtos
 @model CountryDto
 @{
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = "Create Country";
 }
-<div class="card">
-    <div class="card-header">
-        Create new country
-    </div>
-    <div class="card-body">
-        <form asp-action="Create" asp-controller="Countries">
-            <div class="form-group">
-                <label asp-for="Name"></label>
-                <input asp-for="Name" class="form-control" />
+
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">Create Country</h4>
+    <a asp-action="Index" class="btn btn-label-secondary"><i class="icon-base ti tabler-arrow-left me-1"></i> Back</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" asp-controller="Countries" method="post" class="row g-5">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label">Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="Country name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Code" class="form-label">Code</label>
+                        <input asp-for="Code" class="form-control" placeholder="e.g. US" />
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Active</label>
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a asp-controller="Countries" asp-action="Index" class="btn btn-label-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="icon-base ti tabler-device-floppy me-1"></i> Save</button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label asp-for="Code"></label>
-                <input asp-for="Code" class="form-control"  />
-            </div>
-            <div class="form-check">
-                <label asp-for="IsDeleted"></label>
-                <input asp-for="IsDeleted" class="form-check-input"  />
-            </div>
-            <div class="form-check">
-                <label asp-for="IsActive"></label>
-                <input asp-for="IsActive" class="form-check-input"  />
-            </div>
-            <div class="card-footer">
-                <div class="form-group">
-                    <input type="submit" class="btn btn-primary" />
-                    <button class="btn btn-danger" asp-controller="Countries" asp-action="Index">Cancel</button>
-                </div>
-            </div>
-        </form>
+        </div>
     </div>
 </div>

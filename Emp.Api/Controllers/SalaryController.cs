@@ -3,12 +3,13 @@ using Emp.Api.Data;
 using Emp.Api.Dtos;
 using Emp.Api.Dtos.Salary;
 using Emp.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class SalaryController : ControllerBase
@@ -258,7 +259,7 @@ namespace Emp.Api.Controllers
                 {
                     _context.Salaries.Remove(salary);
                     await _context.SaveChangesAsync();
-                    response.Result = salary;
+                    response.Result = new { salary.Id };
                     response.Message = "Salary deleted successfully";
                     response.IsSuccess = true;
                     return response;

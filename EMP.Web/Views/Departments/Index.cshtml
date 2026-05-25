@@ -1,49 +1,52 @@
-﻿@using Emp.Web.Dtos
+@using Emp.Web.Dtos
 @model List<DepartmentDto>
-
 @{
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = "Departments";
 }
 
-@* <div class="container mt-4"> *@
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Departments</h2>
-        <a asp-controller="Departments" asp-action="Create" class="btn btn-success">
-            <i class="fa fa-plus"></i> Add Department
-        </a>
-    <a asp-controller="Reports" asp-action="DepartmentReport" class="btn btn-outline-primary   px-4 py-2 d-flex align-items-center shadow-sm btn-lg">
-        <i class="fa fa-download me-2"></i> Export PDF
-    </a>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
+    <div>
+        <h4 class="mb-1">Departments</h4>
+        <p class="mb-0 text-body-secondary">Organizational units</p>
     </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Departments" asp-action="Create" class="btn btn-primary">
+            <i class="icon-base ti tabler-plus me-1"></i> Add Department
+        </a>
+        <a asp-controller="Reports" asp-action="DepartmentReport" class="btn btn-label-danger">
+            <i class="icon-base ti tabler-file-type-pdf me-1"></i> Export PDF
+        </a>
+    </div>
+</div>
 
-    @if (Model != null && Model.Any())
-    {
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle">
-                <thead class="table-dark">
+<div class="card">
+    <div class="card-datatable table-responsive">
+        @if (Model != null && Model.Any())
+        {
+            <table class="table table-hover border-top" data-paginate="10">
+                <thead>
                     <tr>
-                        <th scope="col">Department Name</th>
-                        <th scope="col" style="width: 150px;">Actions</th>
+                        <th>Department Name</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.Name</td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a asp-controller="Departments" asp-action="Details" asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-info" title="View Details">
-                                        <i class="fa fa-eye"></i>
+                            <td class="fw-medium">@item.Name</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a asp-controller="Departments" asp-action="Details" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Details">
+                                        <i class="icon-base ti tabler-eye"></i>
                                     </a>
-                                    <a asp-controller="Departments" asp-action="Edit" asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-primary" title="Edit Department">
-                                        <i class="fa fa-edit"></i>
+                                    <a asp-controller="Departments" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Edit">
+                                        <i class="icon-base ti tabler-edit"></i>
                                     </a>
-                                    <a asp-controller="Departments" asp-action="Delete" asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-danger" title="Delete Department">
-                                        <i class="fa fa-trash"></i>
+                                    <a asp-controller="Departments" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Delete"
+                                       onclick="return confirm('Delete this department?');">
+                                        <i class="icon-base ti tabler-trash"></i>
                                     </a>
                                 </div>
                             </td>
@@ -51,12 +54,13 @@
                     }
                 </tbody>
             </table>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info text-center">
-            No departments found. Click <strong>"Add Department"</strong> to create one.
-        </div>
-    }
-@* </div> *@
+        }
+        else
+        {
+            <div class="text-center p-6">
+                <i class="icon-base ti tabler-building mb-2" style="font-size:2.5rem;opacity:.4;"></i>
+                <h6 class="mb-0">No departments found</h6>
+            </div>
+        }
+    </div>
+</div>

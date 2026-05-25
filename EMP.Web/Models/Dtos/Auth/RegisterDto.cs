@@ -19,7 +19,7 @@ namespace Emp.Web.Dtos.Auth
         public bool IsActive { get; set; }
         public DateOnly BirthDate { get; set; }
         public DateOnly HireDate { get; set; }
-        public DateOnly LeavingDate { get; set; }
+        public DateOnly? LeavingDate { get; set; }
         public int CountryId { get; set; }
         public int DepartmentId { get; set; }
         public int JobTitleId { get; set; }

@@ -3,6 +3,7 @@ using Emp.Api.Data;
 using Emp.Api.Dtos;
 using Emp.Api.Dtos.JobTitleDto;
 using Emp.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class JobTitleController : ControllerBase
@@ -30,19 +32,9 @@ namespace Emp.Api.Controllers
         {
             ResponseDto _response = new ResponseDto();
             var JobtitleModeldel = await _dbContext.JobTitles.ToListAsync();
-            var response = _mapper.Map<List<JobTitleViewDto>>(JobtitleModeldel);
-            if (response is not null)
-            {
-                _response.Result = response;
-                _response.Message = "";
-                _response.IsSuccess = true;
-            }
-            else
-            {
-                _response.Result = null;
-                _response.Message = "Something went wrong";
-                _response.IsSuccess = false;
-            }
+            _response.Result = _mapper.Map<List<JobTitleViewDto>>(JobtitleModeldel) ?? new List<JobTitleViewDto>();
+            _response.Message = "";
+            _response.IsSuccess = true;
             return Ok(_response);
             
         }
@@ -77,6 +69,7 @@ namespace Emp.Api.Controllers
         }
 
         // POST api/<JobTitlesController>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async  Task<ResponseDto> JobTitle([FromBody] JobTitleCreateDto createDto)
         {
@@ -97,13 +90,14 @@ namespace Emp.Api.Controllers
                 await _dbContext.JobTitles.AddAsync(JobTitleModel);
                 await _dbContext.SaveChangesAsync();
                 response.IsSuccess = true;
-                response.Result = JobTitleModel;
+                response.Result = new { JobTitleModel.Id, JobTitleModel.Title };
                 response.Message = "Job title created Successfully";
                 return response;
             }
         }
         
         // PUT api/<JobTitlesController>/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ResponseDto> JobTitle(int id,[FromBody] JobTitleUpdateDto JobTitlesUpdateDto)
         {
@@ -119,12 +113,13 @@ namespace Emp.Api.Controllers
             _dbContext.Update(mappedmodel);
             await _dbContext.SaveChangesAsync();
             response.IsSuccess = true;
-            response.Result= JobTitleModel;
+            response.Result = JobTitleModel is null ? null : new { JobTitleModel.Id, JobTitleModel.Title };
             response.Message = "Job title updated successfully";
             return response;
         }
 
         // DELETE api/<JobTitlesController>/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         //[Route("job-titles-delete")]
         public async Task<ResponseDto> JobTitle(int id)

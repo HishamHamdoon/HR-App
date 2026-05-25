@@ -137,7 +137,12 @@ namespace Emp.Api.Services
                     EmployeeId = employee.Id
                 };
 
-                var result = await _userManager.CreateAsync(user, registerDto.Password);
+                // Default password when none supplied.
+                var password = string.IsNullOrWhiteSpace(registerDto.Password)
+                    ? DbInitializer.DefaultUserPassword
+                    : registerDto.Password;
+
+                var result = await _userManager.CreateAsync(user, password);
 
                 if (!result.Succeeded)
                 {
@@ -145,18 +150,17 @@ namespace Emp.Api.Services
                     _response.Message = result.Errors.FirstOrDefault()?.Description ?? "Registration failed.";
                     _response.IsSuccess = false;
                     _response.Result = null;
-                }
-                else
-                {
-                    _response.IsSuccess = true;
-                    _response.Result = true;
-                    _response.Message = "Employee created successfully";
+                    return _response;
                 }
 
-                    // role: assign to default role
-                    await AssignRole(user.Email, "Employee");
+                // Assign default role only after the user is successfully created.
+                await AssignRole(user.Email, DbInitializer.EmployeeRole);
 
                 await transaction.CommitAsync();
+
+                _response.IsSuccess = true;
+                _response.Result = true;
+                _response.Message = "Employee created successfully";
                 return _response;
             }
             catch (Exception ex)
@@ -171,45 +175,43 @@ namespace Emp.Api.Services
 
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
-            var user = await _context.ApplicationUsers.Include(e=>e.Employee).FirstOrDefaultAsync(a => a.UserName == loginRequestDto.Username);
-            if (user is not null)
-            {
-                bool valid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
-                var roles = await _userManager.GetRolesAsync(user);
-                string token = await _jwtTokenGenerator.GenerateToken(user,roles);
-                if (valid)
-                {
-                    //generate token
-                    //token = await _jwtTokenGenerator.GenerateToken(user);
+            var user = await _context.ApplicationUsers
+                .Include(e => e.Employee)
+                .FirstOrDefaultAsync(a => a.UserName == loginRequestDto.Username);
 
-                }
-                else
-                {
-                    return new LoginResponseDto()
-                    {
-                        Token = "",
-                        User = null
-                    };
-                }
-                UserDto userDto = new()
+            if (user is null)
+            {
+                return new LoginResponseDto();
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            var valid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if (!valid)
+            {
+                await _userManager.AccessFailedAsync(user);
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = await _jwtTokenGenerator.GenerateToken(user, roles);
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                User = new UserDto
                 {
                     Email = user.Email,
                     Name = user.UserName,
                     Id = user.Id,
                     PhoneNumber = user.PhoneNumber
-                };
-                LoginResponseDto loginResponse = new LoginResponseDto()
-                {
-                    Token = token,
-                    User = userDto
-                };
-                return loginResponse;
-            }
-            else
-            {
-                return new LoginResponseDto();
-            }
-
+                }
+            };
         }
 
         public async Task<ResponseDto?> AssignRole(string email, string roleName)

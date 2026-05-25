@@ -21,7 +21,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = $"https://localhost:7031/api/Salary/CreateSalary",
+                Url = $"{SD.ApiBaseUrl}/api/Salary/CreateSalary",
                 Data=createSalaryDto
             });
         }
@@ -33,7 +33,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Salary/{id}"
+                Url = $"{SD.ApiBaseUrl}/api/Salary/{id}"
             });
         }
 
@@ -42,7 +42,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Salary"
+                Url = $"{SD.ApiBaseUrl}/api/Salary"
             });
         }
 
@@ -51,7 +51,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Put,
-                Url = "https://localhost:7031/api/Salary/UpdateSalary",
+                Url = $"{SD.ApiBaseUrl}/api/Salary/UpdateSalary",
                 Data=salaryDto
             });
         }
@@ -61,7 +61,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Delete,
-                Url = $"https://localhost:7031/api/Salary/{id}"
+                Url = $"{SD.ApiBaseUrl}/api/Salary/{id}"
             });
         }
     }

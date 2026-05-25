@@ -14,6 +14,7 @@ namespace EMP.Web.Services.IServices
         Task<ResponseDto> EditEmployeeAsync(EmployeeCreateDto employeeUpdateDto);
         Task<ResponseDto> ActiveDeActiveEmployee(int employeeId);
         Task<ResponseDto> GetDashboardAsync();
+        Task<ResponseDto> GetDashboardChartsAsync();
         Task<ResponseDto> SetManager(int employeeId, int managerId);
         Task<ResponseDto> GetManagerNameAsync(int employeeId);
         Task<ResponseDto> TerminateEmployeeAsync(int id,TerminationDto terminationDto);

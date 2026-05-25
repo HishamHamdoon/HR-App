@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class SalariesController : Controller
     {
         private readonly ISalaryService _salaryService;
@@ -65,6 +66,11 @@ namespace EMP.Web.Controllers
         {
             if (ModelState.IsValid)
             {
+                // The API DTO expects non-nullable decimal/DateTime — default blanks so it doesn't 400.
+                salaryDto.Allowances ??= 0m;
+                salaryDto.Deductions ??= 0m;
+                salaryDto.EffectiveDate ??= DateTime.UtcNow;
+
                 var response = await _salaryService.CreateSalaryAsync(salaryDto);
 
                 if (response.IsSuccess && response.Result != null)

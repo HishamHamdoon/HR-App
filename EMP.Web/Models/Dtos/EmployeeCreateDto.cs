@@ -21,7 +21,7 @@ namespace Emp.Web.Models.Dtos
         public DateOnly BirthDate { get; set; }
         [Required]
         public DateOnly HireDate { get; set; }= DateOnly.FromDateTime(DateTime.Now);
-        public DateOnly LeavingDate { get; set; }
+        public DateOnly? LeavingDate { get; set; }
 
         //public int Depid { get; set; }
         public int DepartmentId { get; set; }

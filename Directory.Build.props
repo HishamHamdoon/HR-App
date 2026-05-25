@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      Suppress NuGet warnings that EF Core's Update-Database trips on
+      ($ErrorActionPreference = Stop inside the cmdlet treats every warning as fatal).
+
+      NU1903 - AutoMapper 13.0.1 has a known CVE (GHSA-rvv3-g6hj-g44x)
+      NU1608 - Microsoft.VisualStudio.Web.CodeGeneration.Design 8.0.3 pins old Roslyn
+    -->
+    <NoWarn>$(NoWarn);NU1903;NU1608</NoWarn>
+  </PropertyGroup>
+</Project>

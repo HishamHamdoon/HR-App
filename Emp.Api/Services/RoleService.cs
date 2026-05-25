@@ -2,7 +2,6 @@
 using Emp.Api.Services.IServices;
 using Emp.Models.Models;
 using Microsoft.AspNetCore.Identity;
-using System.Data.Entity;
 
 namespace Emp.Api.Services
 {
@@ -93,18 +92,9 @@ namespace Emp.Api.Services
             try
             {
                 var roles = _roleManager.Roles.Select(r => r.Name).ToList();
-                if (roles.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = roles;
-                    response.Message = "";
-                }
-                else
-                {
-                    response.IsSuccess = false;
-                    response.Result = roles;
-                    response.Message = "No data found.";
-                }
+                response.IsSuccess = true;
+                response.Result = roles;
+                response.Message = "";
             }
             catch (Exception ex)
             {

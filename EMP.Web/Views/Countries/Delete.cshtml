@@ -1,12 +1,22 @@
-﻿@using Emp.Web.Models.Dtos
+@using Emp.Web.Models.Dtos
 @model CountryDto
 @{
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = "Delete Country";
 }
-<h2>Delete country</h2>
-<p>Are you sure you want to delete @Model.Name</p>
-<form asp-action="DeletePost" asp-controller="Countries" method="post">
-    <input type="hidden" asp-for="@Model.Id" />
-    <input type="submit" value="Delete" class="btn btn-danger"/>
-    <a asp-action="Index" asp-controller="Countries" class="btn btn-primary"> Cancel</a>
-</form>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0 text-danger">Delete Country</h5></div>
+            <div class="card-body">
+                <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+                <form asp-action="DeletePost" asp-controller="Countries" method="post" class="d-flex gap-2">
+                    <input type="hidden" asp-for="@Model.Id" />
+                    <button type="submit" class="btn btn-danger"><i class="icon-base ti tabler-trash me-1"></i> Delete</button>
+                    <a asp-action="Index" asp-controller="Countries" class="btn btn-label-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

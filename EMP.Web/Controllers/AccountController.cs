@@ -47,23 +47,45 @@ namespace EMP.Web.Controllers
                 return View(model);
 
             var response = await _accountService.LoginAsync(model);
-            if (response.IsSuccess && response.Result != null)
-            {
-                var loginResponse = JsonConvert.DeserializeObject<Emp.Web.Dtos.Auth.LoginResponseDto>(response.Result.ToString());
 
-                await SignIn(loginResponse); // Sign in with roles from JWT
-                _tokenProvider.SetToken(loginResponse.Token);
-                var roles = GetRoleFromToken(loginResponse.Token);
-                if (roles.Contains("Employee"))
-                {
-                    return RedirectToAction("EmployeeDashboard", "Home");
-                }
-                    return RedirectToAction("Index", "Home");
+            if (response is null)
+            {
+                ViewBag.Errors = new List<string> { "No response from authentication service." };
+                return View(model);
             }
 
-            // login failed  
-            ViewBag.Errors = new List<string> { "Invalid login attempt." };
-            return View(model);
+            if (!response.IsSuccess || response.Result is null)
+            {
+                var apiMessage = string.IsNullOrWhiteSpace(response.Message) ? "Invalid login attempt." : response.Message;
+                ViewBag.Errors = new List<string> { apiMessage };
+                return View(model);
+            }
+
+            Emp.Web.Dtos.Auth.LoginResponseDto? loginResponse;
+            try
+            {
+                loginResponse = JsonConvert.DeserializeObject<Emp.Web.Dtos.Auth.LoginResponseDto>(response.Result.ToString());
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Errors = new List<string> { $"Failed to parse login response: {ex.Message}" };
+                return View(model);
+            }
+
+            if (loginResponse is null || string.IsNullOrWhiteSpace(loginResponse.Token))
+            {
+                ViewBag.Errors = new List<string> { "Login succeeded but no token was returned." };
+                return View(model);
+            }
+
+            await SignIn(loginResponse);
+            _tokenProvider.SetToken(loginResponse.Token);
+            var roles = GetRoleFromToken(loginResponse.Token);
+            if (roles.Contains("Employee"))
+            {
+                return RedirectToAction("EmployeeDashboard", "Home");
+            }
+            return RedirectToAction("Index", "Home");
         }
 
 
@@ -115,7 +137,7 @@ namespace EMP.Web.Controllers
                 return View(model);
 
             var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(model), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("https://localhost:7031/api/Auth/register", content);
+            var response = await _httpClient.PostAsync($"{Emp.Web.Utility.SD.ApiBaseUrl}/api/Auth/register", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -130,17 +152,8 @@ namespace EMP.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            // Clear authentication cookie
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            Response.Cookies.Delete("jwtToken"); // optional if you set JWT cookie
-
-
-            // Or if you configured CookieAuthenticationDefaults
-            // await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // Clear custom jwt cookie if you set one
-            Response.Cookies.Delete("jwtToken");
-
+            _tokenProvider.ClearToken();
             return RedirectToAction("Login", "Account");
         }
 
@@ -204,20 +217,35 @@ namespace EMP.Web.Controllers
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var claims = User.Claims.ToList(); // optional, for debugging
-            var EmployeeId = User.FindFirst("EmployeeId")?.Value;
-            var response =  await _employeeService.GetEmployeeAsync(employeeId:int.Parse(EmployeeId));
-            var employee = JsonConvert.DeserializeObject<EmployeeVM>(Convert.ToString(response?.Result));
+            var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
             var userProfile = new UserProfileViewModel
             {
-                Employee=employee,
-                Email = User.FindFirst(ClaimTypes.Email)?.Value
-                        ?? User.FindFirst("email")?.Value,
-                Name = User.FindFirst(ClaimTypes.Name)?.Value
-                       ?? User.FindFirst("name")?.Value,
-                EmployeeId = User.FindFirst("EmployeeId")?.Value,
+                Employee = new EmployeeVM { Name = User.Identity?.Name ?? "" },
+                Email = User.FindFirst(ClaimTypes.Email)?.Value ?? User.FindFirst("email")?.Value,
+                Name = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value ?? User.Identity?.Name,
+                EmployeeId = employeeIdClaim,
                 Role = User.FindFirst(ClaimTypes.Role)?.Value
             };
+
+            if (int.TryParse(employeeIdClaim, out var employeeId) && employeeId > 0)
+            {
+                try
+                {
+                    var response = await _employeeService.GetEmployeeAsync(employeeId);
+                    if (response?.IsSuccess == true && response.Result is not null)
+                    {
+                        var employee = JsonConvert.DeserializeObject<EmployeeVM>(Convert.ToString(response.Result));
+                        if (employee is not null)
+                        {
+                            userProfile.Employee = employee;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Keep the placeholder Employee built above.
+                }
+            }
 
             return View(userProfile);
         }

@@ -2,6 +2,8 @@
 {
     public class SD
     {
+        // Single source of truth for the API host. Set from configuration (ApiUrls:BaseUrl) at startup.
+        public static string ApiBaseUrl { get; set; } = "https://localhost:7031";
         public static string EmployeeAPIUrl{  get; set; }
         public static string DepartmentAPIUrl{  get; set; }
         public static string SectionsAPIUrl {  get; set; }

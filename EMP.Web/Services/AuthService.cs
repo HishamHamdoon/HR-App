@@ -18,7 +18,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = "https://localhost:7031/api/Auth/register",
+                Url = $"{SD.ApiBaseUrl}/api/Auth/register",
                 Data=registerDto
             });
         }

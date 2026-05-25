@@ -1,93 +1,117 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 @model Emp.Web.Dtos.CreateLeaveDto
 @{
-    Layout = "_AdminLayout";
-
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = "Create Leave";
+    var isAdmin = User.IsInRole("Admin");
 }
-<div class="card shadow-lg border-0 rounded-3">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">
-            <i class="fa-solid fa-plus-circle"></i> Create Leave
-        </h4>
-    </div>
-    <div class="card-body">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-           
-            <div class="form-group">
-                <label asp-for="LeavesTypeId">Leaves Type</label>
-                <select asp-for="LeavesTypeId"  asp-items="@(new SelectList(Model.LeavesTypes, "Id", "Name"))" class="form-control">
-                    <option value="">-- Select Leave TypeId --</option>
-                </select>
-            </div>
-            @{
-                var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-                if (role != "Admin")
-                {
-                    <div class="form-group">
-                        <label asp-for="EmployeeId">Employee</label>
-                        <select asp-for="EmployeeId" asp-items="@(new SelectList(Model.Employees, "Id", "Name"))" class="form-control">
-                            <option value="">-- Select Employee --</option>
-                        </select>
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">@(isAdmin ? "Create Leave" : "Apply for Leave")</h4>
+    <a asp-action="Index" class="btn btn-label-secondary">
+        <i class="icon-base ti tabler-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <div class="row g-5">
+                        <div class="col-12">
+                            <label asp-for="LeavesTypeId" class="form-label">Leave Type</label>
+                            <select asp-for="LeavesTypeId" asp-items="@(new SelectList(Model.LeavesTypes, "Id", "Name"))" class="form-select">
+                                <option value="">-- Select Leave Type --</option>
+                            </select>
+                            <span asp-validation-for="LeavesTypeId" class="text-danger"></span>
+                        </div>
+
+                        @if (isAdmin)
+                        {
+                            <div class="col-12">
+                                <label asp-for="EmployeeId" class="form-label">Employee</label>
+                                <select asp-for="EmployeeId" asp-items="@(new SelectList(Model.Employees, "Id", "Name"))" class="form-select" id="EmployeeSelect">
+                                    <option value="">-- Select Employee --</option>
+                                </select>
+                                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Manager</label>
+                                <input type="hidden" asp-for="ManagerId" id="ManagerId" />
+                                <input type="text" id="ManagerNameBox" class="form-control" readonly placeholder="Select an employee to load their manager" />
+                            </div>
+                        }
+                        else
+                        {
+                            <input asp-for="EmployeeId" value="@ViewBag.EmployeeId" type="hidden" />
+                            <input asp-for="ManagerId" type="hidden" />
+                            <div class="col-12">
+                                <label class="form-label">Your Manager</label>
+                                <input type="text" value="@ViewBag.ManagerName" class="form-control" readonly />
+                            </div>
+                        }
+
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label">Start Date</label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label">End Date</label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Note" class="form-label">Note</label>
+                            <textarea asp-for="Note" class="form-control" rows="3" placeholder="Optional note..."></textarea>
+                            <span asp-validation-for="Note" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Attachment" class="form-label">Attachment</label>
+                            <input asp-for="Attachment" type="file" class="form-control" />
+                        </div>
+                        <input asp-for="FilePath" type="hidden" />
+
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-label-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary"><i class="icon-base ti tabler-device-floppy me-1"></i> Save</button>
+                        </div>
                     </div>
-                }
-                else
-                {
-                    <input asp-for="EmployeeId" value="@ViewBag.EmployeeId" type="hidden" />
-                }
-            }
-           
-
-            @* <select asp-for="LeavesTypeId" class="form-select" *@
-            @*         asp-items="@(ViewBag.LeavesTypes != null *@
-            @* ? new SelectList(ViewBag.LeavesTypes, "Id", "Name") *@
-            @* : new SelectList(Enumerable.Empty<SelectListItem>()))"> *@
-            @*     <option value="">-- Select Leave Type --</option> *@
-            @* </select> *@
-
-            <div class="mb-3">
-                <label asp-for="StartDate" class="form-label"></label>
-                <input asp-for="StartDate" class="form-control" type="date" />
-                <span asp-validation-for="StartDate" class="text-danger"></span>
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label asp-for="EndDate" class="form-label"></label>
-                <input asp-for="EndDate" class="form-control" type="date" />
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label  class="form-label">Manager</label>
-                <input type="hidden" asp-for="ManagerId" value="@ViewBag.ManagerId" />
-
-                <!-- Read-only field just for display -->
-                <input type="text" value="@ViewBag.ManagerId" class="form-control" readonly />
-            </div>
-            <div class="mb-3">
-                <label asp-for="Note" class="form-label"></label>
-                <textarea asp-for="Note" class="form-control" rows="3" placeholder="Optional note..."></textarea>
-                <span asp-validation-for="Note" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Attachment" class="form-label">Upload Attachment</label>
-                <input asp-for="Attachment" type="file" class="form-control" />
-            </div>
-            <input asp-for="FilePath" type="hidden" />
-
-            <div class="text-end">
-                <a asp-action="Index" class="btn btn-secondary">
-                    <i class="fa fa-arrow-left"></i> Back
-                </a>
-                <button type="submit" class="btn btn-success">
-                    <i class="fa fa-save"></i> Save
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    <partial name="_ValidationScriptsPartial" />
+    @if (isAdmin)
+    {
+        <script>
+            // When the admin picks an employee, load that employee's manager.
+            (function () {
+                var sel = document.getElementById('EmployeeSelect');
+                if (!sel) return;
+                var onChange = function () {
+                    var id = sel.value;
+                    var box = document.getElementById('ManagerNameBox');
+                    var hidden = document.getElementById('ManagerId');
+                    if (!id) { box.value = ''; hidden.value = ''; return; }
+                    fetch('/Leaves/GetEmployeeManager?employeeId=' + id)
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            box.value = d.managerName || '—';
+                            hidden.value = d.managerId || '';
+                        })
+                        .catch(function () { box.value = '—'; hidden.value = ''; });
+                };
+                // jQuery (Select2) fires change via jQuery; bind both ways.
+                if (window.jQuery) { jQuery(sel).on('change', onChange); } else { sel.addEventListener('change', onChange); }
+            })();
+        </script>
     }
 }

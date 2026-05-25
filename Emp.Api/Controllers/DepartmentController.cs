@@ -12,12 +12,14 @@ using QuestPDF.Helpers;
 using DocumentFormat.OpenXml.Spreadsheet;
 using AutoMapper;
 using Emp.Api.Dtos.Department;
+using Microsoft.AspNetCore.Authorization;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DepartmentController : ControllerBase //IDocument
@@ -42,18 +44,9 @@ namespace Emp.Api.Controllers
         {
             var _response = new ResponseDto();
             var departments = await _dbContext.Departments.ToListAsync();
-            if (departments.Any())
-            {
-                _response.Result = _mapper.Map<List<DepartmentDto>>(departments);
-                _response.IsSuccess = true;
-                _response.Message = "";
-            }
-            else
-            {
-                _response.Result = null;
-                _response.IsSuccess = false;
-                _response.Message = "something went wrong";
-            }
+            _response.Result = _mapper.Map<List<DepartmentDto>>(departments);
+            _response.IsSuccess = true;
+            _response.Message = "";
             return _response;
         }
 
@@ -77,6 +70,7 @@ namespace Emp.Api.Controllers
         }
 
         // POST api/<DepartmentController>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ResponseDto>> Post([FromBody] DepartmentDto department)
         {
@@ -101,6 +95,7 @@ namespace Emp.Api.Controllers
         }
 
         // PUT api/<DepartmentController>/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult<ResponseDto>> Put(int id, [FromBody] Department value)
         {
@@ -127,6 +122,7 @@ namespace Emp.Api.Controllers
         }
 
         // DELETE api/<DepartmentController>/5 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -338,6 +334,7 @@ namespace Emp.Api.Controllers
                 return StatusCode(500, $"Error generating PDF: {ex.Message}");
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPatch("set-manager")]
         public async Task<IActionResult> SetManager(int departmentId, int managerId)
         {
@@ -374,18 +371,9 @@ namespace Emp.Api.Controllers
                                            .Where(s => s.DepartmentId == departmentId)
                                            .Select(s => new { s.Id, s.Name })
                                            .ToListAsync();
-                if (sections.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = sections;
-                    response.Message = "";
-                }
-                else
-                {
-                    response.IsSuccess = false;
-                    response.Result = null;
-                    response.Message = "No data";
-                }
+                response.IsSuccess = true;
+                response.Result = sections;
+                response.Message = "";
                 return response;
             }
             catch (Exception ex)

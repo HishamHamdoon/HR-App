@@ -71,7 +71,16 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/dashboard-counts"
+                Url = $"{SD.ApiBaseUrl}/dashboard-counts"
+            });
+        }
+
+        public async Task<ResponseDto> GetDashboardChartsAsync()
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Get,
+                Url = $"{SD.ApiBaseUrl}/dashboard-charts"
             });
         }
 

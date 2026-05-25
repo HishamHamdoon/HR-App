@@ -28,6 +28,16 @@ namespace EMP.Web.Services
 
       
 
+        public async Task<ResponseDto> UpdateDepartmentAsync(DepartmentCreateDto departmentDto)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Put,
+                Url = $"{SD.DepartmentAPIUrl}/{departmentDto.Id}",
+                Data = departmentDto
+            });
+        }
+
         public async Task<ResponseDto> GetDepartmentAsync(int id)
         {
             return await _baseService.SendAsync(new RequestDto

@@ -12,7 +12,9 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/flatpickr/flatpickr.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/flatpickr/material_blue.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/EMP.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/toastr.js/toastr.min.css" />
@@ -352,36 +354,54 @@
                 <span>HR Admin</span>
             </div>
             <div class="list-group list-group-flush">
-                <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Home" ? "nav-link active" : "")">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-                <a asp-controller="Employees" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Employees" ? "nav-link active" : "")">
-                    <i class="fas fa-users"></i> Employees
-                </a>
-                <a asp-controller="Leaves" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Leaves" ? "nav-link active" : "")">
-                    <i class="fas fa-calendar-days"></i> Leaves
-                </a>
-                <a asp-controller="LeavesType" asp-action="Index" class="list-group-item list-group-item-action @(controller == "LeavesType" ? "nav-link active" : "")">
-                    <i class="fas fa-list"></i> Leave Types
-                </a>
-                <a asp-controller="Departments" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Departments" ? "nav-link active" : "")">
-                    <i class="fas fa-building"></i> Departments
-                </a>
-                <a asp-controller="JobTitles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "JobTitles" ? "nav-link active" : "")">
-                    <i class="fas fa-briefcase"></i> Job Titles
-                </a>
-                <a asp-controller="Countries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Countries" ? "nav-link active" : "")">
-                    <i class="fas fa-globe"></i> Countries
-                </a>
-                <a asp-controller="Salaries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Salaries" ? "nav-link active" : "")">
-                    <i class="fas fa-dollar-sign"></i> Salaries
-                </a>
-                <a asp-controller="Reports" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Reports" ? "nav-link active" : "")">
-                    <i class="fas fa-chart-line"></i> HR Reports
-                </a>
-                <a asp-controller="Roles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Roles" ? "nav-link active" : "")">
-                    <i class="fas fa-user-shield"></i> Roles & Permissions
-                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Home" ? "nav-link active" : "")">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a asp-controller="Employees" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Employees" ? "nav-link active" : "")">
+                        <i class="fas fa-users"></i> Employees
+                    </a>
+                    <a asp-controller="Leaves" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Leaves" ? "nav-link active" : "")">
+                        <i class="fas fa-calendar-days"></i> Leaves
+                    </a>
+                    <a asp-controller="LeavesType" asp-action="Index" class="list-group-item list-group-item-action @(controller == "LeavesType" ? "nav-link active" : "")">
+                        <i class="fas fa-list"></i> Leave Types
+                    </a>
+                    <a asp-controller="Departments" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Departments" ? "nav-link active" : "")">
+                        <i class="fas fa-building"></i> Departments
+                    </a>
+                    <a asp-controller="JobTitles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "JobTitles" ? "nav-link active" : "")">
+                        <i class="fas fa-briefcase"></i> Job Titles
+                    </a>
+                    <a asp-controller="Countries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Countries" ? "nav-link active" : "")">
+                        <i class="fas fa-globe"></i> Countries
+                    </a>
+                    <a asp-controller="Salaries" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Salaries" ? "nav-link active" : "")">
+                        <i class="fas fa-dollar-sign"></i> Salaries
+                    </a>
+                    <a asp-controller="Reports" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Reports" ? "nav-link active" : "")">
+                        <i class="fas fa-chart-line"></i> HR Reports
+                    </a>
+                    <a asp-controller="Roles" asp-action="Index" class="list-group-item list-group-item-action @(controller == "Roles" ? "nav-link active" : "")">
+                        <i class="fas fa-user-shield"></i> Roles & Permissions
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="EmployeeDashboard" class="list-group-item list-group-item-action @(currentAction == "EmployeeDashboard" ? "nav-link active" : "")">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a asp-controller="Leaves" asp-action="Create" class="list-group-item list-group-item-action @(controller == "Leaves" && currentAction == "Create" ? "nav-link active" : "")">
+                        <i class="fas fa-plus"></i> Apply Leave
+                    </a>
+                    <a asp-controller="Leaves" asp-action="EmployeeLeaves" class="list-group-item list-group-item-action @(currentAction == "EmployeeLeaves" ? "nav-link active" : "")">
+                        <i class="fas fa-calendar-days"></i> My Leaves
+                    </a>
+                    <a asp-controller="Account" asp-action="Profile" class="list-group-item list-group-item-action @(controller == "Account" && currentAction == "Profile" ? "nav-link active" : "")">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                }
             </div>
             
             <!-- Logout button at bottom -->
@@ -465,6 +485,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/toastr.js/toastr.min.js"></script>
+    <script src="~/lib/flatpickr/flatpickr.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     @await Html.PartialAsync("_Notifications")
@@ -472,6 +493,22 @@
     <script>
         document.getElementById("sidebarToggle")?.addEventListener("click", function () {
             document.getElementById("wrapper")?.classList.toggle("toggled");
+        });
+
+        // Upgrade every native date/datetime input to Flatpickr.
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof flatpickr === "undefined") return;
+            flatpickr('input[type="date"]', {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                disableMobile: true
+            });
+            flatpickr('input[type="datetime-local"]', {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                allowInput: true,
+                disableMobile: true
+            });
         });
     </script>
 </body>

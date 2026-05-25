@@ -8,6 +8,7 @@ namespace EMP.Web.Services.IServices
     {
         Task<ResponseDto> GetDepartmentsAsync();
         Task<ResponseDto> CreateDepartmentsAsync(DepartmentCreateDto departmentDto);
+        Task<ResponseDto> UpdateDepartmentAsync(DepartmentCreateDto departmentDto);
         Task<ResponseDto> GetDepartmentAsync(int id);
         Task<ResponseDto> GetSectionsByDepartmentAsync(int departmentId);
     }
