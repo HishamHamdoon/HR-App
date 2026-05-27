@@ -26,7 +26,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = $"https://localhost:7031/api/Leaves",
+                Url = $"{SD.ApiBaseUrl}/api/Leaves",
                 Data = createLeaveDto,
                 ContentType=SD.ContentType.MultiPartFormData
             });
@@ -69,7 +69,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Delete,
-                Url = $"https://localhost:7031/api/Leaves/{leaveId}",
+                Url = $"{SD.ApiBaseUrl}/api/Leaves/{leaveId}",
             });
         }
 
@@ -78,7 +78,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Put,
-                Url = $"https://localhost:7031/api/Leaves",
+                Url = $"{SD.ApiBaseUrl}/api/Leaves",
                 Data = updateLeaveDto,
                 //ContentType = SD.ContentType.MultiPartFormData
 
@@ -90,7 +90,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Leaves/{leaveId}"
+                Url = $"{SD.ApiBaseUrl}/api/Leaves/{leaveId}"
             });
         }
 
@@ -99,7 +99,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url= $"https://localhost:7031/api/Leaves?page={page}&pageSize={pageSize}"
+                Url= $"{SD.ApiBaseUrl}/api/Leaves?page={page}&pageSize={pageSize}"
             });
         }
 
@@ -108,7 +108,7 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Leaves/get-leaves-by-employeeId/{employeeId}"
+                Url = $"{SD.ApiBaseUrl}/api/Leaves/get-leaves-by-employeeId/{employeeId}"
             });
         }
 
@@ -117,7 +117,30 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Leaves/get-leaves-by-managerId/{managerId}"
+                Url = $"{SD.ApiBaseUrl}/api/Leaves/get-leaves-by-managerId/{managerId}"
+            });
+        }
+
+        public async Task<ResponseDto> GetLeaveBalanceAsync(int employeeId)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Get,
+                Url = $"{SD.ApiBaseUrl}/api/Leaves/balance/{employeeId}"
+            });
+        }
+
+        public async Task<ResponseDto> DecideLeaveAsync(int leaveId, string status, string? note = null)
+        {
+            var url = $"{SD.ApiBaseUrl}/api/Leaves/{leaveId}/decision?status={status}";
+            if (!string.IsNullOrWhiteSpace(note))
+            {
+                url += $"&note={Uri.EscapeDataString(note)}";
+            }
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Patch,
+                Url = url
             });
         }
 

@@ -2,7 +2,6 @@
 using Emp.Api.Services.IServices;
 using Emp.Models.Models;
 using Microsoft.AspNetCore.Identity;
-using System.Data.Entity;
 
 namespace Emp.Api.Services
 {
@@ -55,6 +54,15 @@ namespace Emp.Api.Services
             return result.Succeeded;
         }
 
+        public async Task<bool> DeleteRoleAsync(string roleName)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null) return false;
+
+            var result = await _roleManager.DeleteAsync(role);
+            return result.Succeeded;
+        }
+
         public async Task<bool> AssignRoleToUserAsync(string userId, string roleName)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -93,18 +101,9 @@ namespace Emp.Api.Services
             try
             {
                 var roles = _roleManager.Roles.Select(r => r.Name).ToList();
-                if (roles.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = roles;
-                    response.Message = "";
-                }
-                else
-                {
-                    response.IsSuccess = false;
-                    response.Result = roles;
-                    response.Message = "No data found.";
-                }
+                response.IsSuccess = true;
+                response.Result = roles;
+                response.Message = "";
             }
             catch (Exception ex)
             {

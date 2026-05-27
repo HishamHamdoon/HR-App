@@ -1,58 +1,73 @@
-﻿@using EMP.Web.Models.Dtos
+@using EMP.Web.Models.Dtos
 @model List<LeaveByManagerDto>
-
 @{
     ViewData["Title"] = "Leaves By Manager";
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
 }
 
-<div class="card shadow-lg border-0 rounded-3 mt-3">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Leaves for Manager</h4>
-    </div>
-    <div class="card-body">
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">Team Leave Requests</h4>
+    <a asp-controller="Home" asp-action="EmployeeDashboard" class="btn btn-label-secondary">
+        <i class="icon-base ti tabler-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-datatable table-responsive">
         @if (Model != null && Model.Any())
         {
-            <table class="table table-striped table-bordered">
+            <table class="table table-hover border-top" data-paginate="10">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Employee</th>
                         <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
+                        <th>Start</th>
+                        <th>End</th>
                         <th>Status</th>
                         <th>Note</th>
-                        <th>Action
-
-                        </th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var leave in Model)
                     {
+                        var status = leave.Status ?? "";
+                        var badge = status.Equals("Approved", StringComparison.OrdinalIgnoreCase) ? "bg-label-success"
+                                  : status.Equals("Rejected", StringComparison.OrdinalIgnoreCase) ? "bg-label-danger"
+                                  : "bg-label-warning";
                         <tr>
                             <td>@leave.Id</td>
-                            <td>@leave.EmployeeName</td>
+                            <td class="fw-medium">@leave.EmployeeName</td>
                             <td>@leave.LeaveType</td>
                             <td>@leave.StartDate</td>
                             <td>@leave.EndDate</td>
-                            <td>@leave.Status</td>
+                            <td><span class="badge rounded-pill @badge">@(string.IsNullOrEmpty(status) ? "Pending" : status)</span></td>
                             <td>@leave.Note</td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <a class="btn btn-outline-info" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@leave.Id">
-                                        <i class="fa fa-eye"></i>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@leave.Id" title="Details">
+                                        <i class="icon-base ti tabler-eye"></i>
                                     </a>
-                                    <a class="btn btn-outline-primary" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@leave.Id">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-leaveId="@leave.Id" method="post"
-                                          onsubmit="return confirm('Are you sure you want to delete this record?')">
-                                        <button type="submit" class="btn btn-outline-danger">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <form asp-controller="Leaves" asp-action="Approve" method="post" class="m-0">
+                                            <input type="hidden" name="leaveId" value="@leave.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                            <button type="submit" class="btn btn-sm btn-label-success" title="Approve">
+                                                <i class="icon-base ti tabler-check"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-controller="Leaves" asp-action="Reject" method="post" class="m-0"
+                                              onsubmit="var r=prompt('Reason for rejection:'); if(r===null||r.trim()===''){return false;} this.note.value=r; return true;">
+                                            <input type="hidden" name="leaveId" value="@leave.Id" />
+                                            <input type="hidden" name="note" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                            <button type="submit" class="btn btn-sm btn-label-danger" title="Reject">
+                                                <i class="icon-base ti tabler-x"></i>
+                                            </button>
+                                        </form>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -62,7 +77,10 @@
         }
         else
         {
-            <div class="alert alert-info">No leaves found for this manager.</div>
+            <div class="text-center p-6">
+                <i class="icon-base ti tabler-calendar-off mb-2" style="font-size:2.5rem;opacity:.4;"></i>
+                <h6 class="mb-0">No leaves found for this manager</h6>
+            </div>
         }
     </div>
 </div>

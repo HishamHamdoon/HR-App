@@ -1,69 +1,60 @@
-﻿@model List<Emp.Web.Dtos.ViewLeaveDto>
-@using System
+@model List<Emp.Web.Dtos.ViewLeaveDto>
 @{
-    ViewData["Title"] = "Employee Leaves";
-    Layout = "_AdminLayout";
+    ViewData["Title"] = "My Leaves";
+    Layout = "_VuexyLayout";
 }
 
-<h2 class="mb-4 text-primary"><i class="fa fa-calendar-alt"></i> Employee Leaves</h2>
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["Error"]
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
+    <div>
+        <h4 class="mb-1">My Leaves</h4>
+        <p class="mb-0 text-body-secondary">Your leave requests and their status</p>
     </div>
-}
+    <a asp-action="Create" asp-controller="Leaves" class="btn btn-primary">
+        <i class="icon-base ti tabler-plus me-1"></i> Apply Leave
+    </a>
+</div>
 
-@if (Model != null && Model.Any())
-{
-    <div class="table-responsive shadow-sm rounded-3">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Days</th>
-                    <th>Status</th>
-                    <th>Reason</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (int i = 0; i < Model.Count; i++)
-                {
-                    var leave = Model[i];
+<div class="card">
+    <div class="card-datatable table-responsive">
+        @if (Model != null && Model.Any())
+        {
+            <table class="table table-hover border-top">
+                <thead>
                     <tr>
-                        <td>@(i + 1)</td>
-                        <td>@leave.StartDate.ToString("yyyy-MM-dd")</td>
-                        <td>@leave.EndDate?.ToString("yyyy-MM-dd")</td>
-                        <td>@leave.EmployeeName</td>
-                        <td>@leave.LeaveName</td>
-                        <td>
-                            @if (leave.Status != "APPROVED")
-                            {
-                                <span class="badge bg-warning">Pending</span>
-                            }
-                            else if (leave.Status == "APPROVED")
-                            {
-                                <span class="badge bg-success">Approved</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Rejected</span>
-                            }
-                        </td>
-                        <td>@leave.Note</td>
+                        <th>#</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Leave Type</th>
+                        <th>Status</th>
+                        <th>Reason</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var leave = Model[i];
+                        var status = leave.Status ?? "";
+                        var badge = status.Equals("Approved", StringComparison.OrdinalIgnoreCase) ? "bg-label-success"
+                                  : status.Equals("Rejected", StringComparison.OrdinalIgnoreCase) ? "bg-label-danger"
+                                  : "bg-label-warning";
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td>@leave.StartDate.ToString("dd MMM yyyy")</td>
+                            <td>@leave.EndDate?.ToString("dd MMM yyyy")</td>
+                            <td>@leave.LeaveName</td>
+                            <td><span class="badge rounded-pill @badge">@(string.IsNullOrEmpty(status) ? "Pending" : status)</span></td>
+                            <td>@leave.Note</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-center p-6">
+                <i class="icon-base ti tabler-calendar-off mb-2" style="font-size:2.5rem;opacity:.4;"></i>
+                <h6 class="mb-0">You don't have any leaves yet</h6>
+            </div>
+        }
     </div>
-}
-else
-{
-    <div class="alert alert-info text-center p-4 rounded-3 shadow-sm">
-        <i class="fa fa-info-circle fa-lg"></i> You don't have leaves
-    </div>
-}
+</div>

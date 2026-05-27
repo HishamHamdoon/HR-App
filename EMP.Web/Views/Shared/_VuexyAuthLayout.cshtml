@@ -1,0 +1,53 @@
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="en" class="layout-wide customizer-hide" dir="ltr" data-skin="default" data-assets-path="/vuexy/assets/" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>@ViewData["Title"] - HR Admin</title>
+
+    <link rel="icon" type="image/x-icon" href="/vuexy/assets/img/favicon/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/vuexy/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/vuexy/assets/css/demo.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/css/pages/page-auth.css" />
+    <link rel="stylesheet" href="~/toastr.js/toastr.min.css" />
+
+    <script src="/vuexy/assets/vendor/js/helpers.js"></script>
+    <script src="/vuexy/assets/js/config.js"></script>
+</head>
+<body>
+    <div class="authentication-wrapper authentication-basic container-p-y">
+        <div class="authentication-inner py-6">
+            <div class="card p-2">
+                <div class="app-brand justify-content-center mt-5">
+                    <a asp-controller="Account" asp-action="Login" class="app-brand-link gap-2">
+                        <span class="app-brand-logo demo text-primary">
+                            <i class="icon-base ti tabler-building-skyscraper" style="font-size:1.75rem;"></i>
+                        </span>
+                        <span class="app-brand-text demo text-heading fw-bold">HR Admin</span>
+                    </a>
+                </div>
+                <div class="card-body mt-1">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/vuexy/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/vuexy/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/vuexy/assets/vendor/js/bootstrap.js"></script>
+    <script src="/vuexy/assets/js/main.js"></script>
+    <script src="~/toastr.js/toastr.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_Notifications")
+</body>
+</html>

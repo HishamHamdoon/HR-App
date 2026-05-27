@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
@@ -63,6 +64,7 @@ namespace Emp.Api.Controllers
         //    }
         //    return _response;
         //}
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ResponseDto> GetAll(int page = 1, int pageSize = 10)
         {
@@ -118,6 +120,94 @@ namespace Emp.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Employees that belong to the departments (and sub-departments) managed by the
+        /// given manager. Accessible by an Admin or the manager themselves.
+        /// </summary>
+        [HttpGet("by-manager/{managerId}")]
+        public async Task<ResponseDto> GetByManager(int managerId)
+        {
+            // A manager may only list their own team; admins may list any manager's.
+            if (!User.IsInRole("Admin"))
+            {
+                int.TryParse(User.FindFirst("EmployeeId")?.Value, out var caller);
+                if (caller != managerId)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "You are not authorized to view this team.";
+                    return _response;
+                }
+            }
+
+            try
+            {
+                // Walk the department tree owned by this manager (department + all sub-departments).
+                var rootDeptIds = await _dbContext.Departments
+                    .Where(d => d.ManagerId == managerId)
+                    .Select(d => d.Id)
+                    .ToListAsync();
+
+                var deptIds = new HashSet<int>(rootDeptIds);
+                var frontier = new Queue<int>(rootDeptIds);
+                while (frontier.Count > 0)
+                {
+                    var current = frontier.Dequeue();
+                    var children = await _dbContext.Departments
+                        .Where(d => d.ParentDepartmentId == current)
+                        .Select(d => d.Id)
+                        .ToListAsync();
+                    foreach (var childId in children)
+                    {
+                        if (deptIds.Add(childId))
+                            frontier.Enqueue(childId);
+                    }
+                }
+
+                var employees = await _dbContext.Employees
+                    .Include(e => e.Department)
+                    .Include(e => e.JobTitle)
+                    .Include(e => e.Country)
+                    .Where(e => deptIds.Contains(e.DepartmentId) && e.Id != managerId)
+                    .OrderBy(e => e.Name)
+                    .ToListAsync();
+
+                _response.Result = _mapper.Map<List<EmployeeViewDto>>(employees);
+                _response.IsSuccess = true;
+                _response.Message = "";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching team for manager {ManagerId}", managerId);
+                _response.Result = null;
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
+        /// <summary>Self-service update of the caller's own contact details (phone/address).</summary>
+        [HttpPut("my-profile")]
+        public async Task<ResponseDto> UpdateMyProfile([FromBody] Dtos.Employee.UpdateProfileDto dto)
+        {
+            int.TryParse(User.FindFirst("EmployeeId")?.Value, out var employeeId);
+            var employee = await _dbContext.Employees.FindAsync(employeeId);
+            if (employee is null)
+            {
+                _response.IsSuccess = false;
+                _response.Message = "Employee not found.";
+                return _response;
+            }
+
+            employee.Phone = dto.Phone;
+            employee.Address = dto.Address;
+            await _dbContext.SaveChangesAsync();
+
+            _response.IsSuccess = true;
+            _response.Message = "Profile updated successfully.";
+            _response.Result = new { employee.Id, employee.Phone, employee.Address };
+            return _response;
+        }
+
         // GET api/<EmployeeController>/5
         [HttpGet("{id}")]
         public async Task<ResponseDto> Get(int id)
@@ -152,6 +242,7 @@ namespace Emp.Api.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ResponseDto> Post([FromBody] EmployeeCreateDto createDto)
         {
@@ -223,6 +314,7 @@ namespace Emp.Api.Controllers
 
         //    return NoContent();
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPut("update-employee/{id}")]
         public async Task<ResponseDto> Put(int id, [FromBody] EmployeeUpdateDto employeeUpdateDto)
         {
@@ -271,6 +363,7 @@ namespace Emp.Api.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> Delete(int id)
         {
@@ -285,6 +378,15 @@ namespace Emp.Api.Controllers
                     _logger.LogWarning($"Employee with Id: {id} not found.");
                     response.IsSuccess = false;
                     response.Message = $"Employee with Id {id} not found.";
+                    return response;
+                }
+
+                // The seeded super-admin must never be deleted (it's the system's break-glass account).
+                if (string.Equals(employeeModel.Email, Data.DbInitializer.AdminEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    response.IsSuccess = false;
+                    response.Result = null;
+                    response.Message = "The system administrator account cannot be deleted.";
                     return response;
                 }
                 // nullify subordinates' manager
@@ -337,6 +439,7 @@ namespace Emp.Api.Controllers
         //    return NoContent();
 
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPatch("UpdateDepartment/{id}")]
         public async Task<ResponseDto> UpdateDepartment(int id, int depId)
         {
@@ -403,6 +506,7 @@ namespace Emp.Api.Controllers
         //    return response;
 
         //}
+        [Authorize(Roles = "Admin")]
         [HttpPatch("terminate/{id}")]
         public async Task<ResponseDto> EmployeeTermination(int id, [FromBody] TerminationDto terminationRequest)
         {
@@ -429,22 +533,63 @@ namespace Emp.Api.Controllers
                 return response;
             }
 
+            // The seeded super-admin must never be terminated.
+            if (string.Equals(employeeModel.Email, Data.DbInitializer.AdminEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                response.IsSuccess = false;
+                response.Message = "The system administrator account cannot be terminated.";
+                response.Result = null;
+                return response;
+            }
+
             // Set the employee status to terminated
             employeeModel.IsActive = false;
             employeeModel.LeavingDate = DateOnly.FromDateTime(DateTime.Now);
 
-            // Create a new termination record and save it
+            // Record the termination.
             var termination = new Termination
             {
                 EmployeeId = id,
-                TerminationType = terminationRequest.TerminationType,  // Now using the string enum
+                TerminationType = terminationRequest.TerminationType,
                 TerminationReason = terminationRequest.TerminationReason,
                 DateTerminated = DateOnly.FromDateTime(DateTime.Now)
             };
-
             _dbContext.Terminations.Add(termination);
 
-            // Save changes to the database
+            // Clear management links so departments, teams and approvals don't dangle on a
+            // terminated person.
+            var managedDepartments = await _dbContext.Departments.Where(d => d.ManagerId == id).ToListAsync();
+            foreach (var d in managedDepartments) d.ManagerId = null;
+
+            var subordinates = await _dbContext.Employees.Where(e => e.ManagerId == id).ToListAsync();
+            foreach (var s in subordinates) s.ManagerId = null;
+
+            // Pending requests routed to this person fall back to Admin approval.
+            var awaitingApproval = await _dbContext.Leaves
+                .Where(l => l.ManagerId == id && l.Status.ToUpper() == "PENDING").ToListAsync();
+            foreach (var l in awaitingApproval) l.ManagerId = null;
+
+            // Auto-reject the terminated employee's own outstanding (non-decided) requests.
+            var ownOutstanding = await _dbContext.Leaves
+                .Where(l => l.EmployeeId == id && l.Status.ToUpper() != "APPROVED" && l.Status.ToUpper() != "REJECTED")
+                .ToListAsync();
+            foreach (var l in ownOutstanding)
+            {
+                l.Status = "REJECTED";
+                l.DecisionNote = "Auto-rejected: employee terminated.";
+                l.DecidedAt = DateTime.Now;
+                l.UpdatedAt = DateTime.Now;
+                l.IsModified = true;
+            }
+
+            // Disable the login so the terminated employee can no longer sign in.
+            var appUser = await _dbContext.ApplicationUsers.FirstOrDefaultAsync(u => u.EmployeeId == id);
+            if (appUser != null)
+            {
+                appUser.LockoutEnabled = true;
+                appUser.LockoutEnd = DateTimeOffset.MaxValue;
+            }
+
             await _dbContext.SaveChangesAsync();
 
             // Set success response
@@ -452,6 +597,103 @@ namespace Emp.Api.Controllers
             response.Message = "Employee terminated successfully.";
             response.Result = true;  // You can return more data if needed (e.g., updated employee)
 
+            return response;
+        }
+
+        /// <summary>
+        /// Reverses a termination: re-activates the employee, clears the leaving date and
+        /// unlocks their login. Manager/team links are NOT restored (re-assign as needed).
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("reactivate/{id}")]
+        public async Task<ResponseDto> Reactivate(int id)
+        {
+            var response = new ResponseDto();
+
+            var employee = await _dbContext.Employees.FirstOrDefaultAsync(x => x.Id == id);
+            if (employee == null)
+            {
+                response.IsSuccess = false;
+                response.Message = "Employee not found.";
+                return response;
+            }
+            if (employee.IsActive)
+            {
+                response.IsSuccess = false;
+                response.Message = "Employee is already active.";
+                return response;
+            }
+
+            employee.IsActive = true;
+            employee.LeavingDate = null;
+
+            // Unlock the login.
+            var appUser = await _dbContext.ApplicationUsers.FirstOrDefaultAsync(u => u.EmployeeId == id);
+            if (appUser != null)
+            {
+                appUser.LockoutEnd = null;
+                appUser.AccessFailedCount = 0;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            response.IsSuccess = true;
+            response.Message = "Employee reactivated successfully.";
+            response.Result = true;
+            return response;
+        }
+
+        /// <summary>Terminated employees with their most recent termination details (for reporting).</summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("terminations")]
+        public async Task<ResponseDto> Terminations()
+        {
+            var response = new ResponseDto();
+            try
+            {
+                var terminated = await _dbContext.Employees
+                    .Where(e => !e.IsActive)
+                    .Select(e => new
+                    {
+                        e.Id,
+                        e.Name,
+                        Department = e.Department != null ? e.Department.Name : "",
+                        e.LeavingDate
+                    })
+                    .ToListAsync();
+
+                var ids = terminated.Select(t => t.Id).ToList();
+                var terminations = await _dbContext.Terminations
+                    .Where(t => ids.Contains(t.EmployeeId))
+                    .ToListAsync();
+
+                var rows = terminated.Select(e =>
+                {
+                    var latest = terminations
+                        .Where(t => t.EmployeeId == e.Id)
+                        .OrderByDescending(t => t.Id)
+                        .FirstOrDefault();
+                    return new
+                    {
+                        e.Name,
+                        e.Department,
+                        TerminationType = latest?.TerminationType ?? "",
+                        TerminationReason = latest?.TerminationReason ?? "",
+                        DateTerminated = (latest != null ? latest.DateTerminated : e.LeavingDate)?.ToString("yyyy-MM-dd") ?? ""
+                    };
+                })
+                .OrderByDescending(r => r.DateTerminated)
+                .ToList();
+
+                response.IsSuccess = true;
+                response.Result = rows;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching terminations");
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+            }
             return response;
         }
 
@@ -516,6 +758,7 @@ namespace Emp.Api.Controllers
         }
         */
         //set Manager
+        [Authorize(Roles = "Admin")]
         [HttpPatch("SetManager")]
         public async Task<IActionResult> SetManager(int employeeId, int managerId)
         {
@@ -567,6 +810,7 @@ namespace Emp.Api.Controllers
             }
         }
         //set department's manager
+        [Authorize(Roles = "Admin")]
         [HttpPatch("SetDepartmentManager")]
         public async Task<IActionResult> SetDepartmentManager(int departmentId, int managerId)
         {
@@ -598,6 +842,7 @@ namespace Emp.Api.Controllers
                 return StatusCode(500, "An error occurred while setting the department manager.");
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("active-deactive-employee/{employeeId}")]
         public async Task<ResponseDto> ActiveDeActiveEmployee(int employeeId)
         {
@@ -674,6 +919,53 @@ namespace Emp.Api.Controllers
                 return response;
             }
         }
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        [Route("/dashboard-charts")]
+        public async Task<ResponseDto> GetDashboardCharts()
+        {
+            var response = new ResponseDto();
+            try
+            {
+                // Leaves per month for the last 6 months (by StartDate).
+                var firstMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(-5);
+                var rawLeaves = await _dbContext.Leaves
+                    .Where(l => l.StartDate >= firstMonth)
+                    .Select(l => new { l.StartDate.Year, l.StartDate.Month })
+                    .ToListAsync();
+
+                var leavesPerMonth = new List<object>();
+                for (int i = 0; i < 6; i++)
+                {
+                    var m = firstMonth.AddMonths(i);
+                    var count = rawLeaves.Count(x => x.Year == m.Year && x.Month == m.Month);
+                    leavesPerMonth.Add(new { Label = m.ToString("MMM"), Count = count });
+                }
+
+                // Employees per department.
+                var employeesPerDepartment = await _dbContext.Employees
+                    .Where(e => e.Department != null)
+                    .GroupBy(e => e.Department.Name)
+                    .Select(g => new { Label = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                response.Result = new
+                {
+                    LeavesPerMonth = leavesPerMonth,
+                    EmployeesPerDepartment = employeesPerDepartment
+                };
+                response.IsSuccess = true;
+                response.Message = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                response.Result = null;
+            }
+            return response;
+        }
+
         [HttpGet("GetManagerName/{employeeId}")]
         public async Task<ResponseDto?> GetManagerName(int employeeId)
         {

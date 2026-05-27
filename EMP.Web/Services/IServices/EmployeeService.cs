@@ -48,6 +48,25 @@ namespace EMP.Web.Services.IServices
             });
         }
 
+        public async Task<ResponseDto> GetByManagerAsync(int managerId)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Get,
+                Url = $"{SD.EmployeeAPIUrl}/by-manager/{managerId}"
+            });
+        }
+
+        public async Task<ResponseDto> UpdateMyProfileAsync(string? phone, string? address)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Put,
+                Url = $"{SD.EmployeeAPIUrl}/my-profile",
+                Data = new { Phone = phone, Address = address }
+            });
+        }
+
         public async Task<ResponseDto> EditEmployeeAsync(EmployeeCreateDto employeeUpdateDto)
         {
             if (employeeUpdateDto == null)
@@ -71,7 +90,16 @@ namespace EMP.Web.Services.IServices
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/dashboard-counts"
+                Url = $"{SD.ApiBaseUrl}/dashboard-counts"
+            });
+        }
+
+        public async Task<ResponseDto> GetDashboardChartsAsync()
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Get,
+                Url = $"{SD.ApiBaseUrl}/dashboard-charts"
             });
         }
 
@@ -101,15 +129,6 @@ namespace EMP.Web.Services.IServices
                 });
         }
 
-        public async Task<ResponseDto> SetManager(int employeeId, int managerId)
-        {
-            return await _baseService.SendAsync(new RequestDto
-            {
-                ApiType = SD.ApiType.Patch,
-                Url = $"{SD.EmployeeAPIUrl}/SetManager?employeeId={employeeId}&managerId={managerId}"
-            });
-        }
-
         public async Task<ResponseDto> TerminateEmployeeAsync(int id,TerminationDto terminationDto )
         {
             return await _baseService.SendAsync(new RequestDto
@@ -117,6 +136,24 @@ namespace EMP.Web.Services.IServices
                 ApiType = SD.ApiType.Patch,
                 Url = $"{SD.EmployeeAPIUrl}/terminate/{id}",
                 Data=terminationDto
+            });
+        }
+
+        public async Task<ResponseDto> ReactivateEmployeeAsync(int id)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Patch,
+                Url = $"{SD.EmployeeAPIUrl}/reactivate/{id}"
+            });
+        }
+
+        public async Task<ResponseDto> GetTerminationsAsync()
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Get,
+                Url = $"{SD.EmployeeAPIUrl}/terminations"
             });
         }
     }

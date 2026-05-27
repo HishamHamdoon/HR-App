@@ -3,12 +3,14 @@ using Emp.Api.Data;
 using Emp.Api.Dtos.Employee;
 using Emp.Api.Dtos;
 using Emp.Models.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class PayrollsController : ControllerBase
@@ -28,38 +30,25 @@ namespace Emp.Api.Controllers
         }
 
         [HttpPost("generate-monthly-payroll")]
-        public async Task GenerateMonthlyPayroll(DateTime forMonth)
+        public async Task<ResponseDto> GenerateMonthlyPayroll(DateTime forMonth)
         {
             var response = new ResponseDto();
-            var employees = await _dbContext.Employees
-                .Include(e => e.Salary)
-                .ToListAsync();
-
-            foreach (var emp in employees)
+            try
             {
-                if (emp.Salary == null) continue;
-
-                var exists = await _dbContext.Payrolls
-                    .AnyAsync(p => p.EmployeeId == emp.Id && p.SalaryMonth.Month == forMonth.Month && p.SalaryMonth.Year == forMonth.Year);
-
-                if (!exists)
-                {
-                    var payroll = new Payroll
-                    {
-                        EmployeeId = emp.Id,
-                        GrossSalary = emp.Salary.BasicSalary,
-                        Deductions = 0, // you can add tax/leave deductions here
-                        NetSalary = emp.Salary.NetSalary,
-                        SalaryMonth = new DateTime(forMonth.Year, forMonth.Month, 1),
-                        GeneratedAt = DateTime.Now,
-                        IsPaid = true
-                    };
-
-                    _dbContext.Payrolls.Add(payroll);
-                }
+                var created = await Services.PayrollGenerator.GenerateForMonthAsync(_dbContext, forMonth);
+                response.IsSuccess = true;
+                response.Result = new { Created = created, Month = new DateTime(forMonth.Year, forMonth.Month, 1) };
+                response.Message = created == 0
+                    ? "Payroll already generated for this month."
+                    : $"Generated {created} payroll record(s).";
             }
-
-            await _dbContext.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Result = null;
+                response.Message = ex.Message;
+            }
+            return response;
         }
         [HttpPost]
         public async Task<bool> PaySalary(int payrollId)

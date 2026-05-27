@@ -23,6 +23,16 @@ namespace EMP.Web.Services
             });
         }
 
+        public async Task<ResponseDto> UpdateCountryAsync(CountryDto countryDto)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Put,
+                Url = SD.CountriesAPIUrl + "/" + countryDto.Id,
+                Data = countryDto
+            });
+        }
+
         public async Task<ResponseDto> DeleteCountryAsync(int id)
         {
             return await _baseService.SendAsync(new RequestDto

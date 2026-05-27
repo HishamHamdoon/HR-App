@@ -23,7 +23,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = $"https://localhost:7031/api/Roles",
+                Url = $"{SD.ApiBaseUrl}/api/Roles",
                 Data=roleName
             });
         }
@@ -33,8 +33,17 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Roles"
+                Url = $"{SD.ApiBaseUrl}/api/Roles"
 
+            });
+        }
+
+        public async Task<ResponseDto> DeleteRoleAsync(string roleName)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Delete,
+                Url = $"{SD.ApiBaseUrl}/api/Roles/{Uri.EscapeDataString(roleName)}"
             });
         }
 

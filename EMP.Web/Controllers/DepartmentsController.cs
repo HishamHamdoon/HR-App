@@ -15,6 +15,7 @@ using System.Text.Json;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class DepartmentsController : BaseController
     {
         private readonly ILogger<HomeController> _logger;
@@ -31,7 +32,8 @@ namespace EMP.Web.Controllers
             ICountryService countryService,
             IDepartmentService departmentService,
             ISectionService sectionService,
-            IJobTitleService jobTitleService
+            IJobTitleService jobTitleService,
+            ISetupService setupService
            )
         {
             _httpClient = httpClient;
@@ -41,6 +43,7 @@ namespace EMP.Web.Controllers
             _logger = logger;
             _sectionService = sectionService;
             _jobTitleService = jobTitleService;
+            _setupService = setupService;
         }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
@@ -102,130 +105,111 @@ namespace EMP.Web.Controllers
                 return View(departmentDto);
             }
         }
-        public async Task<IActionResult> Index1()
-        {
-            var response = await _httpClient.GetAsync("https://localhost:7031/api/Employee");
-
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                throw new UnauthorizedAccessException("API returned 401 Unauthorized.");
-            }
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var countries = System.Text.Json.JsonSerializer.Deserialize<List<Country>>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            return View(countries); // ? This matches what the view expects
-        }
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             ResponseDto response = await _departmentService.GetDepartmentAsync(id);
             if (response is not null && response.IsSuccess)
             {
-                var department= JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentDto>(Convert.ToString(response.Result));
+                var department = JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentDto>(Convert.ToString(response.Result));
+                ViewBag.Employees = await LoadEmployeeOptionsAsync();
                 return View(department);
             }
             return View();
         }
-        [HttpGet]
-        public async Task<IActionResult> DeleteEmployeeGet(int employeeId)
+
+        private async Task<List<Emp.Web.Dtos.NamedItem>> LoadEmployeeOptionsAsync()
         {
-            if (employeeId > 0)
+            try
             {
-                ResponseDto response = await _employeeService.GetEmployeeAsync(employeeId);
-                if (response is not null && response.IsSuccess)
+                var resp = await _setupService.GetEmployeesList();
+                if (resp?.IsSuccess == true && resp.Result is not null)
                 {
-                    EmployeeVM employee = JsonConvert.DeserializeObject<EmployeeVM>(Convert.ToString(response.Result));
-                    return View(employee);
+                    return JsonConvert.DeserializeObject<List<Emp.Web.Dtos.NamedItem>>(Convert.ToString(resp.Result))
+                           ?? new List<Emp.Web.Dtos.NamedItem>();
                 }
             }
-            return View();
+            catch { /* fall through */ }
+            return new List<Emp.Web.Dtos.NamedItem>();
         }
+
         [HttpPost]
-        public async Task<IActionResult> DeleteEmployee(int Id)
+        public async Task<IActionResult> SetManager(int departmentId, int managerId)
         {
-            //ResponseDto response = await _employeeService.GetEmployeeAsync(Id);
-            //Console.WriteLine(response.Result);
-            if (Id>0)
+            if (departmentId <= 0 || managerId <= 0)
             {
-                var deleteResponse = await _employeeService.DeleteEmployeeAsync(Id);
-                if (deleteResponse.IsSuccess)
-                {
-                    TempData["success"] = deleteResponse.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-                TempData["error"] = deleteResponse.Message;
-                return View(nameof(Details));
+                TempData["error"] = "Please choose a manager.";
+                return RedirectToAction("Details", new { id = departmentId });
             }
-            return View("Index");
+            var response = await _departmentService.SetManagerAsync(departmentId, managerId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true
+                    ? (response.Message ?? "Manager assigned.")
+                    : (response?.Message ?? "Failed to assign manager.");
+            return RedirectToAction("Details", new { id = departmentId });
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> Create(EmployeeFormViewModel employee)
-        //{
-        //    var vm = new EmployeeFormViewModel
-        //    {
-        //        Employee = new Employee() // ensures not null
-        //    };
-        //    var departments = await _departmentService.GetDepartmentsAsync();
-        //    var countriesList = await _countryService.GetCountriesAsync();
-        //    var sectionData = await _sectionService.GetSectionsAsync();
-        //    var jobTitlesList = await _jobTitleService.GetJobTitlesAsync();
+        [HttpPost]
+        public async Task<IActionResult> RemoveManager(int departmentId)
+        {
+            if (departmentId <= 0)
+            {
+                return RedirectToAction("Details", new { id = departmentId });
+            }
+            var response = await _departmentService.RemoveManagerAsync(departmentId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true
+                    ? (response.Message ?? "Manager removed.")
+                    : (response?.Message ?? "Failed to remove manager.");
+            return RedirectToAction("Details", new { id = departmentId });
+        }
 
-        //    // Fix for CS0029, CS8601, and CS8604
-        //    if (jobTitlesList.Result != null)
-        //    {
-        //        var jobTitles = JsonConvert.DeserializeObject<List<JobTitle>>(Convert.ToString(jobTitlesList.Result));
-        //        if (jobTitles != null)
-        //        {
-        //            //SelectListItem selectListItem = new SelectListItem();
-        //            //selectListItem.Text = jobTitles[0].Title;
-        //            //selectListItem.Value = jobTitles[0].Id.ToString();
-        //            employee.JobTitles = jobTitles;
-        //        }
-        //        else
-        //        {
-        //            employee.JobTitles = new List<JobTitle>(); // Ensure it's not null
-        //        }
-        //    }
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["error"] = "Invalid department.";
+                return RedirectToAction(nameof(Index));
+            }
+            var response = await _departmentService.DeleteDepartmentAsync(id);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Department deleted." : (response?.Message ?? "Failed to delete department.");
+            return RedirectToAction(nameof(Index));
+        }
 
-        //    var countries = JsonConvert.DeserializeObject<List<Country>>(Convert.ToString(countriesList.Result));
-        //    if (countries != null)
-        //    {
-        //        employee.Countries = countries;
-        //    }
-        //    else
-        //    {
-        //        employee.Countries = new List<Country>();
-        //    }
-        //    var sections = JsonConvert.DeserializeObject<List<Section>>(Convert.ToString(sectionData.Result));
-        //    if (countries != null)
-        //    {
-        //        employee.Sections = sections;
-        //    }
-        //    else
-        //    {
-        //        employee.Sections = new List<Section>();
-        //    }
+        [HttpPost]
+        public async Task<IActionResult> AddSection(int departmentId, string sectionName)
+        {
+            if (departmentId <= 0 || string.IsNullOrWhiteSpace(sectionName))
+            {
+                TempData["error"] = "Section name is required.";
+                return RedirectToAction("Details", new { id = departmentId });
+            }
+            var response = await _sectionService.CreateSectionAsync(sectionName.Trim(), departmentId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Section added." : (response?.Message ?? "Failed to add section.");
+            return RedirectToAction("Details", new { id = departmentId });
+        }
 
-        //    var departmentList = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(departments.Result));
-        //    if (departmentList != null)
-        //    {
-        //        employee.Departments = departmentList;
-        //    }
-        //    else
-        //    {
-        //        employee.Departments = new List<Emp.Api.Models.Department>();
-        //    }
-
-        //    return View(employee); // shows the form
-        //}
+        [HttpPost]
+        public async Task<IActionResult> AddSubDepartment(int parentDepartmentId, string subDepartmentName)
+        {
+            if (parentDepartmentId <= 0 || string.IsNullOrWhiteSpace(subDepartmentName))
+            {
+                TempData["error"] = "Sub-department name is required.";
+                return RedirectToAction("Details", new { id = parentDepartmentId });
+            }
+            var dto = new Emp.Web.Dtos.DepartmentCreateDto
+            {
+                Name = subDepartmentName.Trim(),
+                ParentDepartmentId = parentDepartmentId
+            };
+            var response = await _departmentService.CreateDepartmentsAsync(dto);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Sub-department added." : (response?.Message ?? "Failed to add sub-department.");
+            return RedirectToAction("Details", new { id = parentDepartmentId });
+        }
         [HttpPost]
         public async Task<IActionResult> CreateNewEmployee(EmployeeFormViewModel employeeCreateDto)
         {
@@ -278,174 +262,52 @@ namespace EMP.Web.Controllers
             }
 
         }
-        [HttpPost]
-        public async Task<IActionResult> CreatePost(EmployeeFormViewModel model)
-        {
-            // Optional: validate
-            //if (!ModelState.IsValid)
-            //{
-            //    model.Departments = await GetDepartmentsAsync();
-            //    model.Sections = await GetSectionsAsync();
-            //    model.JobTitles = await GetJobTitlesAsync();
-            //    return View("Create", model);
-            //}
-
-            // Set JWT token if needed
-            var token = HttpContext.Request.Cookies["jwt"];
-            if (!string.IsNullOrEmpty(token))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
-            }
-
-            var json = System.Text.Json.JsonSerializer.Serialize(model.Employee);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync("https://localhost:7031/api/Employee", content);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                ModelState.AddModelError("", "Failed to create employee.");
-
-                //model.Departments = await GetDepartmentsAsync();
-                //model.Sections = await GetSectionsAsync();
-                //model.JobTitles = await GetJobTitlesAsync();
-
-                return View("Create", model);
-            }
-
-            TempData["Success"] = "Record added successfully";
-            return RedirectToAction("Index");
-        }
-
         [HttpGet]
-        public async Task<IActionResult> Edit(int employeeId)
+        public async Task<IActionResult> Edit(int id)
         {
-            var employee = await _employeeService.GetEmployeeAsync(employeeId);
-            var emp = JsonConvert.DeserializeObject<Employee>(Convert.ToString(employee.Result));
-            var vm = new EmployeeFormViewModel
+            var response = await _departmentService.GetDepartmentAsync(id);
+            if (response?.IsSuccess == true && response.Result is not null)
             {
-                Employee = new Employee { Id = employeeId,
-                Address=emp.Address,
-                Email=emp.Email,
-                BirthDate=emp.BirthDate,
-                Country=emp.Country,
-                CountryId=emp.CountryId,
-                Department = emp.Department,
-                DepartmentId=emp.DepartmentId,
-                HireDate=emp.HireDate,
-                IsActive=emp.IsActive,
-                JobTitle=emp.JobTitle,
-                JobTitleId=emp.JobTitleId,
-                LeavingDate=emp.LeavingDate,
-                Manager = emp.Manager,
-                ManagerId=emp.ManagerId,
-                Name=emp.Name,
-                Phone=emp.Phone,
-                Section=emp.Section,
-                SectionId=emp.SectionId,              
-                }
-            };           
-            var departments = await _departmentService.GetDepartmentsAsync();
-            var countriesList = await _countryService.GetCountriesAsync();
-            var sectionData = await _sectionService.GetSectionsAsync();
-            var jobTitlesList = await _jobTitleService.GetJobTitlesAsync();
-            if (jobTitlesList.Result != null)
-            {
-                var jobTitles = JsonConvert.DeserializeObject<List<JobTitle>>(Convert.ToString(jobTitlesList?.Result));
-                if (jobTitles != null)
-                {
-                    //SelectListItem selectListItem = new SelectListItem();
-                    //selectListItem.Text = jobTitles[0].Title;
-                    //selectListItem.Value = jobTitles[0].Id.ToString();
-                    vm.JobTitles = jobTitles;
-                }
-                else
-                {
-                    vm.JobTitles = new List<JobTitle>(); // Ensure it's not null
-                }
+                var dept = JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentCreateDto>(Convert.ToString(response.Result));
+                return View(dept);
             }
-            var countries = JsonConvert.DeserializeObject<List<Country>>(Convert.ToString(countriesList.Result));
-            if (countries != null)
-            {
-                vm.Countries = countries;
-            }
-            else
-            {
-                vm.Countries = new List<Country>();
-            }
-            var sections = JsonConvert.DeserializeObject<List<Section>>(Convert.ToString(sectionData.Result));
-            if (countries != null)
-            {
-                vm.Sections = sections;
-            }
-            else
-            {
-                vm.Sections = new List<Section>();
-            }
-
-            var departmentList = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(departments.Result));
-            if (departmentList != null)
-            {
-                vm.Departments = departmentList;
-            }
-            else
-            {
-                vm.Departments = new List<Emp.Api.Models.Department>();
-            }
-
-            return View(vm); // shows the form
+            TempData["error"] = "Department not found.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(EmployeeFormViewModel employeeCreateDto)
+        public async Task<IActionResult> Edit(Emp.Web.Dtos.DepartmentCreateDto departmentDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                Emp.Web.Models.Dtos.EmployeeCreateDto employee = new()
-                {
-                    Id=employeeCreateDto.Employee.Id,
-                    Email = employeeCreateDto.Employee.Email,
-                    BirthDate = employeeCreateDto.Employee.BirthDate,
-                    Address = employeeCreateDto.Employee.Address,
-                    CountryId = employeeCreateDto.Employee.CountryId,
-                    DepartmentId = employeeCreateDto.Employee.DepartmentId,
-                    HireDate = employeeCreateDto.Employee.HireDate,
-                    IsActive = employeeCreateDto.Employee.IsActive,
-                    JobTitleId = employeeCreateDto.Employee.JobTitleId,
-                    LeavingDate = employeeCreateDto.Employee.LeavingDate,
-                    ManagerId = employeeCreateDto.Employee.ManagerId,
-                    Name = employeeCreateDto.Employee.Name,
-                    Phone = employeeCreateDto.Employee.Phone
-                };
-                var response = await _employeeService.EditEmployeeAsync(employee);
-                TempData["Success"] = response?.Message;
-                return RedirectToAction("Index");
+                return View(departmentDto);
             }
-        
-            else
+            var response = await _departmentService.UpdateDepartmentAsync(departmentDto);
+            if (response?.IsSuccess == true)
             {
-                return View(employeeCreateDto);
+                TempData["success"] = response.Message ?? "Department updated successfully.";
+                return RedirectToAction(nameof(Index));
             }
-            //return View(employee);
+            TempData["error"] = response?.Message ?? "Failed to update department.";
+            return View(departmentDto);
         }
         [HttpGet]
         public async Task<IActionResult> GetSectionsByDepartment(int departmentId)
         {
-            if (departmentId > 0)
+            if (departmentId <= 0)
             {
-                var response = await _departmentService.GetSectionsByDepartmentAsync(departmentId);
-                if (response.IsSuccess)
-                {
-                    var sections = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(response.Result));
-                    return Json(sections);
-                }
+                return Json(Array.Empty<object>());
             }
-            else
+
+            var response = await _departmentService.GetSectionsByDepartmentAsync(departmentId);
+            if (response?.IsSuccess == true && response.Result is not null)
             {
-                return RedirectToAction("Index","Employees");
+                var sections = JsonConvert.DeserializeObject<List<Emp.Web.Dtos.NamedItem>>(Convert.ToString(response.Result))
+                               ?? new List<Emp.Web.Dtos.NamedItem>();
+                return Json(sections.Select(s => new { id = s.Id, name = s.Name }));
             }
-            return RedirectToAction("Index", "Employees");
+
+            return Json(Array.Empty<object>());
         }
     }
 }

@@ -1,0 +1,16 @@
+@model EMP.Web.Models.Dtos.LicenseStatusDto
+
+@if (Model is not null && Model.IsValid && Model.DaysRemaining <= 7)
+{
+    <div class="alert alert-warning alert-dismissible d-flex align-items-center mb-4" role="alert">
+        <i class="icon-base ti tabler-clock-exclamation me-2"></i>
+        <div>
+            Your <strong>@Model.Type</strong> license expires in <strong>@Model.DaysRemaining day(s)</strong> (@Model.ExpiresAt.ToString("dd MMM yyyy")).
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="License" asp-action="Index" class="alert-link">Activate a yearly key</a><text> to keep access.</text>
+            }
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

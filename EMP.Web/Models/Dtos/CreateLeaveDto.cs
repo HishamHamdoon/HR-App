@@ -15,6 +15,7 @@ namespace Emp.Web.Dtos
         [Required]
         public int LeavesTypeId { get; set; }
         public int ManagerId { get; set; }
+        public bool IsHalfDay { get; set; }
         public string? Note { get; set; }
         public string? FilePath { get; set; }
         public IFormFile? Attachment { get; set; }

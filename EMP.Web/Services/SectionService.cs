@@ -20,5 +20,15 @@ namespace EMP.Web.Services
                 Url = SD.SectionsAPIUrl
             });
         }
+
+        public async Task<ResponseDto> CreateSectionAsync(string name, int departmentId)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Post,
+                Url = SD.SectionsAPIUrl,
+                Data = new { Name = name, DepartmentId = departmentId }
+            });
+        }
     }
 }

@@ -1,96 +1,52 @@
-﻿@using Emp.Web.Dtos.Auth
+@using Emp.Web.Dtos.Auth
 @model LoginRequestDto
-
 @{
     ViewData["Title"] = "Login";
-    Layout = "_LoginLayout"; //null; Optional if you want full-page login
+    Layout = "_VuexyAuthLayout";
 }
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
-        overflow: hidden;
-    }
 
-    .login-page {
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+<h4 class="mb-1">Welcome to HR Admin! 👋</h4>
+<p class="mb-6">Please sign in to your account</p>
 
-    .login-image {
-        background: url('/images/HRMS-1.jpg') no-repeat center center;
-        background-size: cover;
-        border-top-left-radius: 0.5rem;
-        border-bottom-left-radius: 0.5rem;
-    }
-</style>
-
-
-<div class="container-fluid login-page d-flex align-items-center justify-content-center">
-    <div class="row shadow-lg rounded-4 overflow-hidden w-100 mx-3" style="max-width: 900px;">
-        <!-- Left image -->
-        <div class="col-md-6 login-image"></div>
-
-        <!-- Right login form -->
-        <div class="col-md-6 bg-white p-5">
-            <div class="text-center mb-4">
-                <h4><i class="fa fa-user-circle me-2"></i>Welcome Back</h4>
-                <p class="text-muted small">Please login to your account</p>
-            </div>
-
-            <!-- Error messages -->
-            @if (ViewBag.Errors != null && ViewBag.Errors.Count > 0)
+@if (ViewBag.Errors != null && ViewBag.Errors.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <ul class="mb-0 ps-3">
+            @foreach (var error in ViewBag.Errors)
             {
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach (var error in ViewBag.Errors)
-                        {
-                            <li>@error</li>
-                        }
-                    </ul>
-                </div>
+                <li>@error</li>
             }
-
-            <form asp-action="Login" method="post">
-                <div class="mb-3">
-                    <label asp-for="Username" class="form-label fw-semibold">Username</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fa fa-user"></i></span>
-                        <input asp-for="Username" class="form-control" placeholder="Enter your username" />
-                    </div>
-                    <span asp-validation-for="Username" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fa fa-lock"></i></span>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
-
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-sign-in-alt me-2"></i> Login
-                    </button>
-                </div>
-
-                <div class="text-center small">
-                    <a href="#" class="text-decoration-none">Forgot your password?</a>
-                </div>
-            </form>
-
-            <div class="text-center text-muted small mt-4">
-                &copy; @DateTime.Now.Year HR App. All rights reserved.
-            </div>
-        </div>
+        </ul>
     </div>
-</div>
+}
+
+<form asp-action="Login" method="post" class="mb-4">
+    <div class="mb-6">
+        <label asp-for="Username" class="form-label">Username</label>
+        <input asp-for="Username" class="form-control" placeholder="Enter your username" autofocus />
+        <span asp-validation-for="Username" class="text-danger"></span>
+    </div>
+    <div class="mb-6 form-password-toggle">
+        <label asp-for="Password" class="form-label">Password</label>
+        <div class="input-group input-group-merge">
+            <input asp-for="Password" type="password" class="form-control" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+            <span class="input-group-text cursor-pointer toggle-pw"><i class="icon-base ti tabler-eye-off"></i></span>
+        </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="mb-6">
+        <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
+    </div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelector('.toggle-pw')?.addEventListener('click', function () {
+            var input = this.closest('.input-group').querySelector('input');
+            var icon = this.querySelector('i');
+            if (input.type === 'password') { input.type = 'text'; icon.className = 'icon-base ti tabler-eye'; }
+            else { input.type = 'password'; icon.className = 'icon-base ti tabler-eye-off'; }
+        });
+    </script>
 }

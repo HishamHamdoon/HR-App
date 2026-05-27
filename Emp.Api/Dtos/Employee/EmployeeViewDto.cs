@@ -11,7 +11,9 @@ namespace Emp.Api.Dtos.Employee
         public string Phone { get; set; }
         public string Address { get; set; }
         public bool isActive { get; set; }
-        //public DateTime BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
+        public DateOnly HireDate { get; set; }
+        public DateOnly? LeavingDate { get; set; }
         public string DepartmentName { get; set; }
         public string JobTitleTitle { get; set; }
         public string CountryName { get; set; }

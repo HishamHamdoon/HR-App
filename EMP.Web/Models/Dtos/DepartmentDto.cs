@@ -1,17 +1,23 @@
-﻿using Emp.Api.Models;
-
-namespace Emp.Web.Dtos
+﻿namespace Emp.Web.Dtos
 {
     public class DepartmentDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string? Location { get; set; }
-        // Department Manager
         public int? ManagerId { get; set; }
-        public Employee Manager { get; set; } = null!;
+        public string? ManagerName { get; set; }
 
-        // List of employees in this department
-        //public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+        public int? ParentDepartmentId { get; set; }
+        public string? ParentDepartmentName { get; set; }
+
+        public List<NamedItem> Sections { get; set; } = new();
+        public List<NamedItem> SubDepartments { get; set; } = new();
+    }
+
+    public class NamedItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

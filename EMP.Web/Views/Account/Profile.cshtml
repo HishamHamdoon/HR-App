@@ -1,65 +1,95 @@
-﻿@model UserProfileViewModel
+@model UserProfileViewModel
 @{
     ViewData["Title"] = "Profile";
-    Layout = "_AdminLayout";
+    Layout = "_VuexyLayout";
+    var name = Model?.Employee?.Name ?? Model?.Name ?? "User";
 }
 
-<div class="row justify-content-center mt-4">
-    <div class="col-lg-8 col-md-10">
-        <div class="card shadow border-0 rounded-3">
-            <div class="card-header bg-gradient bg-primary text-white text-center py-4">
-                <h3 class="mb-0">👤 User Profile</h3>
-            </div>
-            <div class="card-body px-4 py-5">
-                <div class="text-center mb-5">
-                    <i class="fa fa-user-circle fa-7x text-secondary"></i>
-                    <h4 class="mt-3">@Model.Employee.Name</h4>
-                    <p class="text-muted mb-0">@Model.Role</p>
-                    <small class="text-muted">Employee ID: @Model.EmployeeId</small>
+<div class="mb-6">
+    <h4 class="mb-0">My Profile</h4>
+</div>
+
+<div class="row g-6">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded-circle bg-label-primary" style="font-size:1.5rem;">
+                        @(string.IsNullOrEmpty(name) ? "U" : name.Substring(0,1).ToUpper())
+                    </span>
                 </div>
-
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">📧 Email</label>
-                            <div>@Model.Email</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">📞 Phone</label>
-                            <div>@Model.Employee.Phone</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">🏢 Department</label>
-                            <div>@Model.Employee.DepartmentName</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">👔 Manager</label>
-                            <div>@Model.Employee.Manager</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="fw-bold text-muted">🌍 Nationality</label>
-                            <div>@Model.Employee.CountryName</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center mt-5">
-                    <a asp-controller="Account" asp-action="EditProfile" class="btn btn-lg btn-outline-primary px-4">
-                        ✏️ Edit Profile
+                <h5 class="mb-0">@name</h5>
+                <span class="badge bg-label-primary mt-2">@Model?.Role</span>
+                <p class="text-body-secondary mt-2 mb-0">Employee ID: @Model?.EmployeeId</p>
+                <div class="d-grid gap-2 mt-4">
+                    <a asp-action="EditProfile" class="btn btn-label-primary">
+                        <i class="icon-base ti tabler-edit me-1"></i> Edit Profile
+                    </a>
+                    <a asp-action="ChangePassword" class="btn btn-label-secondary">
+                        <i class="icon-base ti tabler-key me-1"></i> Change Password
                     </a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Details</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Email</dt>
+                    <dd class="col-sm-8 fw-medium">@Model?.Email</dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Phone</dt>
+                    <dd class="col-sm-8 fw-medium">@Model?.Employee?.Phone</dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Department</dt>
+                    <dd class="col-sm-8"><span class="badge bg-label-info">@Model?.Employee?.DepartmentName</span></dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Manager</dt>
+                    <dd class="col-sm-8 fw-medium">@(string.IsNullOrEmpty(Model?.Employee?.Manager) ? "—" : Model.Employee.Manager)</dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">@L["Country"]</dt>
+                    <dd class="col-sm-8"><span class="badge bg-label-warning">@Model?.Employee?.CountryName</span></dd>
+                </dl>
+            </div>
+        </div>
+
+        @{
+            var curTheme = Context.Request.Cookies["theme"] == "dark" ? "dark" : "light";
+            var curCalendar = Context.Request.Cookies["calendar"] == "Hijri" ? "Hijri" : "Gregorian";
+            var curLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        }
+        <div class="card mt-6">
+            <div class="card-header"><h5 class="mb-0">@L["Preferences"]</h5></div>
+            <div class="card-body">
+                <form asp-action="Preferences" method="post" class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Language"]</label>
+                        <select name="language" class="form-select" data-no-select2>
+                            <option value="en" selected="@(curLang == "en")">@L["English"]</option>
+                            <option value="ar" selected="@(curLang == "ar")">@L["Arabic"]</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Theme"]</label>
+                        <select name="theme" class="form-select" data-no-select2>
+                            <option value="light" selected="@(curTheme == "light")">@L["Light"]</option>
+                            <option value="dark" selected="@(curTheme == "dark")">@L["Dark"]</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Calendar"]</label>
+                        <select name="calendar" class="form-select" data-no-select2>
+                            <option value="Gregorian" selected="@(curCalendar == "Gregorian")">@L["Gregorian"]</option>
+                            <option value="Hijri" selected="@(curCalendar == "Hijri")">@L["Hijri"]</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary"><i class="icon-base ti tabler-device-floppy me-1"></i> @L["Save"]</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

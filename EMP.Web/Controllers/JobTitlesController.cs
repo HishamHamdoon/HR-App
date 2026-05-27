@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class JobTitlesController : Controller
     {
         private readonly IJobTitleService _jobTitleService;

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Management" xml:space="preserve"><value>Management</value></data>
+  <data name="System" xml:space="preserve"><value>System</value></data>
+  <data name="Employees" xml:space="preserve"><value>Employees</value></data>
+  <data name="Leaves" xml:space="preserve"><value>Leaves</value></data>
+  <data name="LeaveTypes" xml:space="preserve"><value>Leave Types</value></data>
+  <data name="Departments" xml:space="preserve"><value>Departments</value></data>
+  <data name="JobTitles" xml:space="preserve"><value>Job Titles</value></data>
+  <data name="Countries" xml:space="preserve"><value>Countries</value></data>
+  <data name="Salaries" xml:space="preserve"><value>Salaries</value></data>
+  <data name="Reports" xml:space="preserve"><value>HR Reports</value></data>
+  <data name="Roles" xml:space="preserve"><value>Roles &amp; Permissions</value></data>
+  <data name="License" xml:space="preserve"><value>License</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="MyTeam" xml:space="preserve"><value>My Team</value></data>
+  <data name="TeamLeaves" xml:space="preserve"><value>Team Leaves</value></data>
+  <data name="ApplyLeave" xml:space="preserve"><value>Apply Leave</value></data>
+  <data name="MyLeaves" xml:space="preserve"><value>My Leaves</value></data>
+  <data name="MyProfile" xml:space="preserve"><value>My Profile</value></data>
+  <data name="Logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Preferences" xml:space="preserve"><value>Preferences</value></data>
+  <data name="Calendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Gregorian" xml:space="preserve"><value>Gregorian</value></data>
+  <data name="Hijri" xml:space="preserve"><value>Hijri</value></data>
+  <data name="English" xml:space="preserve"><value>English</value></data>
+  <data name="Arabic" xml:space="preserve"><value>العربية</value></data>
+  <data name="Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Title" xml:space="preserve"><value>Title</value></data>
+  <data name="MainSalary" xml:space="preserve"><value>Main Salary</value></data>
+  <data name="Search" xml:space="preserve"><value>Search...</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Days" xml:space="preserve"><value>Days</value></data>
+  <data name="Employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="Manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="Department" xml:space="preserve"><value>Department</value></data>
+  <data name="Country" xml:space="preserve"><value>Country</value></data>
+  <data name="JobTitle" xml:space="preserve"><value>Job Title</value></data>
+  <data name="LeaveType" xml:space="preserve"><value>Leave Type</value></data>
+  <data name="StartDate" xml:space="preserve"><value>Start Date</value></data>
+  <data name="EndDate" xml:space="preserve"><value>End Date</value></data>
+  <data name="Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Attachment" xml:space="preserve"><value>Attachment</value></data>
+  <data name="Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Reject" xml:space="preserve"><value>Reject</value></data>
+  <data name="Basic" xml:space="preserve"><value>Basic</value></data>
+  <data name="Allowances" xml:space="preserve"><value>Allowances</value></data>
+  <data name="Deductions" xml:space="preserve"><value>Deductions</value></data>
+  <data name="Net" xml:space="preserve"><value>Net</value></data>
+  <data name="Effective" xml:space="preserve"><value>Effective</value></data>
+  <data name="RoleName" xml:space="preserve"><value>Role Name</value></data>
+  <data name="NoRecords" xml:space="preserve"><value>No records found</value></data>
+  <data name="AddEmployee" xml:space="preserve"><value>Add Employee</value></data>
+  <data name="AddJobTitle" xml:space="preserve"><value>Add Job Title</value></data>
+  <data name="AddDepartment" xml:space="preserve"><value>Add Department</value></data>
+  <data name="AddCountry" xml:space="preserve"><value>Add Country</value></data>
+  <data name="AddLeaveType" xml:space="preserve"><value>Add Leave Type</value></data>
+  <data name="AddSalary" xml:space="preserve"><value>Add Salary</value></data>
+  <data name="CreateNewLeave" xml:space="preserve"><value>Create New Leave</value></data>
+  <data name="EmployeesSubtitle" xml:space="preserve"><value>Manage your organization's workforce</value></data>
+  <data name="JobTitlesSubtitle" xml:space="preserve"><value>Roles and their base salaries</value></data>
+  <data name="LeavesSubtitle" xml:space="preserve"><value>Review and manage employee leave requests</value></data>
+  <data name="ExportExcel" xml:space="preserve"><value>Export Excel</value></data>
+  <data name="ExportPdf" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="Security" xml:space="preserve"><value>Security</value></data>
+  <data name="Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="CurrentLicense" xml:space="preserve"><value>Current License</value></data>
+  <data name="ActivateLicense" xml:space="preserve"><value>Activate a License Key</value></data>
+  <data name="LicenseKey" xml:space="preserve"><value>License Key</value></data>
+  <data name="Activate" xml:space="preserve"><value>Activate</value></data>
+  <data name="Plan" xml:space="preserve"><value>Plan</value></data>
+  <data name="Expires" xml:space="preserve"><value>Expires</value></data>
+  <data name="DaysRemaining" xml:space="preserve"><value>Days Remaining</value></data>
+  <data name="Generate" xml:space="preserve"><value>Generate</value></data>
+  <data name="Months" xml:space="preserve"><value>Months</value></data>
+  <data name="PDF" xml:space="preserve"><value>PDF</value></data>
+  <data name="Excel" xml:space="preserve"><value>Excel</value></data>
+  <data name="EmployeeReports" xml:space="preserve"><value>Employee Reports</value></data>
+  <data name="DepartmentReports" xml:space="preserve"><value>Department Reports</value></data>
+  <data name="LeaveReports" xml:space="preserve"><value>Leave Reports</value></data>
+  <data name="TerminatedEmployees" xml:space="preserve"><value>Terminated Employees</value></data>
+  <data name="PendingRequests" xml:space="preserve"><value>Pending requests only</value></data>
+  <data name="AtAGlance" xml:space="preserve"><value>At a glance</value></data>
+  <data name="Welcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="RecentLeaves" xml:space="preserve"><value>Recent Leaves</value></data>
+  <data name="PendingApprovals" xml:space="preserve"><value>Pending Approvals</value></data>
+  <data name="LeaveBalances" xml:space="preserve"><value>Leave Balances</value></data>
+  <data name="ActiveEmployees" xml:space="preserve"><value>Active Employees</value></data>
+  <data name="InactiveEmployees" xml:space="preserve"><value>Inactive Employees</value></data>
+  <data name="RequestsToReview" xml:space="preserve"><value>Requests to Review</value></data>
+  <data name="From" xml:space="preserve"><value>From</value></data>
+  <data name="To" xml:space="preserve"><value>To</value></data>
+  <data name="TotalEmployees" xml:space="preserve"><value>Total Employees</value></data>
+  <data name="ActiveLeaves" xml:space="preserve"><value>Active Leaves</value></data>
+  <data name="LeaveStatistics" xml:space="preserve"><value>Leave Statistics</value></data>
+  <data name="EmployeeDistribution" xml:space="preserve"><value>Employee Distribution</value></data>
+  <data name="AccessDenied" xml:space="preserve"><value>Access Denied</value></data>
+  <data name="AccessDeniedMessage" xml:space="preserve"><value>Sorry, you don't have permission to view this page. Please contact your administrator if you believe this is an error.</value></data>
+  <data name="GoBackHome" xml:space="preserve"><value>Go Back Home</value></data>
+</root>

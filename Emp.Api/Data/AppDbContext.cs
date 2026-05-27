@@ -23,6 +23,9 @@ namespace Emp.Api.Data
         public DbSet<Termination> Terminations { get; set; }
         public DbSet<Salary> Salaries { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<License> Licenses { get; set; }
+        public DbSet<CompanySettings> CompanySettings { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -64,6 +67,20 @@ namespace Emp.Api.Data
                 .HasForeignKey(d => d.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascade if manager is deleted
 
+            // Sub-department self-reference
+            builder.Entity<Department>()
+                .HasOne(d => d.ParentDepartment)
+                .WithMany(d => d.SubDepartments)
+                .HasForeignKey(d => d.ParentDepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Section belongs to one department
+            builder.Entity<Section>()
+                .HasOne(s => s.Department)
+                .WithMany(d => d.Sections)
+                .HasForeignKey(s => s.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Leave>()
         .HasOne(l => l.Employee)
         .WithMany()
@@ -93,6 +110,14 @@ namespace Emp.Api.Data
     .HasForeignKey<Salary>(s => s.EmployeeId)
     .OnDelete(DeleteBehavior.Cascade);
 
+            // Money columns: fixed precision to avoid silent decimal truncation.
+            builder.Entity<JobTitle>().Property(j => j.MainSalary).HasPrecision(18, 2);
+            builder.Entity<Salary>().Property(s => s.BasicSalary).HasPrecision(18, 2);
+            builder.Entity<Salary>().Property(s => s.Allowances).HasPrecision(18, 2);
+            builder.Entity<Salary>().Property(s => s.Deductions).HasPrecision(18, 2);
+            builder.Entity<Payroll>().Property(p => p.GrossSalary).HasPrecision(18, 2);
+            builder.Entity<Payroll>().Property(p => p.Deductions).HasPrecision(18, 2);
+            builder.Entity<Payroll>().Property(p => p.NetSalary).HasPrecision(18, 2);
         }
 
     }

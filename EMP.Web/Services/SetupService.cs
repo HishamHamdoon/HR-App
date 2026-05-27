@@ -17,7 +17,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Setup/countries-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/countries-dp-list"
             });
         }
 
@@ -26,7 +26,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Setup/departments-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/departments-dp-list"
             });
         }
 
@@ -35,7 +35,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Setup/employee-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/employee-dp-list"
             });
         }
 
@@ -44,7 +44,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Setup/jot-title-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/jot-title-dp-list"
             });
         }
 
@@ -53,7 +53,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/Setup/leave-type-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/leave-type-dp-list"
             });
         }
 
@@ -62,7 +62,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = "https://localhost:7031/api/Setup/sections-dp-list"
+                Url = $"{SD.ApiBaseUrl}/api/Setup/sections-dp-list"
             });
         }
     }

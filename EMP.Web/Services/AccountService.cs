@@ -20,7 +20,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = "https://localhost:7031/api/Auth/login/",
+                Url = $"{SD.ApiBaseUrl}/api/Auth/login/",
                 Data= loginRequest
             });
         }
@@ -28,6 +28,26 @@ namespace EMP.Web.Services
         public Task<ResponseDto> RegisterAsync(RegisterationRequest loginRequestDto)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<ResponseDto> ChangePasswordAsync(string currentPassword, string newPassword)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Post,
+                Url = $"{SD.ApiBaseUrl}/api/Auth/change-password",
+                Data = new { CurrentPassword = currentPassword, NewPassword = newPassword }
+            });
+        }
+
+        public async Task<ResponseDto> UpdatePreferencesAsync(string? theme, string? calendar, string? language)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Post,
+                Url = $"{SD.ApiBaseUrl}/api/Auth/preferences",
+                Data = new { Theme = theme, Calendar = calendar, Language = language }
+            });
         }
     }
 }

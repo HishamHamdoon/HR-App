@@ -21,7 +21,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Post,
-                Url = $"https://localhost:7031/api/LeaveTypes",
+                Url = $"{SD.ApiBaseUrl}/api/LeaveTypes",
                 Data=createLeaveTypesDto
             });
         }
@@ -31,7 +31,7 @@ namespace EMP.Web.Services
             var response = await _baseService.SendAsync(new RequestDto
             {
                 ApiType= SD.ApiType.Delete,
-                Url = $"https://localhost:7031/api/LeaveTypes/{id}",
+                Url = $"{SD.ApiBaseUrl}/api/LeaveTypes/{id}",
             });
             return response;
         }
@@ -41,7 +41,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/LeaveTypes"
+                Url = $"{SD.ApiBaseUrl}/api/LeaveTypes"
             });
         }
 
@@ -50,7 +50,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"https://localhost:7031/api/LeaveTypes/{id}",
+                Url = $"{SD.ApiBaseUrl}/api/LeaveTypes/{id}",
             });
         }
 
@@ -64,7 +64,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Put,
-                Url = $"https://localhost:7031/api/LeaveTypes/{updateLeaveTypesDto.Id}",
+                Url = $"{SD.ApiBaseUrl}/api/LeaveTypes/{updateLeaveTypesDto.Id}",
                 Data = updateLeaveTypesDto
             });
         }

@@ -5,11 +5,13 @@ using Emp.Api.Dtos.Leave;
 using Emp.Api.Models;
 using Emp.Api.Services.IServices;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class LeavesController : ControllerBase
@@ -35,6 +37,7 @@ namespace Emp.Api.Controllers
         /// Get all leaves 
         /// </summary>
         /// <returns>ResonseDto object which contains a list of leaves in Result prop</returns>
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ResponseDto> GetAllLeaves(int page = 1, int pageSize = 10)
         {
@@ -132,12 +135,122 @@ namespace Emp.Api.Controllers
                     .ToList();
                 return response;
             }
-            Leave leaveModel = _mapper.Map<Leave>(createLeaveDto);
-
-            if (createLeaveDto.EmployeeId != null)
+            // Validate the employee exists and grab their department (no full-entity load).
+            var emp = await _dbContext.Employees
+                .Where(e => e.Id == createLeaveDto.EmployeeId)
+                .Select(e => new { e.Id, e.DepartmentId })
+                .FirstOrDefaultAsync();
+            if (emp is null)
             {
-                var employee = await _dbContext.Employees.FindAsync(createLeaveDto.EmployeeId);
+                response.IsSuccess = false;
+                response.Message = "Selected employee was not found.";
+                response.Result = null;
+                return response;
             }
+
+            // Manager is the employee's DEPARTMENT manager (not a per-employee manager).
+            var deptManagerId = await _dbContext.Departments
+                .Where(d => d.Id == emp.DepartmentId)
+                .Select(d => d.ManagerId)
+                .FirstOrDefaultAsync();
+
+            // Authorize: an Admin, the employee themselves, or the manager of the
+            // employee's department (lets a manager file leave for their team members).
+            var isAdmin = User.IsInRole("Admin");
+            int.TryParse(User.FindFirst("EmployeeId")?.Value, out var caller);
+            var allowed = isAdmin || caller == emp.Id || (deptManagerId.HasValue && deptManagerId.Value == caller);
+            if (!allowed)
+            {
+                response.IsSuccess = false;
+                response.Message = "You are not authorized to create a leave for this employee.";
+                response.Result = null;
+                return response;
+            }
+
+            // ---- Business validation ------------------------------------------------
+            if (!createLeaveDto.EndDate.HasValue)
+            {
+                response.IsSuccess = false;
+                response.Message = "End date is required.";
+                return response;
+            }
+            if (createLeaveDto.EndDate.Value.Date < createLeaveDto.StartDate.Date)
+            {
+                response.IsSuccess = false;
+                response.Message = "End date cannot be before the start date.";
+                return response;
+            }
+            if (createLeaveDto.IsHalfDay && createLeaveDto.StartDate.Date != createLeaveDto.EndDate.Value.Date)
+            {
+                response.IsSuccess = false;
+                response.Message = "A half-day leave must start and end on the same day.";
+                return response;
+            }
+
+            // Reject overlapping requests (anything not already rejected counts).
+            var overlaps = await _dbContext.Leaves.AnyAsync(l =>
+                l.EmployeeId == createLeaveDto.EmployeeId
+                && l.Status.ToUpper() != "REJECTED"
+                && l.EndDate.HasValue
+                && createLeaveDto.StartDate.Date <= l.EndDate.Value.Date
+                && l.StartDate.Date <= createLeaveDto.EndDate.Value.Date);
+            if (overlaps)
+            {
+                response.IsSuccess = false;
+                response.Message = "This employee already has a leave that overlaps these dates.";
+                return response;
+            }
+
+            // Enforce the leave-type entitlement (committed + pending must not exceed MaxDays this year).
+            var leaveType = await _dbContext.LeavesTypes
+                .Where(t => t.Id == createLeaveDto.LeavesTypeId)
+                .Select(t => new { t.Name, t.MaxDays })
+                .FirstOrDefaultAsync();
+            if (leaveType is null)
+            {
+                response.IsSuccess = false;
+                response.Message = "Selected leave type was not found.";
+                return response;
+            }
+
+            var year = createLeaveDto.StartDate.Year;
+            var committed = (await _dbContext.Leaves
+                .Where(l => l.EmployeeId == createLeaveDto.EmployeeId
+                            && l.LeavesTypeId == createLeaveDto.LeavesTypeId
+                            && l.Status.ToUpper() != "REJECTED"
+                            && l.EndDate.HasValue
+                            && l.StartDate.Year == year)
+                .Select(l => new { l.StartDate, l.EndDate, l.IsHalfDay })
+                .ToListAsync())
+                .Sum(l => Services.LeaveCalculations.EffectiveDays(l.StartDate, l.EndDate!.Value, l.IsHalfDay));
+
+            var requestedDays = Services.LeaveCalculations.EffectiveDays(
+                createLeaveDto.StartDate, createLeaveDto.EndDate.Value, createLeaveDto.IsHalfDay);
+
+            if (committed + requestedDays > leaveType.MaxDays)
+            {
+                var remaining = Services.LeaveCalculations.Remaining((decimal)leaveType.MaxDays, committed);
+                response.IsSuccess = false;
+                response.Message = $"Insufficient {leaveType.Name} balance: {remaining} day(s) remaining, but {requestedDays} requested.";
+                return response;
+            }
+            // -------------------------------------------------------------------------
+
+            Leave leaveModel = _mapper.Map<Leave>(createLeaveDto);
+            leaveModel.IsHalfDay = createLeaveDto.IsHalfDay;
+            // An admin-created leave is approved on the spot; everyone else's starts pending.
+            leaveModel.Status = isAdmin ? Emp.Api.Utility.SD.Approved : Emp.Api.Utility.SD.Pending;
+            if (isAdmin)
+            {
+                leaveModel.DecidedById = caller;
+                leaveModel.DecidedAt = DateTime.Now;
+                leaveModel.DecisionNote = "Auto-approved (created by admin).";
+            }
+            // Route to the nearest manager up the department tree who isn't the requester
+            // themselves. A top-level manager's own request resolves to null (Admin approval).
+            leaveModel.ManagerId = await ResolveApproverAsync(emp.DepartmentId, emp.Id);
+
+            leaveModel.Note ??= string.Empty;
 
             _dbContext.Leaves.Add(leaveModel);
             await _dbContext.SaveChangesAsync();
@@ -159,11 +272,73 @@ namespace Emp.Api.Controllers
                 leaveModel.FilePath = "https://placeholde.co/600x400";
             }
             _dbContext.Update(leaveModel);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
+
+            // Notify the approver that a request is waiting (only for pending requests with a manager).
+            if (!isAdmin && leaveModel.ManagerId.HasValue)
+            {
+                var requesterName = await _dbContext.Employees
+                    .Where(e => e.Id == leaveModel.EmployeeId)
+                    .Select(e => e.Name)
+                    .FirstOrDefaultAsync();
+                _dbContext.Notifications.Add(new Notification
+                {
+                    RecipientEmployeeId = leaveModel.ManagerId.Value,
+                    Message = $"{requesterName} requested {leaveType.Name} leave awaiting your approval.",
+                    Url = "/Leaves/TeamLeaves",
+                });
+                await _dbContext.SaveChangesAsync();
+            }
+
             response.IsSuccess = true;
             response.Message = "Leave created successfully";
-            response.Result = leaveModel;
+            // Return a flat projection — never the tracked entity (its navigation graph causes serialization cycles).
+            response.Result = new
+            {
+                leaveModel.Id,
+                leaveModel.EmployeeId,
+                leaveModel.LeavesTypeId,
+                leaveModel.ManagerId,
+                leaveModel.Status,
+                leaveModel.StartDate,
+                leaveModel.EndDate,
+                leaveModel.FilePath
+            };
             return response;
+        }
+
+        /// <summary>
+        /// Finds who should approve a leave by climbing the department tree from the
+        /// employee's department upward. Returns the manager of the nearest department
+        /// whose manager is not the requester. Returns null at the top of the tree (or
+        /// when no manager exists), meaning the request falls to Admin approval.
+        /// </summary>
+        private async Task<int?> ResolveApproverAsync(int departmentId, int employeeId)
+        {
+            int? currentDeptId = departmentId;
+            var visited = new HashSet<int>();
+
+            while (currentDeptId.HasValue && visited.Add(currentDeptId.Value))
+            {
+                var dept = await _dbContext.Departments
+                    .Where(d => d.Id == currentDeptId.Value)
+                    .Select(d => new { d.ManagerId, d.ParentDepartmentId })
+                    .FirstOrDefaultAsync();
+
+                if (dept is null)
+                {
+                    break;
+                }
+
+                if (dept.ManagerId.HasValue && dept.ManagerId.Value != employeeId)
+                {
+                    return dept.ManagerId.Value;
+                }
+
+                currentDeptId = dept.ParentDepartmentId;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -235,6 +410,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="id">leave id parameter</param>
         /// <returns>should return ResponseDto object which contains deleted leave </returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> DeleteLeave(int id)
         {
@@ -245,7 +421,7 @@ namespace Emp.Api.Controllers
                 _dbContext.Leaves.Remove(targetLeave);
                 await _dbContext.SaveChangesAsync();
                 response.IsSuccess = true;
-                response.Result = targetLeave;
+                response.Result = new { targetLeave.Id };
                 response.Message = "Leave deleted successfully";
                 return response;
             }
@@ -302,6 +478,19 @@ namespace Emp.Api.Controllers
         public async Task<ResponseDto> GetLeavesByEmployeeId(int employeeId)
         {
             var response = new ResponseDto();
+
+            // A user may only read their own leaves; admins may read anyone's.
+            if (!User.IsInRole("Admin"))
+            {
+                int.TryParse(User.FindFirst("EmployeeId")?.Value, out var caller);
+                if (caller != employeeId)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "You are not authorized to view these leaves.";
+                    return response;
+                }
+            }
+
             try
             {
                 var leaves = await _dbContext.Leaves
@@ -336,6 +525,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="updateLeaveDto">ResponseDto object</param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<ResponseDto> LeaveAction(UpdateLeaveDto updateLeaveDto)
         {
@@ -383,12 +573,97 @@ namespace Emp.Api.Controllers
                 response.IsSuccess = false;
                 return response;
             }
-            
+
         }
+
+        /// <summary>
+        /// Approve or reject a leave. Allowed for an Admin or the leave's own (department) manager.
+        /// </summary>
+        [Authorize]
+        [HttpPatch("{id}/decision")]
+        public async Task<ResponseDto> Decide(int id, string status, string? note = null)
+        {
+            var response = new ResponseDto();
+
+            if (status != "Approved" && status != "Rejected")
+            {
+                response.IsSuccess = false;
+                response.Message = "Status must be 'Approved' or 'Rejected'.";
+                return response;
+            }
+
+            var leave = await _dbContext.Leaves.FirstOrDefaultAsync(l => l.Id == id);
+            if (leave == null)
+            {
+                response.IsSuccess = false;
+                response.Message = "Leave not found.";
+                return response;
+            }
+
+            // A rejection must carry a reason for the audit trail.
+            if (status == "Rejected" && string.IsNullOrWhiteSpace(note))
+            {
+                response.IsSuccess = false;
+                response.Message = "A reason is required when rejecting a request.";
+                return response;
+            }
+
+            // Authorize: Admin, or the manager this leave is routed to.
+            var isAdmin = User.IsInRole("Admin");
+            int.TryParse(User.FindFirst("EmployeeId")?.Value, out var callerEmployeeId);
+            if (!isAdmin && (leave.ManagerId is null || leave.ManagerId != callerEmployeeId))
+            {
+                response.IsSuccess = false;
+                response.Message = "You are not authorized to act on this request.";
+                return response;
+            }
+
+            // Store status using the canonical (uppercase) constants so balance/overlap
+            // queries are consistent regardless of how the caller cased it.
+            leave.Status = status == "Approved" ? Emp.Api.Utility.SD.Approved : Emp.Api.Utility.SD.Rejected;
+            leave.DecidedById = callerEmployeeId == 0 ? (int?)null : callerEmployeeId;
+            leave.DecidedAt = DateTime.Now;
+            leave.DecisionNote = note;
+            leave.UpdatedAt = DateTime.Now;
+            leave.IsModified = true;
+            await _dbContext.SaveChangesAsync();
+
+            // Tell the employee the outcome.
+            var typeName = await _dbContext.LeavesTypes
+                .Where(t => t.Id == leave.LeavesTypeId).Select(t => t.Name).FirstOrDefaultAsync();
+            _dbContext.Notifications.Add(new Notification
+            {
+                RecipientEmployeeId = leave.EmployeeId,
+                Message = $"Your {typeName} leave request was {status.ToLower()}."
+                          + (string.IsNullOrWhiteSpace(note) ? "" : $" Note: {note}"),
+                Url = "/Leaves/EmployeeLeaves",
+            });
+            await _dbContext.SaveChangesAsync();
+
+            response.IsSuccess = true;
+            response.Result = new { leave.Id, leave.Status };
+            response.Message = $"Leave {status.ToLower()}.";
+            return response;
+        }
+
+        [Authorize]
         [HttpGet("get-leaves-by-managerId/{managerId}")]
         public async Task<ResponseDto> GetLeavesByManagerAsync(int managerId)
         {
             var response = new ResponseDto();
+
+            // A manager may only read the leaves routed to them; admins may read any manager's.
+            if (!User.IsInRole("Admin"))
+            {
+                int.TryParse(User.FindFirst("EmployeeId")?.Value, out var caller);
+                if (caller != managerId)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "You are not authorized to view these leaves.";
+                    return response;
+                }
+            }
+
             try
             {
                 var leavesResponse = await _dbContext.Leaves
@@ -407,16 +682,9 @@ namespace Emp.Api.Controllers
                     })
                     .ToListAsync();
 
-                if (leavesResponse.Any())
-                {
-                    response.IsSuccess = true;
-                    response.Result = leavesResponse;
-                }
-                else
-                {
-                    response.IsSuccess = false;
-                    response.Message = "No leaves found for this manager.";
-                }
+                response.IsSuccess = true;
+                response.Result = leavesResponse;
+                response.Message = "";
             }
             catch (Exception ex)
             {
@@ -426,6 +694,57 @@ namespace Emp.Api.Controllers
             }
             return response;
         }
+        /// <summary>
+        /// Returns leave balance per leave type for an employee:
+        /// entitlement (MaxDays) minus approved days taken in the current year.
+        /// </summary>
+        [HttpGet("balance/{employeeId}")]
+        public async Task<ResponseDto> GetLeaveBalance(int employeeId)
+        {
+            var response = new ResponseDto();
+            try
+            {
+                var year = DateTime.UtcNow.Year;
+                var leaveTypes = await _dbContext.LeavesTypes
+                    .Where(t => t.IsActive)
+                    .ToListAsync();
+
+                var approved = await _dbContext.Leaves
+                    .Where(l => l.EmployeeId == employeeId
+                                && l.Status.ToUpper() == "APPROVED"
+                                && l.EndDate.HasValue
+                                && l.StartDate.Year == year)
+                    .Select(l => new { l.LeavesTypeId, l.StartDate, l.EndDate, l.IsHalfDay })
+                    .ToListAsync();
+
+                var balances = leaveTypes.Select(t =>
+                {
+                    var taken = approved
+                        .Where(a => a.LeavesTypeId == t.Id)
+                        .Sum(a => Services.LeaveCalculations.EffectiveDays(a.StartDate, a.EndDate!.Value, a.IsHalfDay));
+                    return new
+                    {
+                        LeaveTypeId = t.Id,
+                        LeaveType = t.Name,
+                        Entitlement = (decimal)t.MaxDays,
+                        Taken = taken,
+                        Remaining = Services.LeaveCalculations.Remaining((decimal)t.MaxDays, taken)
+                    };
+                }).ToList();
+
+                response.Result = balances;
+                response.IsSuccess = true;
+                response.Message = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                response.Result = null;
+            }
+            return response;
+        }
+
         [HttpPost("TestUpload")]
         public async Task<IActionResult> TestUpload(IFormFile file)
         {

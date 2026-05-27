@@ -6,6 +6,7 @@ using Emp.Api.Dtos;
 using Emp.Api.Dtos.Models;
 using Emp.Api.Dtos.Section;
 using Emp.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class SectionsController : ControllerBase
@@ -34,21 +36,11 @@ namespace Emp.Api.Controllers
             ResponseDto response = new ResponseDto();
             try
             {
-                var sectionList = _dbContext.Sections.Include(e => e.Department).Where(e=>e.DepartmentId != null).ToList();
-                if (sectionList == null)
-                {
-                    response.Result = null;
-                    response.IsSuccess = false;
-                    response.Message = "no data";
-                    return response;
-                }
-                else
-                {
-                    response.Result= _mapper.Map<List<Section>>(sectionList);
-                    response.IsSuccess = true;
-                    response.Message = "";
-                    return response;
-                }
+                var sectionList = _dbContext.Sections.Include(e => e.Department).Where(e => e.DepartmentId != null).ToList();
+                response.Result = _mapper.Map<List<Section>>(sectionList ?? new List<Section>());
+                response.IsSuccess = true;
+                response.Message = "";
+                return response;
             }
             catch (Exception ex)
             {
@@ -104,6 +96,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="createDto"></param>
         /// <returns>ResponseDto whcih contains createdion in Result prop</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ResponseDto> Post([FromBody] SectionCreateDto createDto)
         {
@@ -143,6 +136,7 @@ namespace Emp.Api.Controllers
         /// <param name="id">current section Id</param>
         /// <param name="updateDto">new SectionUpdateDto object</param>
         /// <returns>ResponseDto whcih contains updated object in Result prop</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ResponseDto> Put(int id, [FromBody] SectionUpdateDto updateDto)
         {
@@ -193,6 +187,7 @@ namespace Emp.Api.Controllers
         /// </summary>
         /// <param name="id">section Id</param>
         /// <returns>ResponseDto whcih contains deleted section in Result prop</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ResponseDto> Delete(int id)
         {

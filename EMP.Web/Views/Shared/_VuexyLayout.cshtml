@@ -1,0 +1,539 @@
+@using System.Globalization
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isAdmin = User.IsInRole("Admin");
+    var userName = User.Identity?.Name ?? "User";
+    var userRole = isAdmin ? "Admin" : "Employee";
+
+    var culture = CultureInfo.CurrentUICulture;
+    var isRtl = culture.TextInfo.IsRightToLeft;
+    var dir = isRtl ? "rtl" : "ltr";
+    var lang = culture.TwoLetterISOLanguageName;
+    var theme = Context.Request.Cookies["theme"] == "dark" ? "dark" : "light";
+    var calendar = Context.Request.Cookies["calendar"] == "Hijri" ? "Hijri" : "Gregorian";
+    var todayDisplay = calendar == "Hijri" ? HijriDateHelper.Today : DateTime.Now.ToString("dd MMM yyyy");
+    var primaryColor = Context.Request.Cookies["themecolor"] ?? ThemeColorHelper.Default;
+    var primaryOverrideCss = ThemeColorHelper.BuildPrimaryOverride(primaryColor);
+
+    string Active(string ctrl, string action = null) =>
+        (controller == ctrl && (action == null || currentAction == action)) ? "active" : "";
+}
+<!doctype html>
+<html lang="@lang"
+      class="layout-navbar-fixed layout-menu-fixed layout-compact"
+      dir="@dir"
+      data-skin="default"
+      data-assets-path="/vuexy/assets/"
+      data-template="vertical-menu-template"
+      data-bs-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>@ViewData["Title"] - HR Admin</title>
+
+    <link rel="icon" type="image/x-icon" href="/vuexy/assets/img/favicon/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/vuexy/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/libs/node-waves/node-waves.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/vuexy/assets/css/demo.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/libs/select2/select2.css" />
+    <link rel="stylesheet" href="/vuexy/assets/vendor/libs/flatpickr/flatpickr.css" />
+
+    <link rel="stylesheet" href="~/toastr.js/toastr.min.css" />
+    @await RenderSectionAsync("Styles", required: false)
+
+    <script src="/vuexy/assets/vendor/js/helpers.js"></script>
+    <script src="/vuexy/assets/js/config.js"></script>
+
+    <style>
+        [data-bs-theme="light"] .theme-icon-dark { display: none; }
+        [data-bs-theme="dark"] .theme-icon-light { display: none; }
+        .color-swatch { width: 1.4rem; height: 1.4rem; border-radius: 50%; display: inline-block; border: 2px solid transparent; cursor: pointer; }
+        .color-swatch.active { border-color: var(--bs-body-color); }
+    </style>
+    @if (!string.IsNullOrEmpty(primaryOverrideCss))
+    {
+        <style>@Html.Raw(primaryOverrideCss)</style>
+    }
+    <script>
+        // Active calendar (drives Hijri date display in pickers and elsewhere).
+        window.appCalendar = '@calendar';
+
+        // Primary color customizer — persists via cookie, re-applied server-side (no flash).
+        function setColor(hex) {
+            document.cookie = 'themecolor=' + encodeURIComponent(hex) + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        // Light/Dark theme manager — persists via cookie so the server renders the right
+        // theme on the next request (no flash).
+        function toggleTheme() {
+            var html = document.documentElement;
+            var next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', next);
+            document.cookie = 'theme=' + next + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+        }
+    </script>
+</head>
+
+<body>
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            <!-- Menu -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu">
+                <div class="app-brand demo">
+                    <a asp-controller="Home" asp-action="Index" class="app-brand-link">
+                        <span class="app-brand-logo demo text-primary">
+                            <i class="icon-base ti tabler-building-skyscraper" style="font-size:1.75rem;"></i>
+                        </span>
+                        <span class="app-brand-text demo menu-text fw-bold ms-3">HR Admin</span>
+                    </a>
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+                        <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
+                        <i class="icon-base ti tabler-x d-block d-xl-none"></i>
+                    </a>
+                </div>
+
+                <div class="menu-inner-shadow"></div>
+
+                <ul class="menu-inner py-1">
+                    @if (isAdmin)
+                    {
+                        <li class="menu-item @Active("Home")">
+                            <a asp-controller="Home" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-smart-home"></i>
+                                <div>@L["Dashboard"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-header small"><span class="menu-header-text">@L["Management"]</span></li>
+                        <li class="menu-item @Active("Employees")">
+                            <a asp-controller="Employees" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-users"></i>
+                                <div>@L["Employees"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Leaves")">
+                            <a asp-controller="Leaves" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-calendar"></i>
+                                <div>@L["Leaves"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("LeavesType")">
+                            <a asp-controller="LeavesType" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-list-details"></i>
+                                <div>@L["LeaveTypes"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Departments")">
+                            <a asp-controller="Departments" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-building"></i>
+                                <div>@L["Departments"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("JobTitles")">
+                            <a asp-controller="JobTitles" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-briefcase"></i>
+                                <div>@L["JobTitles"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Countries")">
+                            <a asp-controller="Countries" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-world"></i>
+                                <div>@L["Countries"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Salaries")">
+                            <a asp-controller="Salaries" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-currency-dollar"></i>
+                                <div>@L["Salaries"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-header small"><span class="menu-header-text">@L["System"]</span></li>
+                        <li class="menu-item @Active("Reports")">
+                            <a asp-controller="Reports" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-chart-line"></i>
+                                <div>@L["Reports"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Roles")">
+                            <a asp-controller="Roles" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-shield-lock"></i>
+                                <div>@L["Roles"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("License")">
+                            <a asp-controller="License" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-license"></i>
+                                <div>@L["License"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Settings")">
+                            <a asp-controller="Settings" asp-action="Index" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-settings"></i>
+                                <div>@L["Settings"]</div>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="menu-item @Active("Home", "EmployeeDashboard")">
+                            <a asp-controller="Home" asp-action="EmployeeDashboard" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-smart-home"></i>
+                                <div>@L["Dashboard"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Leaves", "Create")">
+                            <a asp-controller="Leaves" asp-action="Create" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-calendar-plus"></i>
+                                <div>@L["ApplyLeave"]</div>
+                            </a>
+                        </li>
+                        <li class="menu-item @Active("Leaves", "EmployeeLeaves")">
+                            <a asp-controller="Leaves" asp-action="EmployeeLeaves" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-calendar"></i>
+                                <div>@L["MyLeaves"]</div>
+                            </a>
+                        </li>
+                        @if (User.HasClaim("IsManager", "true"))
+                        {
+                            <li class="menu-item @Active("MyTeam")">
+                                <a asp-controller="MyTeam" asp-action="Index" class="menu-link">
+                                    <i class="menu-icon icon-base ti tabler-users"></i>
+                                    <div>@L["MyTeam"]</div>
+                                </a>
+                            </li>
+                            <li class="menu-item @Active("Leaves", "TeamLeaves")">
+                                <a asp-controller="Leaves" asp-action="TeamLeaves" class="menu-link">
+                                    <i class="menu-icon icon-base ti tabler-users-group"></i>
+                                    <div>@L["TeamLeaves"]</div>
+                                </a>
+                            </li>
+                        }
+                        <li class="menu-item @Active("Account", "Profile")">
+                            <a asp-controller="Account" asp-action="Profile" class="menu-link">
+                                <i class="menu-icon icon-base ti tabler-user"></i>
+                                <div>@L["MyProfile"]</div>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </aside>
+            <!-- / Menu -->
+
+            <div class="layout-page">
+                <!-- Navbar -->
+                <nav class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                            <i class="icon-base ti tabler-menu-2 icon-md"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+                        <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+                            <!-- Hijri date -->
+                            <li class="nav-item d-none d-md-flex me-3">
+                                <span class="badge bg-label-secondary" title="@L["Today"]">
+                                    <i class="icon-base ti tabler-calendar me-1"></i>@todayDisplay
+                                </span>
+                            </li>
+
+                            <!-- Theme toggle -->
+                            <li class="nav-item me-2">
+                                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill" href="javascript:void(0);" onclick="toggleTheme()" title="@L["Theme"]">
+                                    <i class="icon-base ti tabler-sun icon-md theme-icon-light"></i>
+                                    <i class="icon-base ti tabler-moon-stars icon-md theme-icon-dark"></i>
+                                </a>
+                            </li>
+
+                            <!-- Primary color customizer -->
+                            <li class="nav-item navbar-dropdown dropdown me-2">
+                                <a class="nav-link dropdown-toggle hide-arrow btn btn-text-secondary btn-icon rounded-pill" href="javascript:void(0);" data-bs-toggle="dropdown" title="@L["Theme"]">
+                                    <i class="icon-base ti tabler-palette icon-md"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end p-3">
+                                    <li class="d-flex flex-wrap gap-2" style="max-width:11rem;">
+                                        @{
+                                            var palette = new (string Name, string Hex)[]
+                                            {
+                                                ("Purple", "#696CFF"), ("Blue", "#3B82F6"), ("Teal", "#0D9488"),
+                                                ("Green", "#28C76F"), ("Orange", "#FF9F43"), ("Red", "#EA5455"),
+                                                ("Pink", "#E83E8C"), ("Slate", "#475569")
+                                            };
+                                        }
+                                        @foreach (var c in palette)
+                                        {
+                                            <span class="color-swatch @(string.Equals(primaryColor, c.Hex, StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                                                  style="background-color:@c.Hex" title="@c.Name"
+                                                  onclick="setColor('@c.Hex')"></span>
+                                        }
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <!-- Language switcher -->
+                            <li class="nav-item navbar-dropdown dropdown me-2">
+                                <a class="nav-link dropdown-toggle hide-arrow btn btn-text-secondary btn-icon rounded-pill" href="javascript:void(0);" data-bs-toggle="dropdown" title="@L["Language"]">
+                                    <i class="icon-base ti tabler-language icon-md"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item @(lang == "en" ? "active" : "")" asp-controller="Home" asp-action="ChangeLang" asp-route-lang="en">@L["English"]</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(lang == "ar" ? "active" : "")" asp-controller="Home" asp-action="ChangeLang" asp-route-lang="ar">@L["Arabic"]</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            @await Component.InvokeAsync("Notifications")
+                            <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+                                    <div class="avatar avatar-online">
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@(userName.Length > 0 ? userName.Substring(0,1).ToUpper() : "U")</span>
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0)">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar avatar-online">
+                                                        <span class="avatar-initial rounded-circle bg-label-primary">@(userName.Length > 0 ? userName.Substring(0,1).ToUpper() : "U")</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">@userName</h6>
+                                                    <small class="text-body-secondary">@userRole</small>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li><div class="dropdown-divider my-1 mx-n2"></div></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                            <i class="icon-base ti tabler-user icon-md me-3"></i><span>My Profile</span>
+                                        </a>
+                                    </li>
+                                    <li><div class="dropdown-divider my-1 mx-n2"></div></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="icon-base ti tabler-power icon-md me-3"></i><span>Log Out</span>
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+                <!-- / Navbar -->
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        @await Component.InvokeAsync("LicenseBanner")
+                        @RenderBody()
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl">
+                            <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                                <div class="text-body">© @DateTime.Now.Year HR Management System</div>
+                            </div>
+                        </div>
+                    </footer>
+
+                    <div class="content-backdrop fade"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layout-overlay layout-menu-toggle"></div>
+        <div class="drag-target"></div>
+    </div>
+
+    <script src="/vuexy/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/vuexy/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/vuexy/assets/vendor/js/bootstrap.js"></script>
+    <script src="/vuexy/assets/vendor/libs/node-waves/node-waves.js"></script>
+    <script src="/vuexy/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/vuexy/assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="/vuexy/assets/vendor/js/menu.js"></script>
+    <script src="/vuexy/assets/vendor/libs/select2/select2.js"></script>
+    <script src="/vuexy/assets/vendor/libs/flatpickr/flatpickr.js"></script>
+    <script src="/js/hijri-datepicker.js"></script>
+    <script src="/vuexy/assets/js/main.js"></script>
+
+    <script src="~/toastr.js/toastr.min.js"></script>
+
+    <script>
+        // Upgrade dropdowns to searchable Select2 and date inputs to Flatpickr.
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.jQuery && jQuery.fn.select2) {
+                jQuery('select.form-select:not([data-no-select2])').each(function () {
+                    var $el = jQuery(this);
+                    var $modal = $el.closest('.modal');
+                    var ph = $el.find('option[value=""]').first().text() || 'Select...';
+                    $el.select2({
+                        placeholder: ph,
+                        width: '100%',
+                        dropdownParent: $modal.length ? $modal : undefined
+                    });
+                });
+            }
+
+            // Hijri mode uses a dedicated Hijri month-grid picker; otherwise flatpickr.
+            var hijriMode = (window.appCalendar === 'Hijri' && window.HijriPicker);
+
+            document.querySelectorAll('input[type="date"]:not([data-fp-done])').forEach(function (el) {
+                el.setAttribute('data-fp-done', '1');
+
+                if (hijriMode) {
+                    window.HijriPicker.attach(el);
+                    return;
+                }
+
+                if (typeof flatpickr === 'undefined') return;
+
+                // Native date inputs render their own browser picker, which clashes with
+                // flatpickr. Switch to text so the Vuexy-styled calendar is the only picker.
+                el.setAttribute('type', 'text');
+                var fp = flatpickr(el, {
+                    dateFormat: 'Y-m-d',
+                    monthSelectorType: 'static',
+                    allowInput: true,
+                    disableMobile: true
+                });
+
+                // Wrap in a Vuexy input-group with a leading calendar icon.
+                if (el.parentNode && !el.parentNode.classList.contains('input-group')) {
+                    var group = document.createElement('div');
+                    group.className = 'input-group';
+                    el.parentNode.insertBefore(group, el);
+
+                    var icon = document.createElement('span');
+                    icon.className = 'input-group-text cursor-pointer';
+                    icon.innerHTML = '<i class="icon-base ti tabler-calendar"></i>';
+                    icon.addEventListener('click', function () { fp.open(); });
+
+                    group.appendChild(icon);
+                    group.appendChild(el);
+                }
+            });
+
+            // Rows marked data-href open on double-click.
+            var hrefStyle = document.createElement('style');
+            hrefStyle.textContent = 'tr[data-href]{cursor:pointer}';
+            document.head.appendChild(hrefStyle);
+            document.addEventListener('dblclick', function (e) {
+                var tr = e.target.closest && e.target.closest('tr[data-href]');
+                if (tr && tr.getAttribute('data-href')) {
+                    window.location = tr.getAttribute('data-href');
+                }
+            });
+
+            // Generic list-table enhancements: a search box (table[data-search]) and
+            // client-side pagination (table[data-paginate="N"]). They cooperate — searching
+            // re-paginates the filtered rows.
+            document.querySelectorAll('table[data-paginate], table[data-search]').forEach(function (table) {
+                var tbody = table.querySelector('tbody');
+                if (!tbody) return;
+                var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+                var pageSize = parseInt(table.getAttribute('data-paginate'), 10) || 0;
+                var card = table.closest('.card');
+                var filterText = '';
+                var current = 1;
+
+                if (table.hasAttribute('data-search')) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'p-4 pb-0';
+                    wrap.innerHTML = '<div class="input-group input-group-sm" style="max-width:340px;">' +
+                        '<span class="input-group-text"><i class="icon-base ti tabler-search"></i></span>' +
+                        '<input type="text" class="form-control" placeholder="Search...">' +
+                        '</div>';
+                    var input = wrap.querySelector('input');
+                    var datatable = card ? card.querySelector('.card-datatable') : null;
+                    var anchor = datatable || table.parentNode;
+                    anchor.parentNode.insertBefore(wrap, anchor);
+                    input.addEventListener('input', function () {
+                        filterText = this.value.toLowerCase();
+                        current = 1;
+                        render();
+                    });
+                }
+
+                var footer, info, ul;
+                function ensureFooter() {
+                    if (footer) return;
+                    footer = document.createElement('div');
+                    footer.className = 'card-footer d-flex align-items-center justify-content-between flex-wrap gap-2';
+                    info = document.createElement('span');
+                    info.className = 'text-body-secondary';
+                    var nav = document.createElement('nav');
+                    ul = document.createElement('ul');
+                    ul.className = 'pagination mb-0';
+                    nav.appendChild(ul);
+                    footer.appendChild(info);
+                    footer.appendChild(nav);
+                    (card || table.parentNode).appendChild(footer);
+                }
+
+                function matches(r) {
+                    return !filterText || r.textContent.toLowerCase().indexOf(filterText) !== -1;
+                }
+
+                function render() {
+                    var visible = rows.filter(matches);
+                    var usePaging = pageSize > 0 && visible.length > pageSize;
+                    var pageCount = usePaging ? Math.ceil(visible.length / pageSize) : 1;
+                    if (current > pageCount) current = pageCount;
+                    if (current < 1) current = 1;
+
+                    rows.forEach(function (r) { r.style.display = 'none'; });
+                    var shown = usePaging ? visible.slice((current - 1) * pageSize, current * pageSize) : visible;
+                    shown.forEach(function (r) { r.style.display = ''; });
+
+                    if (pageSize > 0) {
+                        ensureFooter();
+                        var from = visible.length === 0 ? 0 : (usePaging ? (current - 1) * pageSize + 1 : 1);
+                        var to = usePaging ? Math.min(current * pageSize, visible.length) : visible.length;
+                        info.textContent = 'Showing ' + from + '–' + to + ' of ' + visible.length;
+                        ul.innerHTML = '';
+                        function btn(label, page, disabled, active) {
+                            var li = document.createElement('li');
+                            li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+                            var a = document.createElement('a');
+                            a.className = 'page-link';
+                            a.href = 'javascript:void(0)';
+                            a.innerHTML = label;
+                            a.addEventListener('click', function () {
+                                if (!disabled && page !== current) { current = page; render(); }
+                            });
+                            li.appendChild(a);
+                            ul.appendChild(li);
+                        }
+                        if (usePaging) {
+                            btn('<i class="icon-base ti tabler-chevron-left"></i>', current - 1, current === 1, false);
+                            for (var p = 1; p <= pageCount; p++) btn(p, p, false, p === current);
+                            btn('<i class="icon-base ti tabler-chevron-right"></i>', current + 1, current === pageCount, false);
+                        }
+                    }
+                }
+                render();
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_Notifications")
+</body>
+</html>

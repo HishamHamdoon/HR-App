@@ -1,75 +1,190 @@
-﻿@{
-    ViewData["Title"] = "Reports";
-    Layout = "_AdminLayout";
-
+@{
+    ViewData["Title"] = L["Reports"].Value;
+    Layout = "_VuexyLayout";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3">📊 HR Reports</h2>
-    <p class="text-muted">Download and analyze reports for employees, departments, leaves, and payroll.</p>
+<div class="mb-6">
+    <h4 class="mb-1">@L["Reports"]</h4>
+</div>
 
-    <div class="row">
-        <!-- Employees -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">👤 Employee Reports</h5>
-                    <p class="card-text text-muted">Employee details, headcount, positions, and join dates.</p>
-                    <a asp-controller="Reports" asp-action="EmployeeReport" class="btn btn-sm btn-primary me-2">
-                        PDF
-                    </a>
-                    <a asp-controller="Reports" asp-action="EmployeeExcelReport" class="btn btn-sm btn-success">
-                        Excel
-                    </a>
+<div class="row g-6">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar me-3">
+                        <span class="avatar-initial rounded bg-label-primary"><i class="icon-base ti tabler-users icon-lg"></i></span>
+                    </div>
+                    <h5 class="mb-0">@L["EmployeeReports"]</h5>
+                </div>
+                <p class="text-body-secondary">Employee details, headcount, positions, and join dates.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Reports" asp-action="EmployeeReport" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-file-type-pdf me-1"></i> @L["PDF"]</a>
+                    <a asp-controller="Reports" asp-action="EmployeeExcelReport" class="btn btn-sm btn-label-success"><i class="icon-base ti tabler-file-spreadsheet me-1"></i> @L["Excel"]</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Departments -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">🏢 Department Reports</h5>
-                    <p class="card-text text-muted">Department size, managers, and employee distribution.</p>
-                    <a asp-controller="Reports" asp-action="DepartmentReport" class="btn btn-sm btn-primary me-2">
-                        PDF
-                    </a>
-                    <a asp-controller="Reports" asp-action="DepartmentExcelReport" class="btn btn-sm btn-success">
-                        Excel
-                    </a>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar me-3">
+                        <span class="avatar-initial rounded bg-label-warning"><i class="icon-base ti tabler-building icon-lg"></i></span>
+                    </div>
+                    <h5 class="mb-0">@L["DepartmentReports"]</h5>
+                </div>
+                <p class="text-body-secondary">Department size, managers, and employee distribution.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Reports" asp-action="DepartmentReport" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-file-type-pdf me-1"></i> @L["PDF"]</a>
+                    <a asp-controller="Reports" asp-action="DepartmentExcelReport" class="btn btn-sm btn-label-success"><i class="icon-base ti tabler-file-spreadsheet me-1"></i> @L["Excel"]</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Leaves -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">📅 Leave Reports</h5>
-                    <p class="card-text text-muted">Leave balances, usage trends, and absence statistics.</p>
-                    <a asp-controller="Reports" asp-action="LeaveReport" class="btn btn-sm btn-primary me-2">
-                        PDF
-                    </a>
-                    <a asp-controller="Reports" asp-action="LeaveExcelReport" class="btn btn-sm btn-success">
-                        Excel
-                    </a>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar me-3">
+                        <span class="avatar-initial rounded bg-label-danger"><i class="icon-base ti tabler-user-x icon-lg"></i></span>
+                    </div>
+                    <h5 class="mb-0">@L["TerminatedEmployees"]</h5>
+                </div>
+                <p class="text-body-secondary">Off-boarded staff with termination type, reason, and date.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Reports" asp-action="TerminatedReport" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-file-type-pdf me-1"></i> @L["PDF"]</a>
+                    <a asp-controller="Reports" asp-action="TerminatedExcelReport" class="btn btn-sm btn-label-success"><i class="icon-base ti tabler-file-spreadsheet me-1"></i> @L["Excel"]</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Payroll -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">💰 Payroll Reports</h5>
-                    <p class="card-text text-muted">Salary distribution, raises, and department cost breakdown.</p>
-                    <a asp-controller="Reports" asp-action="PayrollReport" class="btn btn-sm btn-primary me-2">
-                        PDF
-                    </a>
-                    <a asp-controller="Reports" asp-action="PayrollExcelReport" class="btn btn-sm btn-success">
-                        Excel
-                    </a>
+    <div class="col-12">
+        <form method="get" id="leaveReportForm">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="icon-base ti tabler-calendar me-1 text-success"></i> @L["LeaveReports"]</h5>
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                        <div>
+                            <label class="form-label mb-1 small">@L["From"]</label>
+                            <input type="date" name="from" class="form-control form-control-sm" />
+                        </div>
+                        <div>
+                            <label class="form-label mb-1 small">@L["To"]</label>
+                            <input type="date" name="to" class="form-control form-control-sm" />
+                        </div>
+                    </div>
                 </div>
+                <div class="card-body">
+                    <p class="text-body-secondary">All leave requests. Use the date range to limit by start date — leave blank for all.</p>
+                    <div class="d-flex gap-2 flex-wrap mb-4">
+                        <button type="submit" formaction="@Url.Action("LeaveReport")" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-file-type-pdf me-1"></i> @L["PDF"]</button>
+                        <button type="submit" formaction="@Url.Action("LeaveExcelReport")" class="btn btn-sm btn-label-success"><i class="icon-base ti tabler-file-spreadsheet me-1"></i> @L["Excel"]</button>
+                    </div>
+
+                    <hr />
+                    <p class="text-body-secondary mb-2"><i class="icon-base ti tabler-clock-hour-4 me-1 text-warning"></i> <strong>@L["PendingRequests"]</strong></p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" formaction="@Url.Action("PendingLeaveReport")" class="btn btn-sm btn-warning"><i class="icon-base ti tabler-file-type-pdf me-1"></i> Pending PDF</button>
+                        <button type="submit" formaction="@Url.Action("PendingLeaveExcelReport")" class="btn btn-sm btn-label-warning"><i class="icon-base ti tabler-file-spreadsheet me-1"></i> Pending Excel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@{
+    var headcount = ViewBag.HeadcountByDept as List<KeyValuePair<string, int>> ?? new List<KeyValuePair<string, int>>();
+    var byStatus = ViewBag.LeaveByStatus as List<KeyValuePair<string, int>> ?? new List<KeyValuePair<string, int>>();
+    var byType = ViewBag.LeaveByType as List<KeyValuePair<string, int>> ?? new List<KeyValuePair<string, int>>();
+}
+
+<div class="row g-6 mt-1">
+    <div class="col-12">
+        <h5 class="mb-0">@L["AtAGlance"]</h5>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-start justify-content-between">
+                <div>
+                    <span class="text-heading">@L["ActiveEmployees"]</span>
+                    <h4 class="mb-0 mt-1">@(ViewBag.ActiveCount ?? 0)</h4>
+                </div>
+                <div class="avatar"><span class="avatar-initial rounded bg-label-success"><i class="icon-base ti tabler-user-check icon-lg"></i></span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-start justify-content-between">
+                <div>
+                    <span class="text-heading">@L["InactiveEmployees"]</span>
+                    <h4 class="mb-0 mt-1">@(ViewBag.InactiveCount ?? 0)</h4>
+                </div>
+                <div class="avatar"><span class="avatar-initial rounded bg-label-secondary"><i class="icon-base ti tabler-user-off icon-lg"></i></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Headcount by Department</h6></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        @foreach (var row in headcount)
+                        {
+                            <tr>
+                                <td class="fw-medium">@row.Key</td>
+                                <td class="text-end"><span class="badge bg-label-primary">@row.Value</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Leave Requests by Status</h6></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        @foreach (var row in byStatus)
+                        {
+                            <tr>
+                                <td class="fw-medium">@row.Key</td>
+                                <td class="text-end"><span class="badge bg-label-info">@row.Value</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Leave Utilisation by Type</h6></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        @foreach (var row in byType)
+                        {
+                            <tr>
+                                <td class="fw-medium">@row.Key</td>
+                                <td class="text-end"><span class="badge bg-label-warning">@row.Value</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

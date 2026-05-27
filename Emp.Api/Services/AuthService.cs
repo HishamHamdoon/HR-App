@@ -128,16 +128,28 @@ namespace Emp.Api.Services
                 await _context.Employees.AddAsync(employee);
                 await _context.SaveChangesAsync();
 
+                // Honour the org policy: force a password change at first login when enabled.
+                var requireChange = await _context.CompanySettings
+                    .OrderBy(s => s.Id)
+                    .Select(s => (bool?)s.RequirePasswordChangeOnFirstLogin)
+                    .FirstOrDefaultAsync() ?? true;
+
                 // Step 2: Create Identity User
                 var user = new ApplicationUser
                 {
                     UserName = registerDto.Email,
                     Email = registerDto.Email,
                     PhoneNumber = registerDto.PhoneNumber,
-                    EmployeeId = employee.Id
+                    EmployeeId = employee.Id,
+                    MustChangePassword = requireChange
                 };
 
-                var result = await _userManager.CreateAsync(user, registerDto.Password);
+                // Default password when none supplied.
+                var password = string.IsNullOrWhiteSpace(registerDto.Password)
+                    ? DbInitializer.DefaultUserPassword
+                    : registerDto.Password;
+
+                var result = await _userManager.CreateAsync(user, password);
 
                 if (!result.Succeeded)
                 {
@@ -145,18 +157,17 @@ namespace Emp.Api.Services
                     _response.Message = result.Errors.FirstOrDefault()?.Description ?? "Registration failed.";
                     _response.IsSuccess = false;
                     _response.Result = null;
-                }
-                else
-                {
-                    _response.IsSuccess = true;
-                    _response.Result = true;
-                    _response.Message = "Employee created successfully";
+                    return _response;
                 }
 
-                    // role: assign to default role
-                    await AssignRole(user.Email, "Employee");
+                // Assign default role only after the user is successfully created.
+                await AssignRole(user.Email, DbInitializer.EmployeeRole);
 
                 await transaction.CommitAsync();
+
+                _response.IsSuccess = true;
+                _response.Result = true;
+                _response.Message = "Employee created successfully";
                 return _response;
             }
             catch (Exception ex)
@@ -171,45 +182,118 @@ namespace Emp.Api.Services
 
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
-            var user = await _context.ApplicationUsers.Include(e=>e.Employee).FirstOrDefaultAsync(a => a.UserName == loginRequestDto.Username);
-            if (user is not null)
-            {
-                bool valid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
-                var roles = await _userManager.GetRolesAsync(user);
-                string token = await _jwtTokenGenerator.GenerateToken(user,roles);
-                if (valid)
-                {
-                    //generate token
-                    //token = await _jwtTokenGenerator.GenerateToken(user);
+            var user = await _context.ApplicationUsers
+                .Include(e => e.Employee)
+                .FirstOrDefaultAsync(a => a.UserName == loginRequestDto.Username);
 
-                }
-                else
-                {
-                    return new LoginResponseDto()
-                    {
-                        Token = "",
-                        User = null
-                    };
-                }
-                UserDto userDto = new()
+            if (user is null)
+            {
+                return new LoginResponseDto();
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            var valid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if (!valid)
+            {
+                await _userManager.AccessFailedAsync(user);
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // A user is a manager if they own at least one department.
+            var isManager = user.Employee != null
+                && await _context.Departments.AnyAsync(d => d.ManagerId == user.Employee.Id);
+
+            // Resolve UI preferences (calendar falls back to the org default).
+            var theme = string.IsNullOrWhiteSpace(user.PreferredTheme) ? "light" : user.PreferredTheme;
+            var orgCalendar = await _context.CompanySettings
+                .OrderBy(s => s.Id).Select(s => s.DefaultCalendar).FirstOrDefaultAsync() ?? "Gregorian";
+            var calendar = string.IsNullOrWhiteSpace(user.PreferredCalendar) ? orgCalendar : user.PreferredCalendar;
+            var lang = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage;
+
+            var token = await _jwtTokenGenerator.GenerateToken(user, roles, isManager, user.MustChangePassword, theme, calendar, lang);
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                User = new UserDto
                 {
                     Email = user.Email,
                     Name = user.UserName,
                     Id = user.Id,
                     PhoneNumber = user.PhoneNumber
-                };
-                LoginResponseDto loginResponse = new LoginResponseDto()
+                }
+            };
+        }
+
+        public async Task<ResponseDto> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+        {
+            var response = new ResponseDto();
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User not found.";
+                return response;
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (result.Succeeded)
+            {
+                if (user.MustChangePassword)
                 {
-                    Token = token,
-                    User = userDto
-                };
-                return loginResponse;
+                    user.MustChangePassword = false;
+                    await _userManager.UpdateAsync(user);
+                }
+                response.IsSuccess = true;
+                response.Result = true;
+                response.Message = "Password changed successfully.";
             }
             else
             {
-                return new LoginResponseDto();
+                response.IsSuccess = false;
+                response.Message = string.Join("; ", result.Errors.Select(e => e.Description));
+            }
+            return response;
+        }
+
+        public async Task<ResponseDto> UpdatePreferencesAsync(string userId, string? theme, string? calendar, string? language)
+        {
+            var response = new ResponseDto();
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User not found.";
+                return response;
             }
 
+            if (theme is not null)
+            {
+                user.PreferredTheme = theme.Equals("dark", StringComparison.OrdinalIgnoreCase) ? "dark" : "light";
+            }
+            if (calendar is not null)
+            {
+                user.PreferredCalendar = calendar.Equals("Hijri", StringComparison.OrdinalIgnoreCase) ? "Hijri" : "Gregorian";
+            }
+            if (language is not null)
+            {
+                user.PreferredLanguage = language.Equals("ar", StringComparison.OrdinalIgnoreCase) ? "ar" : "en";
+            }
+            await _userManager.UpdateAsync(user);
+
+            response.IsSuccess = true;
+            response.Message = "Preferences saved.";
+            response.Result = new { Theme = user.PreferredTheme, Calendar = user.PreferredCalendar, Language = user.PreferredLanguage };
+            return response;
         }
 
         public async Task<ResponseDto?> AssignRole(string email, string roleName)

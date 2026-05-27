@@ -6,5 +6,6 @@ namespace EMP.Web.Services.IServices
     public interface ISectionService
     {
         Task<ResponseDto> GetSectionsAsync();
+        Task<ResponseDto> CreateSectionAsync(string name, int departmentId);
     }
 }

@@ -28,6 +28,43 @@ namespace EMP.Web.Services
 
       
 
+        public async Task<ResponseDto> UpdateDepartmentAsync(DepartmentCreateDto departmentDto)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Put,
+                Url = $"{SD.DepartmentAPIUrl}/{departmentDto.Id}",
+                Data = departmentDto
+            });
+        }
+
+        public async Task<ResponseDto> DeleteDepartmentAsync(int id)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Delete,
+                Url = $"{SD.DepartmentAPIUrl}/{id}"
+            });
+        }
+
+        public async Task<ResponseDto> SetManagerAsync(int departmentId, int managerId)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Patch,
+                Url = $"{SD.DepartmentAPIUrl}/set-manager?departmentId={departmentId}&managerId={managerId}"
+            });
+        }
+
+        public async Task<ResponseDto> RemoveManagerAsync(int departmentId)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Patch,
+                Url = $"{SD.DepartmentAPIUrl}/remove-manager?departmentId={departmentId}"
+            });
+        }
+
         public async Task<ResponseDto> GetDepartmentAsync(int id)
         {
             return await _baseService.SendAsync(new RequestDto
@@ -51,7 +88,7 @@ namespace EMP.Web.Services
             return await _baseService.SendAsync(new RequestDto
             {
                 ApiType = SD.ApiType.Get,
-                Url = $"{SD.DepartmentAPIUrl}/{departmentId}"
+                Url = $"{SD.DepartmentAPIUrl}/sections/{departmentId}"
              });
         }
     }

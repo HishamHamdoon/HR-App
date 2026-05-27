@@ -1,0 +1,50 @@
+@model EMP.Web.Models.Dtos.NotificationListDto
+
+<li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
+    <a class="nav-link dropdown-toggle hide-arrow position-relative" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <i class="icon-base ti tabler-bell icon-md"></i>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="badge rounded-pill bg-danger badge-notifications border position-absolute" style="top:4px;right:4px;">@Model.UnreadCount</span>
+        }
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end p-0" style="min-width:22rem;">
+        <li class="dropdown-menu-header border-bottom">
+            <div class="dropdown-header d-flex align-items-center py-3 px-4">
+                <h6 class="mb-0 me-auto">Notifications</h6>
+                @if (Model.UnreadCount > 0)
+                {
+                    <span class="badge bg-label-primary me-2">@Model.UnreadCount New</span>
+                    <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                        <button type="submit" class="btn btn-text-secondary btn-icon rounded-pill p-0" title="Mark all as read">
+                            <i class="icon-base ti tabler-mail-opened text-heading"></i>
+                        </button>
+                    </form>
+                }
+            </div>
+        </li>
+        <li class="dropdown-notifications-list" style="max-height:20rem;overflow:auto;">
+            @if (Model.Items.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var n in Model.Items)
+                    {
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item @(n.IsRead ? "" : "bg-label-primary")">
+                            <a href="@(string.IsNullOrEmpty(n.Url) ? "javascript:void(0);" : n.Url)" class="d-block text-body">
+                                <div class="small">@n.Message</div>
+                                <small class="text-body-secondary">@n.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center p-4 text-body-secondary">
+                    <i class="icon-base ti tabler-bell-off mb-2 d-block" style="font-size:1.75rem;opacity:.4;"></i>
+                    No notifications
+                </div>
+            }
+        </li>
+    </ul>
+</li>

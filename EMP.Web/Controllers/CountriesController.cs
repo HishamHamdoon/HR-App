@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 
 namespace EMP.Web.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class CountriesController : Controller
     {
         private readonly ICountryService _countryService;
@@ -69,6 +70,36 @@ namespace EMP.Web.Controllers
                 return View(countryDto);
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var response = await _countryService.GetCountryAsync(id);
+            if (response?.IsSuccess == true && response.Result is not null)
+            {
+                var country = JsonConvert.DeserializeObject<CountryDto>(response.Result.ToString());
+                return View(country);
+            }
+            TempData["error"] = "Country not found.";
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(CountryDto countryDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(countryDto);
+            }
+            var response = await _countryService.UpdateCountryAsync(countryDto);
+            if (response?.IsSuccess == true)
+            {
+                TempData["success"] = response.Message ?? "Country updated successfully.";
+                return RedirectToAction("Index");
+            }
+            TempData["error"] = response?.Message ?? "Failed to update country.";
+            return View(countryDto);
+        }
+
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {

@@ -1,0 +1,89 @@
+@model EMP.Web.Models.Dtos.CompanySettingsDto
+@{
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = L["Settings"].Value;
+}
+
+<div class="mb-6">
+    <h4 class="mb-1">@L["Settings"]</h4>
+    <p class="mb-0 text-body-secondary">Organisation details and branding used across the app and on reports.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Index" method="post" enctype="multipart/form-data">
+                    <div class="row g-5">
+                        <div class="col-md-6">
+                            <label asp-for="CompanyName" class="form-label">Company Name</label>
+                            <input asp-for="CompanyName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label">Phone</label>
+                            <input asp-for="Phone" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Address" class="form-label">Address</label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Company Logo</label>
+                            <div class="d-flex align-items-center gap-4 mb-2">
+                                @if (!string.IsNullOrEmpty(Model.LogoBase64))
+                                {
+                                    <img src="data:image/png;base64,@Model.LogoBase64" alt="Logo" style="height:64px;max-width:200px;object-fit:contain;border:1px solid #eee;border-radius:6px;padding:4px;" />
+                                }
+                                else
+                                {
+                                    <span class="text-body-secondary">No logo uploaded.</span>
+                                }
+                            </div>
+                            <input name="logo" type="file" accept="image/*" class="form-control" />
+                            <div class="form-text">PNG or JPG. Appears on report headers. Leave empty to keep the current logo.</div>
+                            @if (!string.IsNullOrEmpty(Model.LogoBase64))
+                            {
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="removeLogo" value="true" id="removeLogo" />
+                                    <label class="form-check-label" for="removeLogo">Remove current logo</label>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DefaultCalendar" class="form-label">@L["Calendar"]</label>
+                            <select asp-for="DefaultCalendar" class="form-select" data-no-select2>
+                                <option value="Gregorian">@L["Gregorian"]</option>
+                                <option value="Hijri">@L["Hijri"]</option>
+                            </select>
+                            <div class="form-text">Default calendar for new users (each user can override it in their profile).</div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2" />
+                            <h6 class="mb-2">Security</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="reqPwd"
+                                       asp-for="RequirePasswordChangeOnFirstLogin" />
+                                <label class="form-check-label" for="reqPwd">
+                                    Require new users to change their password at first login
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="icon-base ti tabler-device-floppy me-1"></i> @L["Save"]
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

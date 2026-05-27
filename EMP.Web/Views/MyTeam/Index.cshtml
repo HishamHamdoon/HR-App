@@ -1,0 +1,74 @@
+@using EMP.Web.Views.ViewModels
+@model List<EmployeeVM>
+@{
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = "My Team";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">My Team</h4>
+    <a asp-controller="Home" asp-action="EmployeeDashboard" class="btn btn-label-secondary">
+        <i class="icon-base ti tabler-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-datatable table-responsive">
+        @if (Model != null && Model.Any())
+        {
+            <table class="table table-hover border-top" data-paginate="10">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Job Title</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Country</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var employee in Model)
+                    {
+                        <tr>
+                            <td><span class="fw-medium">@employee.Id</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-3">
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            @(string.IsNullOrEmpty(employee.Name) ? "?" : employee.Name.Substring(0, 1).ToUpper())
+                                        </span>
+                                    </div>
+                                    <span class="fw-medium">@employee.Name</span>
+                                </div>
+                            </td>
+                            <td>@employee.JobTitleTitle</td>
+                            <td>@employee.Email</td>
+                            <td>@employee.DepartmentName</td>
+                            <td>@employee.CountryName</td>
+                            <td>
+                                @if (employee.isActive)
+                                {
+                                    <span class="badge rounded-pill bg-label-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill bg-label-danger">Inactive</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-center p-6">
+                <i class="icon-base ti tabler-users-off mb-2" style="font-size:2.5rem;opacity:.4;"></i>
+                <h6 class="mb-0">No team members found</h6>
+                <p class="text-body-secondary mb-0">You are not set as the manager of any department yet.</p>
+            </div>
+        }
+    </div>
+</div>
