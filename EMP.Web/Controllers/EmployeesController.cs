@@ -49,8 +49,6 @@ namespace EMP.Web.Controllers
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             Emp.Web.Models.Dtos.ResponseDto response = await _employeeService.GetEmployeesAsync(page, pageSize);
-            //var employeeList = new PagedEmployeesVM();
-
             if (response.IsSuccess && response.Result is not null)
             {
                 // Deserialize the response into a paged response of EmployeeVM
