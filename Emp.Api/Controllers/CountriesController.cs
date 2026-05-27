@@ -24,7 +24,6 @@ namespace Emp.Api.Controllers
         {
             _dbContext = dbContext;
             _mapper = mapper;
-            
         }
         // GET: api/<CountriesController>
         [HttpGet]
@@ -145,7 +144,5 @@ namespace Emp.Api.Controllers
 
             return response;
         }
-
-
     }
 }

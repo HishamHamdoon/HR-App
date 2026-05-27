@@ -51,8 +51,6 @@ namespace EMP.Web.Controllers
         {
             // Load the full set; the list uses client-side search + pagination.
             Emp.Web.Models.Dtos.ResponseDto response = await _employeeService.GetEmployeesAsync(page, pageSize);
-            //var employeeList = new PagedEmployeesVM();
-
             if (response.IsSuccess && response.Result is not null)
             {
                 // Deserialize the response into a paged response of EmployeeVM

@@ -36,7 +36,6 @@ namespace Emp.Api.Controllers
             //_response = new ResponseDto();
             _mapper = mapper;
             _employees = new List<EmployeeDto>();
-
         }
         // GET: api/<DepartmentController>
         [HttpGet]
