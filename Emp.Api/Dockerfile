@@ -14,7 +14,8 @@ COPY ["Emp.Models/Emp.Models.csproj", "Emp.Models/"]
 RUN dotnet restore "Emp.Api/Emp.Api.csproj"
 COPY . .
 WORKDIR "/src/Emp.Api"
-RUN dotnet publish "Emp.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Emp.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false \
+    /p:UseSharedCompilation=false /p:RunAnalyzers=false
 
 FROM base AS final
 WORKDIR /app

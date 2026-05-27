@@ -201,10 +201,9 @@ namespace Emp.Api.Controllers
                 return response;
             }
 
-            // Enforce the leave-type entitlement (committed + pending must not exceed MaxDays this year).
             var leaveType = await _dbContext.LeavesTypes
                 .Where(t => t.Id == createLeaveDto.LeavesTypeId)
-                .Select(t => new { t.Name, t.MaxDays })
+                .Select(t => new { t.Name, t.MinDays, t.MaxDays })
                 .FirstOrDefaultAsync();
             if (leaveType is null)
             {
@@ -213,6 +212,24 @@ namespace Emp.Api.Controllers
                 return response;
             }
 
+            var requestedDays = Services.LeaveCalculations.EffectiveDays(
+                createLeaveDto.StartDate, createLeaveDto.EndDate.Value, createLeaveDto.IsHalfDay);
+
+            // Per-request duration bounds configured on the leave type.
+            if (leaveType.MinDays > 0 && requestedDays < leaveType.MinDays)
+            {
+                response.IsSuccess = false;
+                response.Message = $"{leaveType.Name} requires at least {leaveType.MinDays} day(s) per request (requested {requestedDays}).";
+                return response;
+            }
+            if (leaveType.MaxDays > 0 && requestedDays > leaveType.MaxDays)
+            {
+                response.IsSuccess = false;
+                response.Message = $"{leaveType.Name} allows at most {leaveType.MaxDays} day(s) per request (requested {requestedDays}).";
+                return response;
+            }
+
+            // Enforce the annual entitlement (committed + pending must not exceed MaxDays this year).
             var year = createLeaveDto.StartDate.Year;
             var committed = (await _dbContext.Leaves
                 .Where(l => l.EmployeeId == createLeaveDto.EmployeeId
@@ -224,10 +241,7 @@ namespace Emp.Api.Controllers
                 .ToListAsync())
                 .Sum(l => Services.LeaveCalculations.EffectiveDays(l.StartDate, l.EndDate!.Value, l.IsHalfDay));
 
-            var requestedDays = Services.LeaveCalculations.EffectiveDays(
-                createLeaveDto.StartDate, createLeaveDto.EndDate.Value, createLeaveDto.IsHalfDay);
-
-            if (committed + requestedDays > leaveType.MaxDays)
+            if (leaveType.MaxDays > 0 && committed + requestedDays > leaveType.MaxDays)
             {
                 var remaining = Services.LeaveCalculations.Remaining((decimal)leaveType.MaxDays, committed);
                 response.IsSuccess = false;

@@ -11,7 +11,10 @@ COPY ["Emp.Models/Emp.Models.csproj", "Emp.Models/"]
 RUN dotnet restore "EMP.Web/EMP.Web.csproj"
 COPY . .
 WORKDIR "/src/EMP.Web"
-RUN dotnet publish "EMP.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# UseSharedCompilation=false avoids the Roslyn compiler server crashing in resource-limited
+# containers (silent exit 1); analyzers off keeps build memory down.
+RUN dotnet publish "EMP.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false \
+    /p:UseSharedCompilation=false /p:RunAnalyzers=false
 
 FROM base AS final
 WORKDIR /app
