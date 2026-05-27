@@ -1,29 +1,29 @@
 @using Emp.Web.Dtos.JobTitle
 @model IEnumerable<JobTitleViewDto>
 @{
-    ViewData["Title"] = "Job Titles";
+    ViewData["Title"] = L["JobTitles"].Value;
     Layout = "_VuexyLayout";
 }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
     <div>
-        <h4 class="mb-1">Job Titles</h4>
-        <p class="mb-0 text-body-secondary">Roles and their base salaries</p>
+        <h4 class="mb-1">@L["JobTitles"]</h4>
+        <p class="mb-0 text-body-secondary">@L["JobTitlesSubtitle"]</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary"><i class="icon-base ti tabler-plus me-1"></i> Add Job Title</a>
+    <a asp-action="Create" class="btn btn-primary"><i class="icon-base ti tabler-plus me-1"></i> @L["AddJobTitle"]</a>
 </div>
 
 <div class="card">
     <div class="card-datatable table-responsive">
-        <table class="table table-hover border-top" data-paginate="10">
+        <table class="table table-hover border-top" data-paginate="10" data-search>
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Main Salary</th>
-                    <th>Created</th>
-                    <th class="text-end">Actions</th>
+                    <th>@L["Title"]</th>
+                    <th>@L["Description"]</th>
+                    <th>@L["MainSalary"]</th>
+                    <th>@L["Created"]</th>
+                    <th class="text-end">@L["Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,7 +32,7 @@
                     int i = 1;
                     foreach (var item in Model)
                     {
-                        <tr>
+                        <tr data-href="@Url.Action("Details", new { id = item.Id })">
                             <td>@i</td>
                             <td class="fw-medium">@item.Title</td>
                             <td>@item.Description</td>
@@ -40,15 +40,15 @@
                             <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Edit">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="@L["Edit"]">
                                         <i class="icon-base ti tabler-edit"></i>
                                     </a>
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Details">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="@L["Details"]">
                                         <i class="icon-base ti tabler-eye"></i>
                                     </a>
                                     <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="m-0"
                                           onsubmit="return confirm('Delete this job title?');">
-                                        <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill" title="Delete">
+                                        <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill" title="@L["Delete"]">
                                             <i class="icon-base ti tabler-trash"></i>
                                         </button>
                                     </form>
@@ -60,7 +60,7 @@
                 }
                 else
                 {
-                    <tr><td colspan="6" class="text-center text-body-secondary py-4">No job titles found.</td></tr>
+                    <tr><td colspan="6" class="text-center text-body-secondary py-4">@L["NoRecords"]</td></tr>
                 }
             </tbody>
         </table>

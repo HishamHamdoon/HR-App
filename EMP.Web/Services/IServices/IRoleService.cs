@@ -7,6 +7,7 @@ namespace EMP.Web.Services.IServices
     {
         Task<ResponseDto> GetAllRolesAsync();
         Task<ResponseDto> CreateRoleAsync(string roleName);
+        Task<ResponseDto> DeleteRoleAsync(string roleName);
         Task<bool> AssignRoleToUserAsync(string userId, string roleName);
         Task<IList<string>> GetUserRolesAsync(string userId);
         Task<bool> RemoveRoleFromUserAsync(string userId, string roleName);

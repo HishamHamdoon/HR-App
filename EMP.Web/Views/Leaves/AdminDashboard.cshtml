@@ -5,8 +5,11 @@
     Layout = "_VuexyLayout";
 }
 
-<div class="mb-6">
-    <h4 class="mb-0">Leaves for Manager</h4>
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <h4 class="mb-0">Team Leave Requests</h4>
+    <a asp-controller="Home" asp-action="EmployeeDashboard" class="btn btn-label-secondary">
+        <i class="icon-base ti tabler-arrow-left me-1"></i> Back
+    </a>
 </div>
 
 <div class="card">
@@ -46,15 +49,25 @@
                                     <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@leave.Id" title="Details">
                                         <i class="icon-base ti tabler-eye"></i>
                                     </a>
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@leave.Id" title="Edit">
-                                        <i class="icon-base ti tabler-edit"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-leaveId="@leave.Id" method="post" class="m-0"
-                                          onsubmit="return confirm('Delete this record?')">
-                                        <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill" title="Delete">
-                                            <i class="icon-base ti tabler-trash"></i>
-                                        </button>
-                                    </form>
+                                    @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <form asp-controller="Leaves" asp-action="Approve" method="post" class="m-0">
+                                            <input type="hidden" name="leaveId" value="@leave.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                            <button type="submit" class="btn btn-sm btn-label-success" title="Approve">
+                                                <i class="icon-base ti tabler-check"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-controller="Leaves" asp-action="Reject" method="post" class="m-0"
+                                              onsubmit="var r=prompt('Reason for rejection:'); if(r===null||r.trim()===''){return false;} this.note.value=r; return true;">
+                                            <input type="hidden" name="leaveId" value="@leave.Id" />
+                                            <input type="hidden" name="note" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                            <button type="submit" class="btn btn-sm btn-label-danger" title="Reject">
+                                                <i class="icon-base ti tabler-x"></i>
+                                            </button>
+                                        </form>
+                                    }
                                 </div>
                             </td>
                         </tr>

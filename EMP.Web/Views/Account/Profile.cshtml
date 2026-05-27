@@ -21,6 +21,14 @@
                 <h5 class="mb-0">@name</h5>
                 <span class="badge bg-label-primary mt-2">@Model?.Role</span>
                 <p class="text-body-secondary mt-2 mb-0">Employee ID: @Model?.EmployeeId</p>
+                <div class="d-grid gap-2 mt-4">
+                    <a asp-action="EditProfile" class="btn btn-label-primary">
+                        <i class="icon-base ti tabler-edit me-1"></i> Edit Profile
+                    </a>
+                    <a asp-action="ChangePassword" class="btn btn-label-secondary">
+                        <i class="icon-base ti tabler-key me-1"></i> Change Password
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -42,9 +50,46 @@
                     <dt class="col-sm-4 text-body-secondary fw-normal">Manager</dt>
                     <dd class="col-sm-8 fw-medium">@(string.IsNullOrEmpty(Model?.Employee?.Manager) ? "—" : Model.Employee.Manager)</dd>
 
-                    <dt class="col-sm-4 text-body-secondary fw-normal">Country</dt>
+                    <dt class="col-sm-4 text-body-secondary fw-normal">@L["Country"]</dt>
                     <dd class="col-sm-8"><span class="badge bg-label-warning">@Model?.Employee?.CountryName</span></dd>
                 </dl>
+            </div>
+        </div>
+
+        @{
+            var curTheme = Context.Request.Cookies["theme"] == "dark" ? "dark" : "light";
+            var curCalendar = Context.Request.Cookies["calendar"] == "Hijri" ? "Hijri" : "Gregorian";
+            var curLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        }
+        <div class="card mt-6">
+            <div class="card-header"><h5 class="mb-0">@L["Preferences"]</h5></div>
+            <div class="card-body">
+                <form asp-action="Preferences" method="post" class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Language"]</label>
+                        <select name="language" class="form-select" data-no-select2>
+                            <option value="en" selected="@(curLang == "en")">@L["English"]</option>
+                            <option value="ar" selected="@(curLang == "ar")">@L["Arabic"]</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Theme"]</label>
+                        <select name="theme" class="form-select" data-no-select2>
+                            <option value="light" selected="@(curTheme == "light")">@L["Light"]</option>
+                            <option value="dark" selected="@(curTheme == "dark")">@L["Dark"]</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@L["Calendar"]</label>
+                        <select name="calendar" class="form-select" data-no-select2>
+                            <option value="Gregorian" selected="@(curCalendar == "Gregorian")">@L["Gregorian"]</option>
+                            <option value="Hijri" selected="@(curCalendar == "Hijri")">@L["Hijri"]</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary"><i class="icon-base ti tabler-device-floppy me-1"></i> @L["Save"]</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

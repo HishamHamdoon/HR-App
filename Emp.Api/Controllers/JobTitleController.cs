@@ -102,18 +102,27 @@ namespace Emp.Api.Controllers
         public async Task<ResponseDto> JobTitle(int id,[FromBody] JobTitleUpdateDto JobTitlesUpdateDto)
         {
             ResponseDto response = new ResponseDto();
-            var JobTitleModel = await _dbContext.JobTitles.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==id);
+            var exists = await _dbContext.JobTitles.AnyAsync(x => x.Id == id);
+            if (!exists)
+            {
+                response.IsSuccess = false;
+                response.Result = null;
+                response.Message = "Job title not found";
+                return response;
+            }
             if (!ModelState.IsValid)
             {
-                response.IsSuccess= false;
+                response.IsSuccess = false;
                 response.Result = ModelState.Values.SelectMany(error => error.Errors).Select(e => e.ErrorMessage).ToList();
-                response.Message="Error";
+                response.Message = "Error";
+                return response;
             }
             var mappedmodel = _mapper.Map<JobTitle>(JobTitlesUpdateDto);
+            mappedmodel.Id = id; // route id is authoritative
             _dbContext.Update(mappedmodel);
             await _dbContext.SaveChangesAsync();
             response.IsSuccess = true;
-            response.Result = JobTitleModel is null ? null : new { JobTitleModel.Id, JobTitleModel.Title };
+            response.Result = new { mappedmodel.Id, mappedmodel.Title };
             response.Message = "Job title updated successfully";
             return response;
         }

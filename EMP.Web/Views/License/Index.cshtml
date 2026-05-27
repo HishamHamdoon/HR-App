@@ -1,0 +1,100 @@
+@using EMP.Web.Models.Dtos
+@{
+    Layout = "_VuexyLayout";
+    ViewData["Title"] = L["License"].Value;
+    var status = ViewBag.Status as LicenseStatusDto ?? new LicenseStatusDto { Type = "Unknown" };
+    var isAdmin = User.IsInRole("Admin");
+    var stateBadge = status.IsValid ? (status.DaysRemaining <= 7 ? "bg-label-warning" : "bg-label-success") : "bg-label-danger";
+    var stateText = status.IsValid ? L["Active"].Value : L["Expired"].Value;
+    var generatedKey = TempData["generatedKey"] as string;
+}
+
+<div class="mb-6">
+    <h4 class="mb-1">@L["License"]</h4>
+</div>
+
+<div class="row g-6 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card mb-6">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">@L["CurrentLicense"]</h5>
+                <span class="badge rounded-pill @stateBadge">@stateText</span>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-body-secondary fw-normal">@L["Plan"]</dt>
+                    <dd class="col-sm-8 fw-medium">@status.Type</dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">@L["Expires"]</dt>
+                    <dd class="col-sm-8 fw-medium">@(status.ExpiresAt == DateTime.MinValue ? "—" : status.ExpiresAt.ToString("dd MMM yyyy"))</dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">@L["DaysRemaining"]</dt>
+                    <dd class="col-sm-8 fw-medium">@status.DaysRemaining</dd>
+                </dl>
+
+                @if (!status.IsValid)
+                {
+                    <div class="alert alert-danger mt-4 mb-0">
+                        <i class="icon-base ti tabler-alert-triangle me-1"></i>
+                        Your license has expired. @(isAdmin ? "Activate a yearly key below to restore access." : "Please contact your administrator.")
+                    </div>
+                }
+                else if (status.DaysRemaining <= 7)
+                {
+                    <div class="alert alert-warning mt-4 mb-0">
+                        <i class="icon-base ti tabler-clock me-1"></i>
+                        Your @status.Type license expires in @status.DaysRemaining day(s).
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (isAdmin)
+        {
+            <div class="card mb-6">
+                <div class="card-header"><h5 class="mb-0">@L["ActivateLicense"]</h5></div>
+                <div class="card-body">
+                    <form asp-action="Activate" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">@L["LicenseKey"]</label>
+                            <textarea name="key" class="form-control" rows="3" placeholder="Paste your yearly license key here..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="icon-base ti tabler-key me-1"></i> @L["Activate"]
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h6 class="mb-0">Generate a Key (development only)</h6></div>
+                <div class="card-body">
+                    <p class="text-body-secondary small">In production this is disabled — keys are issued by the vendor. Use this to test activation locally.</p>
+                    @if (!string.IsNullOrEmpty(generatedKey))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Generated Key</label>
+                            <textarea class="form-control" rows="3" readonly onclick="this.select()">@generatedKey</textarea>
+                        </div>
+                    }
+                    <form asp-action="Generate" method="post" class="d-flex align-items-end gap-2 flex-wrap">
+                        <div>
+                            <label class="form-label">@L["Plan"]</label>
+                            <select name="type" class="form-select" data-no-select2>
+                                <option value="Yearly">Yearly</option>
+                                <option value="Trial">Trial</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">@L["Months"]</label>
+                            <input name="months" type="number" value="12" min="1" class="form-control" style="width:7rem;" />
+                        </div>
+                        <button type="submit" class="btn btn-label-secondary">
+                            <i class="icon-base ti tabler-wand me-1"></i> @L["Generate"]
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

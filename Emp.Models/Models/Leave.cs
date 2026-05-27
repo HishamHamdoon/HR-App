@@ -15,6 +15,15 @@ namespace Emp.Api.Models
         [Required]
         public DateTime? EndDate { get; set; }
         public string Status { get; set; } = Utility.SD.Pending;
+
+        // A single-day request taken as a half day (counts as 0.5 against the balance).
+        public bool IsHalfDay { get; set; } = false;
+
+        // Decision audit: who actioned the request, when, and why (reason — required on reject).
+        public int? DecidedById { get; set; }
+        public DateTime? DecidedAt { get; set; }
+        public string? DecisionNote { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; } = false;

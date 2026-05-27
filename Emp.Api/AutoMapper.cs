@@ -33,7 +33,17 @@ namespace Emp.Api
             CreateMap<Employee, EmployeeUpdateDto>().ReverseMap();
             //end of map employee 
             //start of map Department
-            CreateMap<Department, DepartmentDto>().ReverseMap();
+            CreateMap<Section, NamedItemDto>();
+            CreateMap<Department, NamedItemDto>();
+            CreateMap<Department, DepartmentDto>()
+                .ForMember(d => d.ParentDepartmentName, o => o.MapFrom(s => s.ParentDepartment != null ? s.ParentDepartment.Name : null))
+                .ForMember(d => d.ManagerName, o => o.MapFrom(s => s.Manager != null ? s.Manager.Name : null))
+                .ReverseMap()
+                .ForMember(d => d.Sections, o => o.Ignore())
+                .ForMember(d => d.SubDepartments, o => o.Ignore())
+                .ForMember(d => d.ParentDepartment, o => o.Ignore())
+                .ForMember(d => d.Manager, o => o.Ignore())
+                .ForMember(d => d.Employees, o => o.Ignore());
             //end of map Department
             //start of map Leave
             CreateMap<Leave, CreateLeaveDto>().ReverseMap();

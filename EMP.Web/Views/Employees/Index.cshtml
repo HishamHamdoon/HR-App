@@ -4,23 +4,23 @@
 
 @{
     Layout = "_VuexyLayout";
-    ViewData["Title"] = "Employees";
+    ViewData["Title"] = L["Employees"].Value;
 }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
     <div>
-        <h4 class="mb-1">Employees</h4>
-        <p class="mb-0 text-body-secondary">Manage your organization's workforce</p>
+        <h4 class="mb-1">@L["Employees"]</h4>
+        <p class="mb-0 text-body-secondary">@L["EmployeesSubtitle"]</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a asp-controller="Employees" asp-action="Create" class="btn btn-primary">
-            <i class="icon-base ti tabler-plus me-1"></i> Add Employee
+            <i class="icon-base ti tabler-plus me-1"></i> @L["AddEmployee"]
         </a>
         <a asp-controller="Employees" asp-action="ImportExcel" class="btn btn-label-success">
-            <i class="icon-base ti tabler-file-spreadsheet me-1"></i> Export Excel
+            <i class="icon-base ti tabler-file-spreadsheet me-1"></i> @L["ExportExcel"]
         </a>
         <a asp-controller="Reports" asp-action="EmployeeReport" class="btn btn-label-danger">
-            <i class="icon-base ti tabler-file-type-pdf me-1"></i> Export PDF
+            <i class="icon-base ti tabler-file-type-pdf me-1"></i> @L["ExportPdf"]
         </a>
     </div>
 </div>
@@ -29,24 +29,23 @@
     <div class="card-datatable table-responsive">
         @if (Model.Employees.Any())
         {
-            <table class="table table-hover border-top">
+            <table class="table table-hover border-top" data-paginate="10" data-search>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Name</th>
-                        <th>Job Title</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Manager</th>
-                        <th>Country</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>@L["Name"]</th>
+                        <th>@L["JobTitle"]</th>
+                        <th>@L["Email"]</th>
+                        <th>@L["Department"]</th>
+                        <th>@L["Country"]</th>
+                        <th>@L["Status"]</th>
+                        <th class="text-end">@L["Actions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var employee in Model.Employees)
                     {
-                        <tr>
+                        <tr data-href="@Url.Action("EmployeeDetails", new { employeeId = employee.Id })">
                             <td><span class="fw-medium">@employee.Id</span></td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -61,24 +60,23 @@
                             <td>@employee.JobTitleTitle</td>
                             <td>@employee.Email</td>
                             <td>@employee.DepartmentName</td>
-                            <td>@(string.IsNullOrEmpty(employee.Manager) ? "—" : employee.Manager)</td>
                             <td>@employee.CountryName</td>
                             <td>
                                 @if (employee.isActive)
                                 {
-                                    <span class="badge rounded-pill bg-label-success">Active</span>
+                                    <span class="badge rounded-pill bg-label-success">@L["Active"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge rounded-pill bg-label-danger">Inactive</span>
+                                    <span class="badge rounded-pill bg-label-danger">@L["Inactive"]</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-action="Edit" asp-route-employeeId="@employee.Id" title="Edit">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-action="Edit" asp-route-employeeId="@employee.Id" title="@L["Edit"]">
                                         <i class="icon-base ti tabler-edit"></i>
                                     </a>
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-action="EmployeeDetails" asp-route-employeeId="@employee.Id" title="Details">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-action="EmployeeDetails" asp-route-employeeId="@employee.Id" title="@L["Details"]">
                                         <i class="icon-base ti tabler-eye"></i>
                                     </a>
                                     <button type="button" class="btn btn-icon btn-text-secondary rounded-pill" data-employee-id="@employee.Id" onclick="showConfirmModal(this)" title="Delete">
@@ -88,9 +86,6 @@
                                             onclick="toggleEmployeeStatus(@employee.Id, @(employee.isActive.ToString().ToLower()))"
                                             title="@(employee.isActive ? "Deactivate" : "Activate")">
                                         <i class="icon-base ti @(employee.isActive ? "tabler-ban" : "tabler-check")"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-icon btn-text-secondary rounded-pill" onclick="openSetManagerModal(@employee.Id)" title="Set Manager">
-                                        <i class="icon-base ti tabler-user-cog"></i>
                                     </button>
                                 </div>
                             </td>
@@ -109,55 +104,6 @@
         }
     </div>
 
-    @if (Model.Employees.Any())
-    {
-        <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <span class="text-body-secondary">Showing @Model.Employees.Count of @Model.TotalCount employees</span>
-            <nav>
-                <ul class="pagination mb-0">
-                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"><i class="icon-base ti tabler-chevron-left"></i></a>
-                    </li>
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"><i class="icon-base ti tabler-chevron-right"></i></a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    }
-</div>
-
-<!-- Set Manager Modal -->
-<div class="modal fade" id="setManagerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Set Manager</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="employeeId" />
-                <label for="managerId" class="form-label">Select Manager</label>
-                <select id="managerId" class="form-select">
-                    <option value="">-- Choose Manager --</option>
-                    @foreach (var manager in Model.Employees)
-                    {
-                        <option value="@manager.Id">@manager.Name</option>
-                    }
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="setManager()">Save</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Confirm Delete Modal -->
@@ -179,21 +125,6 @@
 
 @section Scripts {
     <script>
-        function openSetManagerModal(employeeId) {
-            document.getElementById("employeeId").value = employeeId;
-            new bootstrap.Modal(document.getElementById("setManagerModal")).show();
-        }
-
-        async function setManager() {
-            const employeeId = document.getElementById("employeeId").value;
-            const managerId = document.getElementById("managerId").value;
-            if (!managerId) { alert("Please select a manager."); return; }
-            try {
-                const response = await fetch(`/Employees/SetManager?employeeId=${employeeId}&managerId=${managerId}`, { method: "POST" });
-                if (response.ok) { location.reload(); } else { alert("Failed to set manager."); }
-            } catch (e) { console.error(e); alert("An error occurred while setting the manager."); }
-        }
-
         async function toggleEmployeeStatus(employeeId) {
             try {
                 const response = await fetch(`/Employees/ActiveDeActiveEmployee?employeeId=${employeeId}`, { method: "POST" });

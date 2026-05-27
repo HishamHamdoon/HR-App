@@ -9,7 +9,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
                     <div class="content-left">
-                        <span class="text-heading">Total Employees</span>
+                        <span class="text-heading">@L["TotalEmployees"]</span>
                         <div class="d-flex align-items-center my-1">
                             <h4 class="mb-0 me-2">@ViewBag.Employees</h4>
                         </div>
@@ -30,7 +30,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
                     <div class="content-left">
-                        <span class="text-heading">Active Leaves</span>
+                        <span class="text-heading">@L["ActiveLeaves"]</span>
                         <div class="d-flex align-items-center my-1">
                             <h4 class="mb-0 me-2">@ViewBag.ActiveLeaves</h4>
                         </div>
@@ -51,7 +51,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
                     <div class="content-left">
-                        <span class="text-heading">Departments</span>
+                        <span class="text-heading">@L["Departments"]</span>
                         <div class="d-flex align-items-center my-1">
                             <h4 class="mb-0 me-2">@ViewBag.Departments</h4>
                         </div>
@@ -72,7 +72,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
                     <div class="content-left">
-                        <span class="text-heading">Pending Approvals</span>
+                        <span class="text-heading">@L["PendingApprovals"]</span>
                         <div class="d-flex align-items-center my-1">
                             <h4 class="mb-0 me-2">@ViewBag.Pending</h4>
                         </div>
@@ -93,7 +93,7 @@
     <div class="col-lg-7">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between">
-                <h5 class="card-title mb-0">Leave Statistics</h5>
+                <h5 class="card-title mb-0">@L["LeaveStatistics"]</h5>
             </div>
             <div class="card-body">
                 <canvas id="leavesChart" height="120"></canvas>
@@ -103,7 +103,7 @@
     <div class="col-lg-5">
         <div class="card h-100">
             <div class="card-header">
-                <h5 class="card-title mb-0">Employee Distribution</h5>
+                <h5 class="card-title mb-0">@L["EmployeeDistribution"]</h5>
             </div>
             <div class="card-body">
                 <canvas id="employeeChart" height="120"></canvas>

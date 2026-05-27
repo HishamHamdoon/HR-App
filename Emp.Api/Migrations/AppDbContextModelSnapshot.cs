@@ -22,6 +22,42 @@ namespace Emp.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Emp.Api.Models.CompanySettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DefaultCalendar")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoBase64")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequirePasswordChangeOnFirstLogin")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompanySettings");
+                });
+
             modelBuilder.Entity("Emp.Api.Models.Country", b =>
                 {
                     b.Property<int>("Id")
@@ -76,9 +112,14 @@ namespace Emp.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ParentDepartmentId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerId");
+
+                    b.HasIndex("ParentDepartmentId");
 
                     b.ToTable("Departments");
                 });
@@ -172,6 +213,7 @@ namespace Emp.Api.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("MainSalary")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("Slots")
@@ -205,6 +247,15 @@ namespace Emp.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DecidedById")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
@@ -216,6 +267,9 @@ namespace Emp.Api.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsHalfDay")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsModified")
@@ -286,6 +340,64 @@ namespace Emp.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LeavesTypes");
+                });
+
+            modelBuilder.Entity("Emp.Api.Models.License", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Licenses");
+                });
+
+            modelBuilder.Entity("Emp.Api.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecipientEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Emp.Api.Models.Section", b =>
@@ -363,6 +475,9 @@ namespace Emp.Api.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -379,6 +494,15 @@ namespace Emp.Api.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("PreferredCalendar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreferredTheme")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -415,6 +539,7 @@ namespace Emp.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Deductions")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("EmployeeId")
@@ -424,12 +549,14 @@ namespace Emp.Api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("GrossSalary")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("NetSalary")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("SalaryId")
@@ -484,12 +611,15 @@ namespace Emp.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Allowances")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("BasicSalary")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Deductions")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("EffectiveDate")
@@ -646,7 +776,14 @@ namespace Emp.Api.Migrations
                         .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Emp.Api.Models.Department", "ParentDepartment")
+                        .WithMany("SubDepartments")
+                        .HasForeignKey("ParentDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Manager");
+
+                    b.Navigation("ParentDepartment");
                 });
 
             modelBuilder.Entity("Emp.Api.Models.Employee", b =>
@@ -727,8 +864,9 @@ namespace Emp.Api.Migrations
             modelBuilder.Entity("Emp.Api.Models.Section", b =>
                 {
                     b.HasOne("Emp.Api.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId");
+                        .WithMany("Sections")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Department");
                 });
@@ -843,6 +981,10 @@ namespace Emp.Api.Migrations
             modelBuilder.Entity("Emp.Api.Models.Department", b =>
                 {
                     b.Navigation("Employees");
+
+                    b.Navigation("Sections");
+
+                    b.Navigation("SubDepartments");
                 });
 
             modelBuilder.Entity("Emp.Api.Models.Employee", b =>

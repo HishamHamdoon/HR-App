@@ -2,16 +2,15 @@
 @model List<CountryDto>
 @{
     Layout = "_VuexyLayout";
-    ViewData["Title"] = "Countries";
+    ViewData["Title"] = L["Countries"].Value;
 }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
     <div>
-        <h4 class="mb-1">Countries</h4>
-        <p class="mb-0 text-body-secondary">Manage country list</p>
+        <h4 class="mb-1">@L["Countries"]</h4>
     </div>
     <a asp-controller="Countries" asp-action="Create" class="btn btn-primary">
-        <i class="icon-base ti tabler-plus me-1"></i> Add Country
+        <i class="icon-base ti tabler-plus me-1"></i> @L["AddCountry"]
     </a>
 </div>
 
@@ -19,45 +18,45 @@
     <div class="card-datatable table-responsive">
         @if (Model != null && Model.Any())
         {
-            <table class="table table-hover border-top" data-paginate="10">
+            <table class="table table-hover border-top" data-paginate="10" data-search>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Name</th>
-                        <th>Code</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>@L["Name"]</th>
+                        <th>@L["Code"]</th>
+                        <th>@L["Status"]</th>
+                        <th class="text-end">@L["Actions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var country in Model)
                     {
-                        <tr>
+                        <tr data-href="@Url.Action("Details", new { id = country.Id })">
                             <td>@country.Id</td>
                             <td class="fw-medium">@country.Name</td>
                             <td>@country.Code</td>
                             <td>
                                 @if (country.IsActive)
                                 {
-                                    <span class="badge rounded-pill bg-label-success">Active</span>
+                                    <span class="badge rounded-pill bg-label-success">@L["Active"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge rounded-pill bg-label-secondary">Inactive</span>
+                                    <span class="badge rounded-pill bg-label-secondary">@L["Inactive"]</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Countries" asp-action="Edit" asp-route-id="@country.Id" title="Edit">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Countries" asp-action="Edit" asp-route-id="@country.Id" title="@L["Edit"]">
                                         <i class="icon-base ti tabler-edit"></i>
                                     </a>
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Countries" asp-action="Details" asp-route-id="@country.Id" title="Details">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Countries" asp-action="Details" asp-route-id="@country.Id" title="@L["Details"]">
                                         <i class="icon-base ti tabler-eye"></i>
                                     </a>
                                     <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Countries" asp-action="ToggleStatus" asp-route-id="@country.Id" title="@(country.IsActive ? "Deactivate" : "Activate")">
                                         <i class="icon-base ti @(country.IsActive ? "tabler-ban" : "tabler-check")"></i>
                                     </a>
-                                    <button type="button" class="btn btn-icon btn-text-secondary rounded-pill" data-country-id="@country.Id" onclick="showConfirmModal(this)" title="Delete">
+                                    <button type="button" class="btn btn-icon btn-text-secondary rounded-pill" data-country-id="@country.Id" onclick="showConfirmModal(this)" title="@L["Delete"]">
                                         <i class="icon-base ti tabler-trash"></i>
                                     </button>
                                 </div>

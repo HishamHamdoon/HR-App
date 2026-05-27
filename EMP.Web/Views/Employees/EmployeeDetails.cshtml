@@ -7,9 +7,30 @@
 
 <div class="d-flex justify-content-between align-items-center mb-6">
     <h4 class="mb-0">Employee Details</h4>
-    <a class="btn btn-label-secondary" asp-controller="Employees" asp-action="Index">
-        <i class="icon-base ti tabler-arrow-left me-1"></i> Back to List
-    </a>
+    <div class="d-flex gap-2">
+        @if (Model.isActive)
+        {
+            <a class="btn btn-label-danger" asp-controller="Employees" asp-action="Terminate" asp-route-employeeId="@Model.Id">
+                <i class="icon-base ti tabler-user-x me-1"></i> Terminate
+            </a>
+        }
+        else
+        {
+            <span class="badge bg-label-danger align-self-center">
+                Terminated@(Model.LeavingDate.HasValue ? $" on {Model.LeavingDate.Value:dd MMM yyyy}" : "")
+            </span>
+            <form asp-controller="Employees" asp-action="Reactivate" method="post" class="m-0"
+                  onsubmit="return confirm('Reactivate this employee and restore their login?');">
+                <input type="hidden" name="employeeId" value="@Model.Id" />
+                <button type="submit" class="btn btn-label-success">
+                    <i class="icon-base ti tabler-user-check me-1"></i> Reactivate
+                </button>
+            </form>
+        }
+        <a class="btn btn-label-secondary" asp-controller="Employees" asp-action="Index">
+            <i class="icon-base ti tabler-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
 </div>
 
 <div class="row g-6">

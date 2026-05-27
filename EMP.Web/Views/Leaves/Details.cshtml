@@ -34,10 +34,28 @@
                     <dd class="col-sm-8 fw-medium">@Model.StartDate.ToString("dd MMM yyyy")</dd>
 
                     <dt class="col-sm-4 text-body-secondary fw-normal">End Date</dt>
-                    <dd class="col-sm-8 fw-medium">@Model.EndDate?.ToString("dd MMM yyyy")</dd>
+                    <dd class="col-sm-8 fw-medium">@Model.EndDate?.ToString("dd MMM yyyy")@(Model.IsHalfDay ? " (half day)" : "")</dd>
 
                     <dt class="col-sm-4 text-body-secondary fw-normal">Note</dt>
                     <dd class="col-sm-8 fw-medium">@(string.IsNullOrEmpty(Model.Note) ? "—" : Model.Note)</dd>
+
+                    @if (Model.DecidedAt.HasValue || !string.IsNullOrEmpty(Model.DecisionNote))
+                    {
+                        <dt class="col-sm-4 text-body-secondary fw-normal">Decision</dt>
+                        <dd class="col-sm-8 fw-medium">
+                            @(string.IsNullOrEmpty(status) ? "Pending" : status)
+                            @if (Model.DecidedAt.HasValue)
+                            {
+                                <span class="text-body-secondary">on @Model.DecidedAt.Value.ToString("dd MMM yyyy HH:mm")</span>
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.DecisionNote))
+                        {
+                            <dt class="col-sm-4 text-body-secondary fw-normal">Decision Note</dt>
+                            <dd class="col-sm-8 fw-medium">@Model.DecisionNote</dd>
+                        }
+                    }
                 </dl>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">

@@ -2,16 +2,16 @@
 @model PagedLeavesVM
 @{
     Layout = "_VuexyLayout";
-    ViewData["Title"] = "Leaves";
+    ViewData["Title"] = L["Leaves"].Value;
 }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-6">
     <div>
-        <h4 class="mb-1">Leaves Management</h4>
-        <p class="mb-0 text-body-secondary">Review and manage employee leave requests</p>
+        <h4 class="mb-1">@L["Leaves"]</h4>
+        <p class="mb-0 text-body-secondary">@L["LeavesSubtitle"]</p>
     </div>
     <a asp-action="Create" asp-controller="Leaves" class="btn btn-primary">
-        <i class="icon-base ti tabler-plus me-1"></i> Create New Leave
+        <i class="icon-base ti tabler-plus me-1"></i> @L["CreateNewLeave"]
     </a>
 </div>
 
@@ -19,24 +19,24 @@
     <div class="card-datatable table-responsive">
         @if (Model.Leaves.Any())
         {
-            <table class="table table-hover border-top">
+            <table class="table table-hover border-top" data-paginate="10" data-search>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Employee</th>
-                        <th>Leave</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Manager</th>
-                        <th>Days</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>@L["Employee"]</th>
+                        <th>@L["LeaveType"]</th>
+                        <th>@L["StartDate"]</th>
+                        <th>@L["EndDate"]</th>
+                        <th>@L["Manager"]</th>
+                        <th>@L["Days"]</th>
+                        <th>@L["Status"]</th>
+                        <th class="text-end">@L["Actions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Leaves)
                     {
-                        <tr>
+                        <tr data-href="@Url.Action("Details", new { leaveId = item.Id })">
                             <td>@item.Id</td>
                             <td class="fw-medium">@item.EmployeeName</td>
                             <td>@item.LeaveName</td>
@@ -64,12 +64,31 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@item.Id" title="Details">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@item.Id" title="@L["Details"]">
                                         <i class="icon-base ti tabler-eye"></i>
                                     </a>
-                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@item.Id" title="Edit">
+                                    <a class="btn btn-icon btn-text-secondary rounded-pill" asp-controller="Leaves" asp-action="Edit" asp-route-leaveId="@item.Id" title="@L["Edit"]">
                                         <i class="icon-base ti tabler-edit"></i>
                                     </a>
+                                    @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(status))
+                                    {
+                                        <form asp-controller="Leaves" asp-action="Approve" method="post" class="m-0">
+                                            <input type="hidden" name="leaveId" value="@item.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill text-success" title="@L["Approve"]">
+                                                <i class="icon-base ti tabler-check"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-controller="Leaves" asp-action="Reject" method="post" class="m-0"
+                                              onsubmit="var n=prompt('Reason for rejection:'); if(n===null||n.trim()===''){return false;} this.note.value=n; return true;">
+                                            <input type="hidden" name="leaveId" value="@item.Id" />
+                                            <input type="hidden" name="note" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill text-danger" title="@L["Reject"]">
+                                                <i class="icon-base ti tabler-x"></i>
+                                            </button>
+                                        </form>
+                                    }
                                     @if (!string.IsNullOrEmpty(item.FilePath))
                                     {
                                         <a href="@item.FilePath" target="_blank" class="btn btn-icon btn-text-secondary rounded-pill" title="Attachment">
@@ -78,7 +97,7 @@
                                     }
                                     <form asp-action="Delete" asp-route-leaveId="@item.Id" method="post" class="m-0"
                                           onsubmit="return confirm('Are you sure you want to delete this record?')">
-                                        <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill" title="Delete">
+                                        <button type="submit" class="btn btn-icon btn-text-secondary rounded-pill" title="@L["Delete"]">
                                             <i class="icon-base ti tabler-trash"></i>
                                         </button>
                                     </form>
@@ -93,31 +112,9 @@
         {
             <div class="text-center p-6">
                 <i class="icon-base ti tabler-calendar-off mb-2" style="font-size:2.5rem;opacity:.4;"></i>
-                <h6 class="mb-0">No leaves found</h6>
+                <h6 class="mb-0">@L["NoRecords"]</h6>
             </div>
         }
     </div>
 
-    @if (Model.Leaves.Any())
-    {
-        <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <span class="text-body-secondary">Showing @Model.Leaves.Count of @Model.TotalCount leaves</span>
-            <nav>
-                <ul class="pagination mb-0">
-                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"><i class="icon-base ti tabler-chevron-left"></i></a>
-                    </li>
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"><i class="icon-base ti tabler-chevron-right"></i></a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    }
 </div>

@@ -10,8 +10,7 @@
 }
 
 <div class="mb-6">
-    <h4 class="mb-1">Welcome, @employeeName! 👋</h4>
-    <p class="mb-0 text-body-secondary">Here's an overview of your leave activity</p>
+    <h4 class="mb-1">@L["Welcome"], @employeeName! 👋</h4>
 </div>
 
 <div class="row g-6 mb-6">
@@ -51,17 +50,95 @@
 </div>
 
 @{
+    var pendingApprovals = ViewBag.PendingApprovals as List<EMP.Web.Models.Dtos.LeaveByManagerDto> ?? new List<EMP.Web.Models.Dtos.LeaveByManagerDto>();
+    var isManager = User.HasClaim("IsManager", "true");
+}
+@if (isManager)
+{
+    <div class="row g-6 mb-6">
+        <div class="col-sm-6 col-xl-4">
+            <div class="card h-100 border-warning">
+                <div class="card-body d-flex align-items-start justify-content-between">
+                    <div>
+                        <span class="text-heading">@L["RequestsToReview"]</span>
+                        <h4 class="mb-0 mt-1">@pendingApprovals.Count</h4>
+                        <a asp-controller="Leaves" asp-action="TeamLeaves" class="small">View team leaves</a>
+                    </div>
+                    <div class="avatar"><span class="avatar-initial rounded bg-label-warning"><i class="icon-base ti tabler-checklist icon-lg"></i></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@if (pendingApprovals.Any())
+{
+    <div class="card mb-6 border-warning">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><i class="icon-base ti tabler-checklist me-1 text-warning"></i> @L["PendingApprovals"]</h5>
+            <span class="badge bg-label-warning">@pendingApprovals.Count awaiting your action</span>
+        </div>
+        <div class="card-datatable table-responsive">
+            <table class="table table-hover border-top">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Note</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in pendingApprovals)
+                    {
+                        <tr>
+                            <td class="fw-medium">@r.EmployeeName</td>
+                            <td>@r.LeaveType</td>
+                            <td>@r.StartDate.ToString("dd MMM yyyy")</td>
+                            <td>@r.EndDate?.ToString("dd MMM yyyy")</td>
+                            <td>@r.Note</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a asp-controller="Leaves" asp-action="Details" asp-route-leaveId="@r.Id" class="btn btn-icon btn-text-secondary rounded-pill" title="Review">
+                                        <i class="icon-base ti tabler-eye"></i>
+                                    </a>
+                                    <form asp-controller="Leaves" asp-action="Approve" method="post" class="m-0">
+                                        <input type="hidden" name="leaveId" value="@r.Id" />
+                                        <button type="submit" class="btn btn-sm btn-label-success" title="Approve">
+                                            <i class="icon-base ti tabler-check"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-controller="Leaves" asp-action="Reject" method="post" class="m-0"
+                                          onsubmit="var n=prompt('Reason for rejection:'); if(n===null||n.trim()===''){return false;} this.note.value=n; return true;">
+                                        <input type="hidden" name="leaveId" value="@r.Id" />
+                                        <input type="hidden" name="note" />
+                                        <button type="submit" class="btn btn-sm btn-label-danger" title="Reject">
+                                            <i class="icon-base ti tabler-x"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@{
     var balances = ViewBag.Balances as List<EMP.Web.Models.Dtos.LeaveBalanceDto> ?? new List<EMP.Web.Models.Dtos.LeaveBalanceDto>();
 }
 @if (balances.Any())
 {
     <div class="card mb-6">
-        <div class="card-header"><h5 class="mb-0">Leave Balances (@DateTime.UtcNow.Year)</h5></div>
+        <div class="card-header"><h5 class="mb-0">@L["LeaveBalances"] (@DateTime.UtcNow.Year)</h5></div>
         <div class="card-body">
             <div class="row g-5">
                 @foreach (var b in balances)
                 {
-                    var pct = b.Entitlement > 0 ? (int)Math.Round(100.0 * b.Taken / b.Entitlement) : 0;
+                    var pct = b.Entitlement > 0 ? (int)Math.Round(100.0 * (double)b.Taken / (double)b.Entitlement) : 0;
                     var bar = pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-success";
                     <div class="col-md-6">
                         <div class="d-flex justify-content-between mb-1">
@@ -80,7 +157,7 @@
 }
 
 <div class="card mb-6">
-    <div class="card-header"><h5 class="mb-0">Recent Leaves</h5></div>
+    <div class="card-header"><h5 class="mb-0">@L["RecentLeaves"]</h5></div>
     <div class="card-datatable table-responsive">
         @if (Model.Any())
         {
@@ -125,17 +202,17 @@
 <div class="row g-6">
     <div class="col-md-4">
         <a asp-action="Create" asp-controller="Leaves" class="btn btn-label-primary w-100 py-3">
-            <i class="icon-base ti tabler-plus me-1"></i> Apply Leave
+            <i class="icon-base ti tabler-plus me-1"></i> @L["ApplyLeave"]
         </a>
     </div>
     <div class="col-md-4">
         <a asp-action="EmployeeLeaves" asp-controller="Leaves" class="btn btn-label-success w-100 py-3">
-            <i class="icon-base ti tabler-list me-1"></i> My Leaves
+            <i class="icon-base ti tabler-list me-1"></i> @L["MyLeaves"]
         </a>
     </div>
     <div class="col-md-4">
         <a asp-action="Profile" asp-controller="Account" class="btn btn-label-info w-100 py-3">
-            <i class="icon-base ti tabler-user me-1"></i> My Profile
+            <i class="icon-base ti tabler-user me-1"></i> @L["MyProfile"]
         </a>
     </div>
 </div>

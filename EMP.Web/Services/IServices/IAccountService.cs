@@ -7,5 +7,7 @@ namespace EMP.Web.Services.IServices
     {
         Task<ResponseDto> RegisterAsync(RegisterationRequest loginRequestDto);
         Task<ResponseDto> LoginAsync(LoginRequestDto loginRequest);
+        Task<ResponseDto> ChangePasswordAsync(string currentPassword, string newPassword);
+        Task<ResponseDto> UpdatePreferencesAsync(string? theme, string? calendar, string? language);
     }
 }

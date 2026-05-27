@@ -29,5 +29,25 @@ namespace EMP.Web.Services
         {
             throw new NotImplementedException();
         }
+
+        public async Task<ResponseDto> ChangePasswordAsync(string currentPassword, string newPassword)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Post,
+                Url = $"{SD.ApiBaseUrl}/api/Auth/change-password",
+                Data = new { CurrentPassword = currentPassword, NewPassword = newPassword }
+            });
+        }
+
+        public async Task<ResponseDto> UpdatePreferencesAsync(string? theme, string? calendar, string? language)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Post,
+                Url = $"{SD.ApiBaseUrl}/api/Auth/preferences",
+                Data = new { Theme = theme, Calendar = calendar, Language = language }
+            });
+        }
     }
 }

@@ -82,6 +82,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<ILicenseService, LicenseService>();
 builder.Services.AddSingleton<IFileService, FileService>();
 
 builder.Services.AddControllers();
@@ -149,6 +150,19 @@ var app = builder.Build();
 
 await DbInitializer.SeedAsync(app.Services);
 
+// Create the 30-day trial on first run.
+using (var licenseScope = app.Services.CreateScope())
+{
+    await licenseScope.ServiceProvider.GetRequiredService<ILicenseService>().EnsureTrialAsync();
+}
+
+// Test data: one manager + two employees (each with a login) for every department.
+// Idempotent — safe to run on every startup; skips departments already seeded.
+if (app.Environment.IsDevelopment())
+{
+    await DbInitializer.SeedTestEmployeesAsync(app.Services);
+}
+
 // Global exception handler must be first.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -159,7 +173,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// The Web app calls the API over HTTP inside the container network; redirecting to HTTPS
+// would break those calls. Only redirect in local development.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("MyPolicy");
 
 app.UseRouting();

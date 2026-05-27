@@ -20,6 +20,9 @@ namespace Emp.Api.Dtos.Leave
         public string ManagerName { get; set; }
         public string LeaveName { get; set; }
         public string Note { get; set; }
+        public bool IsHalfDay { get; set; }
+        public DateTime? DecidedAt { get; set; }
+        public string? DecisionNote { get; set; }
         public string? FilePath { get; set; }
     }
 }

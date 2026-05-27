@@ -4,6 +4,7 @@
     Layout = "_VuexyLayout";
     ViewData["Title"] = "Create Leave";
     var isAdmin = User.IsInRole("Admin");
+    var isManager = User.HasClaim("IsManager", "true");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-6">
@@ -17,6 +18,10 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
+                <div class="alert alert-primary" role="alert">
+                    <i class="icon-base ti tabler-info-circle me-1"></i>
+                    This request is routed to the employee's <strong>department manager</strong> for approval.
+                </div>
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     <div class="row g-5">
                         <div class="col-12">
@@ -27,29 +32,25 @@
                             <span asp-validation-for="LeavesTypeId" class="text-danger"></span>
                         </div>
 
-                        @if (isAdmin)
+                        @if (isAdmin || isManager)
                         {
                             <div class="col-12">
-                                <label asp-for="EmployeeId" class="form-label">Employee</label>
-                                <select asp-for="EmployeeId" asp-items="@(new SelectList(Model.Employees, "Id", "Name"))" class="form-select" id="EmployeeSelect">
-                                    <option value="">-- Select Employee --</option>
+                                <label asp-for="EmployeeId" class="form-label">@(isAdmin ? "Employee" : "Employee (yourself or a team member)")</label>
+                                <select asp-for="EmployeeId" asp-items="@(new SelectList(Model.Employees, "Id", "Name"))" class="form-select">
+                                    @if (isAdmin)
+                                    {
+                                        <option value="">-- Select Employee --</option>
+                                    }
                                 </select>
                                 <span asp-validation-for="EmployeeId" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Manager</label>
-                                <input type="hidden" asp-for="ManagerId" id="ManagerId" />
-                                <input type="text" id="ManagerNameBox" class="form-control" readonly placeholder="Select an employee to load their manager" />
                             </div>
                         }
                         else
                         {
                             <input asp-for="EmployeeId" value="@ViewBag.EmployeeId" type="hidden" />
-                            <input asp-for="ManagerId" type="hidden" />
                             <div class="col-12">
                                 <label class="form-label">Your Manager</label>
-                                <input type="text" value="@ViewBag.ManagerName" class="form-control" readonly />
+                                <input type="text" class="form-control" value="@ViewBag.ManagerName" disabled />
                             </div>
                         }
 
@@ -62,6 +63,13 @@
                             <label asp-for="EndDate" class="form-label">End Date</label>
                             <input asp-for="EndDate" class="form-control" type="date" />
                             <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="IsHalfDay" id="IsHalfDay" />
+                                <label class="form-check-label" for="IsHalfDay">Half day — single day only, counts as 0.5 against the balance</label>
+                            </div>
                         </div>
 
                         <div class="col-12">
@@ -89,29 +97,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    @if (isAdmin)
-    {
-        <script>
-            // When the admin picks an employee, load that employee's manager.
-            (function () {
-                var sel = document.getElementById('EmployeeSelect');
-                if (!sel) return;
-                var onChange = function () {
-                    var id = sel.value;
-                    var box = document.getElementById('ManagerNameBox');
-                    var hidden = document.getElementById('ManagerId');
-                    if (!id) { box.value = ''; hidden.value = ''; return; }
-                    fetch('/Leaves/GetEmployeeManager?employeeId=' + id)
-                        .then(function (r) { return r.json(); })
-                        .then(function (d) {
-                            box.value = d.managerName || '—';
-                            hidden.value = d.managerId || '';
-                        })
-                        .catch(function () { box.value = '—'; hidden.value = ''; });
-                };
-                // jQuery (Select2) fires change via jQuery; bind both ways.
-                if (window.jQuery) { jQuery(sel).on('change', onChange); } else { sel.addEventListener('change', onChange); }
-            })();
-        </script>
-    }
 }

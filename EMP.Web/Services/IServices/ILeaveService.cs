@@ -16,7 +16,6 @@ namespace EMP.Web.Services.IServices
         Task<ResponseDto> GetLeavesByEmployeeIdAsync(int employeeId);
         Task<ResponseDto> GetLeavesByManagerAsync(int managerId);
         Task<ResponseDto> GetLeaveBalanceAsync(int employeeId);
-
-
+        Task<ResponseDto> DecideLeaveAsync(int leaveId, string status, string? note = null);
     }
 }

@@ -136,9 +136,10 @@ namespace Emp.Api.Controllers
                 if (leaveType != null)
                 {
                     var mappedmodel = _mapper.Map<LeavesType>(updateLeaveTypesDto);
+                    mappedmodel.Id = id; // route id is authoritative
                     _dbContext.Update(mappedmodel);
                     await _dbContext.SaveChangesAsync();
-                    LeaveTypesViewDto resultDto = _mapper.Map<LeaveTypesViewDto>(leaveType);
+                    LeaveTypesViewDto resultDto = _mapper.Map<LeaveTypesViewDto>(mappedmodel);
                     response.Result = resultDto;
                     response.IsSuccess = true;
                     response.Message = "Leave type updated successfully";

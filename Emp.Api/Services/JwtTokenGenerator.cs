@@ -17,20 +17,21 @@ namespace Emp.Api.Services
         {
             _jwtOptions = jwtOptions.Value;
         }
-        public async Task<string> GenerateToken(ApplicationUser applicationUser, IEnumerable<string> roles)
+        public async Task<string> GenerateToken(ApplicationUser applicationUser, IEnumerable<string> roles, bool isManager = false, bool mustChangePassword = false, string? theme = null, string? calendar = null, string? lang = null)
         {
             var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
-            if (applicationUser.Employee != null)
-            {
-                new Claim("EmployeeId", applicationUser.Employee.Id.ToString());
-            }
             var claimList = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Email, applicationUser.Email),
                 new Claim(JwtRegisteredClaimNames.Sub, applicationUser.Id),
                 new Claim(JwtRegisteredClaimNames.Name, applicationUser.UserName),
-                new Claim("EmployeeId", applicationUser.Employee.Id.ToString())
+                new Claim("EmployeeId", applicationUser.Employee.Id.ToString()),
+                new Claim("IsManager", isManager ? "true" : "false"),
+                new Claim("MustChangePassword", mustChangePassword ? "true" : "false"),
+                new Claim("PreferredTheme", string.IsNullOrWhiteSpace(theme) ? "light" : theme),
+                new Claim("Calendar", string.IsNullOrWhiteSpace(calendar) ? "Gregorian" : calendar),
+                new Claim("Lang", string.IsNullOrWhiteSpace(lang) ? "en" : lang)
             };
             claimList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             var tokendescriptor = new SecurityTokenDescriptor

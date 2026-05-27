@@ -32,7 +32,8 @@ namespace EMP.Web.Controllers
             ICountryService countryService,
             IDepartmentService departmentService,
             ISectionService sectionService,
-            IJobTitleService jobTitleService
+            IJobTitleService jobTitleService,
+            ISetupService setupService
            )
         {
             _httpClient = httpClient;
@@ -42,6 +43,7 @@ namespace EMP.Web.Controllers
             _logger = logger;
             _sectionService = sectionService;
             _jobTitleService = jobTitleService;
+            _setupService = setupService;
         }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
@@ -109,10 +111,104 @@ namespace EMP.Web.Controllers
             ResponseDto response = await _departmentService.GetDepartmentAsync(id);
             if (response is not null && response.IsSuccess)
             {
-                var department= JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentDto>(Convert.ToString(response.Result));
+                var department = JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentDto>(Convert.ToString(response.Result));
+                ViewBag.Employees = await LoadEmployeeOptionsAsync();
                 return View(department);
             }
             return View();
+        }
+
+        private async Task<List<Emp.Web.Dtos.NamedItem>> LoadEmployeeOptionsAsync()
+        {
+            try
+            {
+                var resp = await _setupService.GetEmployeesList();
+                if (resp?.IsSuccess == true && resp.Result is not null)
+                {
+                    return JsonConvert.DeserializeObject<List<Emp.Web.Dtos.NamedItem>>(Convert.ToString(resp.Result))
+                           ?? new List<Emp.Web.Dtos.NamedItem>();
+                }
+            }
+            catch { /* fall through */ }
+            return new List<Emp.Web.Dtos.NamedItem>();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetManager(int departmentId, int managerId)
+        {
+            if (departmentId <= 0 || managerId <= 0)
+            {
+                TempData["error"] = "Please choose a manager.";
+                return RedirectToAction("Details", new { id = departmentId });
+            }
+            var response = await _departmentService.SetManagerAsync(departmentId, managerId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true
+                    ? (response.Message ?? "Manager assigned.")
+                    : (response?.Message ?? "Failed to assign manager.");
+            return RedirectToAction("Details", new { id = departmentId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveManager(int departmentId)
+        {
+            if (departmentId <= 0)
+            {
+                return RedirectToAction("Details", new { id = departmentId });
+            }
+            var response = await _departmentService.RemoveManagerAsync(departmentId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true
+                    ? (response.Message ?? "Manager removed.")
+                    : (response?.Message ?? "Failed to remove manager.");
+            return RedirectToAction("Details", new { id = departmentId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["error"] = "Invalid department.";
+                return RedirectToAction(nameof(Index));
+            }
+            var response = await _departmentService.DeleteDepartmentAsync(id);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Department deleted." : (response?.Message ?? "Failed to delete department.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddSection(int departmentId, string sectionName)
+        {
+            if (departmentId <= 0 || string.IsNullOrWhiteSpace(sectionName))
+            {
+                TempData["error"] = "Section name is required.";
+                return RedirectToAction("Details", new { id = departmentId });
+            }
+            var response = await _sectionService.CreateSectionAsync(sectionName.Trim(), departmentId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Section added." : (response?.Message ?? "Failed to add section.");
+            return RedirectToAction("Details", new { id = departmentId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddSubDepartment(int parentDepartmentId, string subDepartmentName)
+        {
+            if (parentDepartmentId <= 0 || string.IsNullOrWhiteSpace(subDepartmentName))
+            {
+                TempData["error"] = "Sub-department name is required.";
+                return RedirectToAction("Details", new { id = parentDepartmentId });
+            }
+            var dto = new Emp.Web.Dtos.DepartmentCreateDto
+            {
+                Name = subDepartmentName.Trim(),
+                ParentDepartmentId = parentDepartmentId
+            };
+            var response = await _departmentService.CreateDepartmentsAsync(dto);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Sub-department added." : (response?.Message ?? "Failed to add sub-department.");
+            return RedirectToAction("Details", new { id = parentDepartmentId });
         }
         [HttpPost]
         public async Task<IActionResult> CreateNewEmployee(EmployeeFormViewModel employeeCreateDto)
@@ -198,20 +294,20 @@ namespace EMP.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSectionsByDepartment(int departmentId)
         {
-            if (departmentId > 0)
+            if (departmentId <= 0)
             {
-                var response = await _departmentService.GetSectionsByDepartmentAsync(departmentId);
-                if (response.IsSuccess)
-                {
-                    var sections = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(response.Result));
-                    return Json(sections);
-                }
+                return Json(Array.Empty<object>());
             }
-            else
+
+            var response = await _departmentService.GetSectionsByDepartmentAsync(departmentId);
+            if (response?.IsSuccess == true && response.Result is not null)
             {
-                return RedirectToAction("Index","Employees");
+                var sections = JsonConvert.DeserializeObject<List<Emp.Web.Dtos.NamedItem>>(Convert.ToString(response.Result))
+                               ?? new List<Emp.Web.Dtos.NamedItem>();
+                return Json(sections.Select(s => new { id = s.Id, name = s.Name }));
             }
-            return RedirectToAction("Index", "Employees");
+
+            return Json(Array.Empty<object>());
         }
     }
 }

@@ -28,6 +28,11 @@ namespace Emp.Api.Data
 
             await context.Database.MigrateAsync();
 
+            // Rows created before LeavingDate became nullable hold the 0001-01-01 sentinel.
+            // Normalise those to NULL ("still employed").
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Employees SET LeavingDate = NULL WHERE LeavingDate IS NOT NULL AND LeavingDate <= '0001-01-02'");
+
             foreach (var role in new[] { AdminRole, EmployeeRole })
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -106,6 +111,117 @@ namespace Emp.Api.Data
             }
 
             await userManager.AddToRoleAsync(adminUser, AdminRole);
+        }
+
+        /// <summary>
+        /// Seeds test staff for every department: one manager (set as the department's
+        /// manager if none exists) plus two regular employees, each with a login account
+        /// (Employee role, password <see cref="DefaultUserPassword"/>). Idempotent: a
+        /// department whose manager login already exists is skipped.
+        /// </summary>
+        public static async Task SeedTestEmployeesAsync(IServiceProvider services)
+        {
+            using var scope = services.CreateScope();
+            var sp = scope.ServiceProvider;
+
+            var context = sp.GetRequiredService<AppDbContext>();
+            var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
+
+            var departments = await context.Departments.ToListAsync();
+            if (departments.Count == 0)
+            {
+                return;
+            }
+
+            var country = await context.Countries.FirstOrDefaultAsync();
+            if (country is null)
+            {
+                country = new Country { Name = "Testland", Code = "TST" };
+                context.Countries.Add(country);
+                await context.SaveChangesAsync();
+            }
+
+            var jobTitle = await context.JobTitles.FirstOrDefaultAsync();
+            if (jobTitle is null)
+            {
+                jobTitle = new JobTitle { Title = "Staff", MainSalary = 1000 };
+                context.JobTitles.Add(jobTitle);
+                await context.SaveChangesAsync();
+            }
+
+            foreach (var dept in departments)
+            {
+                var managerEmail = $"mgr.dept{dept.Id}@test.com";
+
+                // Treat the manager login as the marker for "this department is already seeded".
+                if (await userManager.FindByNameAsync(managerEmail) is not null)
+                {
+                    continue;
+                }
+
+                var manager = new Employee
+                {
+                    Name = $"{dept.Name} Manager",
+                    Email = managerEmail,
+                    Phone = "0100000000",
+                    IsActive = true,
+                    BirthDate = new DateOnly(1985, 1, 1),
+                    HireDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    CountryId = country.Id,
+                    DepartmentId = dept.Id,
+                    JobTitleId = jobTitle.Id,
+                };
+                context.Employees.Add(manager);
+                await context.SaveChangesAsync();
+
+                await CreateLoginAsync(userManager, manager);
+
+                // Make this employee the department's manager if one isn't set yet.
+                if (dept.ManagerId is null)
+                {
+                    dept.ManagerId = manager.Id;
+                    await context.SaveChangesAsync();
+                }
+
+                for (var n = 1; n <= 2; n++)
+                {
+                    var employee = new Employee
+                    {
+                        Name = $"{dept.Name} Employee {n}",
+                        Email = $"emp.dept{dept.Id}.{n}@test.com",
+                        Phone = "0100000000",
+                        IsActive = true,
+                        BirthDate = new DateOnly(1995, 1, 1),
+                        HireDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                        CountryId = country.Id,
+                        DepartmentId = dept.Id,
+                        JobTitleId = jobTitle.Id,
+                        ManagerId = dept.ManagerId,
+                    };
+                    context.Employees.Add(employee);
+                    await context.SaveChangesAsync();
+
+                    await CreateLoginAsync(userManager, employee);
+                }
+            }
+        }
+
+        private static async Task CreateLoginAsync(UserManager<ApplicationUser> userManager, Employee employee)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = employee.Email,
+                Email = employee.Email,
+                EmailConfirmed = true,
+                PhoneNumber = employee.Phone,
+                EmployeeId = employee.Id,
+            };
+
+            var result = await userManager.CreateAsync(user, DefaultUserPassword);
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, EmployeeRole);
+            }
         }
     }
 }

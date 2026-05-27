@@ -107,6 +107,7 @@ namespace EMP.Web.Controllers
         {
             var leavesList = new List<ViewLeaveDto>();
             ViewBag.Balances = new List<EMP.Web.Models.Dtos.LeaveBalanceDto>();
+            ViewBag.PendingApprovals = new List<EMP.Web.Models.Dtos.LeaveByManagerDto>();
 
             var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
             if (int.TryParse(employeeIdClaim, out var employeeId) && employeeId > 0)
@@ -127,6 +128,20 @@ namespace EMP.Web.Controllers
                         ViewBag.Balances = JsonConvert.DeserializeObject<List<EMP.Web.Models.Dtos.LeaveBalanceDto>>(
                                                JsonConvert.SerializeObject(balanceResp.Result))
                                            ?? new List<EMP.Web.Models.Dtos.LeaveBalanceDto>();
+                    }
+
+                    // If this employee manages others, surface the leave requests awaiting their approval.
+                    var managerResp = await _leaveService.GetLeavesByManagerAsync(employeeId);
+                    if (managerResp?.IsSuccess == true && managerResp.Result is not null)
+                    {
+                        var managed = JsonConvert.DeserializeObject<List<EMP.Web.Models.Dtos.LeaveByManagerDto>>(
+                                          JsonConvert.SerializeObject(managerResp.Result))
+                                      ?? new List<EMP.Web.Models.Dtos.LeaveByManagerDto>();
+                        ViewBag.PendingApprovals = managed
+                            .Where(l => string.IsNullOrEmpty(l.Status)
+                                        || l.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase)
+                                        || l.Status.Equals("PENDING", StringComparison.OrdinalIgnoreCase))
+                            .ToList();
                     }
                 }
                 catch

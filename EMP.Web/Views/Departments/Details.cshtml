@@ -6,28 +6,157 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-6">
-    <h4 class="mb-0">Department Details</h4>
+    <div>
+        <h4 class="mb-1">@Model.Name</h4>
+        @if (!string.IsNullOrEmpty(Model.ParentDepartmentName))
+        {
+            <p class="mb-0 text-body-secondary">
+                <i class="icon-base ti tabler-corner-down-right"></i>
+                Sub-department of <span class="fw-medium">@Model.ParentDepartmentName</span>
+            </p>
+        }
+    </div>
     <a asp-action="Index" class="btn btn-label-secondary"><i class="icon-base ti tabler-arrow-left me-1"></i> Back to List</a>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-7">
+<div class="row g-6">
+    <!-- Department info -->
+    <div class="col-lg-4">
         <div class="card">
-            <div class="card-header"><h5 class="mb-0">@Model.Name</h5></div>
+            <div class="card-header"><h5 class="mb-0">Details</h5></div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4 text-body-secondary fw-normal">ID</dt>
-                    <dd class="col-sm-8 fw-medium">@Model.Id</dd>
-                    <dt class="col-sm-4 text-body-secondary fw-normal">Name</dt>
-                    <dd class="col-sm-8 fw-medium">@Model.Name</dd>
+                    <dt class="col-5 text-body-secondary fw-normal">ID</dt>
+                    <dd class="col-7 fw-medium">@Model.Id</dd>
+                    <dt class="col-5 text-body-secondary fw-normal">Name</dt>
+                    <dd class="col-7 fw-medium">@Model.Name</dd>
+                    <dt class="col-5 text-body-secondary fw-normal">Location</dt>
+                    <dd class="col-7 fw-medium">@(string.IsNullOrEmpty(Model.Location) ? "—" : Model.Location)</dd>
                 </dl>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="icon-base ti tabler-edit me-1"></i> Edit</a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-edit me-1"></i> Edit</a>
                 <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
-                    <button type="submit" class="btn btn-label-danger" onclick="return confirm('Delete this department?');">
+                    <button type="submit" class="btn btn-sm btn-label-danger" onclick="return confirm('Delete this department?');">
                         <i class="icon-base ti tabler-trash me-1"></i> Delete
                     </button>
+                </form>
+            </div>
+        </div>
+
+        @{
+            var employeeOptions = ViewBag.Employees as List<Emp.Web.Dtos.NamedItem> ?? new List<Emp.Web.Dtos.NamedItem>();
+        }
+        <div class="card mt-6">
+            <div class="card-header"><h5 class="mb-0"><i class="icon-base ti tabler-user-cog me-1"></i> Department Manager</h5></div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <span class="text-body-secondary d-block small">Current manager</span>
+                        @if (!string.IsNullOrEmpty(Model.ManagerName))
+                        {
+                            <span class="fw-medium"><i class="icon-base ti tabler-user me-1 text-primary"></i>@Model.ManagerName</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-label-secondary">None assigned</span>
+                        }
+                    </div>
+                    @if (Model.ManagerId.HasValue && Model.ManagerId.Value > 0)
+                    {
+                        <form asp-action="RemoveManager" method="post" class="m-0"
+                              onsubmit="return confirm('Remove the manager from this department and its sub-departments?');">
+                            <input type="hidden" name="departmentId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-label-danger">
+                                <i class="icon-base ti tabler-user-minus me-1"></i> Remove
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <p class="text-body-secondary">
+                    The selected manager becomes manager for <strong>everyone</strong> in this department
+                    and all its sub-departments.
+                </p>
+                <form asp-action="SetManager" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="departmentId" value="@Model.Id" />
+                    <select name="managerId" class="form-select" required>
+                        <option value="">-- Select manager --</option>
+                        @foreach (var e in employeeOptions)
+                        {
+                            <option value="@e.Id" selected="@(Model.ManagerId == e.Id)">@e.Name</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary text-nowrap">
+                        <i class="icon-base ti tabler-user-check me-1"></i> @(Model.ManagerId.HasValue && Model.ManagerId.Value > 0 ? "Change" : "Set Manager")
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0"><i class="icon-base ti tabler-layout-grid me-1"></i> Sections</h5>
+                <span class="badge bg-label-primary">@Model.Sections.Count</span>
+            </div>
+            <div class="card-body">
+                @if (Model.Sections.Any())
+                {
+                    <ul class="list-group list-group-flush mb-3">
+                        @foreach (var s in Model.Sections)
+                        {
+                            <li class="list-group-item px-0 d-flex align-items-center">
+                                <i class="icon-base ti tabler-point me-2 text-primary"></i>@s.Name
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-body-secondary">No sections yet.</p>
+                }
+                <form asp-action="AddSection" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="departmentId" value="@Model.Id" />
+                    <input type="text" name="sectionName" class="form-control form-control-sm" placeholder="New section name" required />
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="icon-base ti tabler-plus"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sub-departments -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0"><i class="icon-base ti tabler-sitemap me-1"></i> Sub-Departments</h5>
+                <span class="badge bg-label-info">@Model.SubDepartments.Count</span>
+            </div>
+            <div class="card-body">
+                @if (Model.SubDepartments.Any())
+                {
+                    <ul class="list-group list-group-flush mb-3">
+                        @foreach (var d in Model.SubDepartments)
+                        {
+                            <li class="list-group-item px-0 d-flex align-items-center justify-content-between">
+                                <span><i class="icon-base ti tabler-building me-2 text-info"></i>@d.Name</span>
+                                <a asp-action="Details" asp-route-id="@d.Id" class="btn btn-icon btn-text-secondary btn-sm rounded-pill" title="Open">
+                                    <i class="icon-base ti tabler-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-body-secondary">No sub-departments yet.</p>
+                }
+                <form asp-action="AddSubDepartment" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="parentDepartmentId" value="@Model.Id" />
+                    <input type="text" name="subDepartmentName" class="form-control form-control-sm" placeholder="New sub-department name" required />
+                    <button type="submit" class="btn btn-sm btn-info"><i class="icon-base ti tabler-plus"></i></button>
                 </form>
             </div>
         </div>

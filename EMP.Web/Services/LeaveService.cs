@@ -130,6 +130,20 @@ namespace EMP.Web.Services.IServices
             });
         }
 
+        public async Task<ResponseDto> DecideLeaveAsync(int leaveId, string status, string? note = null)
+        {
+            var url = $"{SD.ApiBaseUrl}/api/Leaves/{leaveId}/decision?status={status}";
+            if (!string.IsNullOrWhiteSpace(note))
+            {
+                url += $"&note={Uri.EscapeDataString(note)}";
+            }
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Patch,
+                Url = url
+            });
+        }
+
 
 
         //public async Task<ResponseDto> ActiveDeActiveEmployee(int employeeId)

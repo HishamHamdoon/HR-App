@@ -54,6 +54,15 @@ namespace Emp.Api.Services
             return result.Succeeded;
         }
 
+        public async Task<bool> DeleteRoleAsync(string roleName)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null) return false;
+
+            var result = await _roleManager.DeleteAsync(role);
+            return result.Succeeded;
+        }
+
         public async Task<bool> AssignRoleToUserAsync(string userId, string roleName)
         {
             var user = await _userManager.FindByIdAsync(userId);

@@ -5,4 +5,8 @@
 **/.github/
 **/*.user
 **/node_modules/
+**/DataProtection-Keys/
+.env
+.env.*
+!.env.template
 README.md

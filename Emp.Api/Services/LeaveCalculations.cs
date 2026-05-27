@@ -13,5 +13,16 @@ namespace Emp.Api.Services
         /// <summary>Remaining entitlement, never negative.</summary>
         public static int Remaining(int entitlement, int taken)
             => Math.Max(entitlement - taken, 0);
+
+        /// <summary>Remaining entitlement (decimal, for half-day support), never negative.</summary>
+        public static decimal Remaining(decimal entitlement, decimal taken)
+            => Math.Max(entitlement - taken, 0m);
+
+        /// <summary>
+        /// Days charged against the balance. A single-day request flagged half-day counts as 0.5;
+        /// otherwise the inclusive day count.
+        /// </summary>
+        public static decimal EffectiveDays(DateTime start, DateTime end, bool isHalfDay)
+            => (isHalfDay && start.Date == end.Date) ? 0.5m : DaysInclusive(start, end);
     }
 }

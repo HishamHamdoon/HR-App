@@ -55,7 +55,12 @@ namespace Emp.Api.Controllers
         public async Task<ActionResult<ResponseDto>> Get(int id)
         {
             var _response = new ResponseDto();
-            var dept = await _dbContext.Departments.FindAsync(id);
+            var dept = await _dbContext.Departments
+                .Include(d => d.Manager)
+                .Include(d => d.ParentDepartment)
+                .Include(d => d.Sections)
+                .Include(d => d.SubDepartments)
+                .FirstOrDefaultAsync(d => d.Id == id);
             if (dept is null)
             {
                 _response.Result = null;
@@ -63,7 +68,7 @@ namespace Emp.Api.Controllers
                 _response.Message = "Department not found";
                 return BadRequest("Department not found");
             }
-            _response.Result =_mapper.Map<DepartmentDto>(dept);
+            _response.Result = _mapper.Map<DepartmentDto>(dept);
             _response.IsSuccess = true;
             _response.Message = "";
             return _response;
@@ -334,32 +339,133 @@ namespace Emp.Api.Controllers
                 return StatusCode(500, $"Error generating PDF: {ex.Message}");
             }
         }
+        /// <summary>
+        /// Sets the manager for a department, its sub-departments (recursively), and every
+        /// employee that belongs to any of them. Admin only.
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPatch("set-manager")]
-        public async Task<IActionResult> SetManager(int departmentId, int managerId)
+        public async Task<ResponseDto> SetManager(int departmentId, int managerId)
         {
-            // Check if manager and department IDs are supplied
+            var response = new ResponseDto();
+
             if (departmentId <= 0 || managerId <= 0)
             {
-                return BadRequest("Manager and department are required");
+                response.IsSuccess = false;
+                response.Message = "Manager and department are required.";
+                return response;
             }
 
-            // Use nullable type for the department variable to handle potential null values
-            Department? department = await _dbContext.Departments.AsNoTracking().FirstOrDefaultAsync(dept => dept.Id == departmentId);
-            Employee? manager = await _dbContext.Employees.AsNoTracking().FirstOrDefaultAsync(emp => emp.Id == managerId);
-            // Check if the department exists
-            if (department == null || manager == null)
+            var managerExists = await _dbContext.Employees.AnyAsync(e => e.Id == managerId);
+            if (!managerExists)
             {
-                return NotFound($"Department or manager not found");
+                response.IsSuccess = false;
+                response.Message = "Manager not found.";
+                return response;
             }
-            else
+
+            var allDepartments = await _dbContext.Departments.ToListAsync();
+            if (allDepartments.All(d => d.Id != departmentId))
             {
-                department.ManagerId = managerId;
-                _dbContext.Departments.Update(department);
-                await _dbContext.SaveChangesAsync();
-                return Ok("Manager set successfully");
+                response.IsSuccess = false;
+                response.Message = "Department not found.";
+                return response;
             }
+
+            // Walk the department + all descendant sub-departments.
+            var targetIds = new HashSet<int>();
+            var queue = new Queue<int>();
+            queue.Enqueue(departmentId);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (!targetIds.Add(current)) continue;
+                foreach (var child in allDepartments.Where(d => d.ParentDepartmentId == current))
+                    queue.Enqueue(child.Id);
+            }
+
+            // Set the manager on each department in the subtree.
+            foreach (var dept in allDepartments.Where(d => targetIds.Contains(d.Id)))
+                dept.ManagerId = managerId;
+
+            // Set the manager on every employee in those departments (the manager isn't their own manager).
+            var employees = await _dbContext.Employees
+                .Where(e => targetIds.Contains(e.DepartmentId))
+                .ToListAsync();
+            var affected = 0;
+            foreach (var emp in employees)
+            {
+                if (emp.Id == managerId) continue;
+                emp.ManagerId = managerId;
+                affected++;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            response.IsSuccess = true;
+            response.Result = new { Departments = targetIds.Count, Employees = affected };
+            response.Message = $"Manager assigned to {targetIds.Count} department(s) and {affected} employee(s).";
+            return response;
         }
+
+        /// <summary>
+        /// Removes the manager from a department, its sub-departments, and clears that manager
+        /// from every employee in them. Admin only.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("remove-manager")]
+        public async Task<ResponseDto> RemoveManager(int departmentId)
+        {
+            var response = new ResponseDto();
+            if (departmentId <= 0)
+            {
+                response.IsSuccess = false;
+                response.Message = "Department is required.";
+                return response;
+            }
+
+            var allDepartments = await _dbContext.Departments.ToListAsync();
+            if (allDepartments.All(d => d.Id != departmentId))
+            {
+                response.IsSuccess = false;
+                response.Message = "Department not found.";
+                return response;
+            }
+
+            var targetIds = new HashSet<int>();
+            var queue = new Queue<int>();
+            queue.Enqueue(departmentId);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (!targetIds.Add(current)) continue;
+                foreach (var child in allDepartments.Where(d => d.ParentDepartmentId == current))
+                    queue.Enqueue(child.Id);
+            }
+
+            // Capture the managers being removed so we only clear employees that pointed at them.
+            var removedManagerIds = allDepartments
+                .Where(d => targetIds.Contains(d.Id) && d.ManagerId.HasValue)
+                .Select(d => d.ManagerId!.Value)
+                .ToHashSet();
+
+            foreach (var dept in allDepartments.Where(d => targetIds.Contains(d.Id)))
+                dept.ManagerId = null;
+
+            var employees = await _dbContext.Employees
+                .Where(e => targetIds.Contains(e.DepartmentId) && e.ManagerId.HasValue && removedManagerIds.Contains(e.ManagerId.Value))
+                .ToListAsync();
+            foreach (var emp in employees)
+                emp.ManagerId = null;
+
+            await _dbContext.SaveChangesAsync();
+
+            response.IsSuccess = true;
+            response.Result = true;
+            response.Message = "Manager removed.";
+            return response;
+        }
+
         [HttpGet("sections/{departmentId}")]
         public async Task<ResponseDto> GetSectionsByDepartment(int departmentId)
         {

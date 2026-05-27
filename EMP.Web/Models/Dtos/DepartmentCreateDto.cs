@@ -7,5 +7,7 @@
         public string? Location { get; set; }
         // Department Manager
         public int? ManagerId { get; set; }
+        // Parent for sub-departments
+        public int? ParentDepartmentId { get; set; }
     }
 }

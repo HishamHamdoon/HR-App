@@ -120,7 +120,31 @@ namespace Emp.Api.Controllers
             return Ok(_response);
         }
 
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<ResponseDto> ChangePassword(Dtos.Auth.ChangePasswordDto model)
+        {
+            var userId = User.FindFirst("sub")?.Value
+                         ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto { IsSuccess = false, Message = "Not authenticated." };
+            }
+            return await _authService.ChangePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
+        }
 
+        [Authorize]
+        [HttpPost("preferences")]
+        public async Task<ResponseDto> UpdatePreferences(Dtos.Auth.UpdatePreferencesDto model)
+        {
+            var userId = User.FindFirst("sub")?.Value
+                         ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto { IsSuccess = false, Message = "Not authenticated." };
+            }
+            return await _authService.UpdatePreferencesAsync(userId, model.Theme, model.Calendar, model.Language);
+        }
     }
 }
 

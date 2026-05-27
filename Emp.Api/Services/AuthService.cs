@@ -128,13 +128,20 @@ namespace Emp.Api.Services
                 await _context.Employees.AddAsync(employee);
                 await _context.SaveChangesAsync();
 
+                // Honour the org policy: force a password change at first login when enabled.
+                var requireChange = await _context.CompanySettings
+                    .OrderBy(s => s.Id)
+                    .Select(s => (bool?)s.RequirePasswordChangeOnFirstLogin)
+                    .FirstOrDefaultAsync() ?? true;
+
                 // Step 2: Create Identity User
                 var user = new ApplicationUser
                 {
                     UserName = registerDto.Email,
                     Email = registerDto.Email,
                     PhoneNumber = registerDto.PhoneNumber,
-                    EmployeeId = employee.Id
+                    EmployeeId = employee.Id,
+                    MustChangePassword = requireChange
                 };
 
                 // Default password when none supplied.
@@ -199,7 +206,19 @@ namespace Emp.Api.Services
             await _userManager.ResetAccessFailedCountAsync(user);
 
             var roles = await _userManager.GetRolesAsync(user);
-            var token = await _jwtTokenGenerator.GenerateToken(user, roles);
+
+            // A user is a manager if they own at least one department.
+            var isManager = user.Employee != null
+                && await _context.Departments.AnyAsync(d => d.ManagerId == user.Employee.Id);
+
+            // Resolve UI preferences (calendar falls back to the org default).
+            var theme = string.IsNullOrWhiteSpace(user.PreferredTheme) ? "light" : user.PreferredTheme;
+            var orgCalendar = await _context.CompanySettings
+                .OrderBy(s => s.Id).Select(s => s.DefaultCalendar).FirstOrDefaultAsync() ?? "Gregorian";
+            var calendar = string.IsNullOrWhiteSpace(user.PreferredCalendar) ? orgCalendar : user.PreferredCalendar;
+            var lang = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage;
+
+            var token = await _jwtTokenGenerator.GenerateToken(user, roles, isManager, user.MustChangePassword, theme, calendar, lang);
 
             return new LoginResponseDto
             {
@@ -212,6 +231,69 @@ namespace Emp.Api.Services
                     PhoneNumber = user.PhoneNumber
                 }
             };
+        }
+
+        public async Task<ResponseDto> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+        {
+            var response = new ResponseDto();
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User not found.";
+                return response;
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (result.Succeeded)
+            {
+                if (user.MustChangePassword)
+                {
+                    user.MustChangePassword = false;
+                    await _userManager.UpdateAsync(user);
+                }
+                response.IsSuccess = true;
+                response.Result = true;
+                response.Message = "Password changed successfully.";
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.Message = string.Join("; ", result.Errors.Select(e => e.Description));
+            }
+            return response;
+        }
+
+        public async Task<ResponseDto> UpdatePreferencesAsync(string userId, string? theme, string? calendar, string? language)
+        {
+            var response = new ResponseDto();
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User not found.";
+                return response;
+            }
+
+            if (theme is not null)
+            {
+                user.PreferredTheme = theme.Equals("dark", StringComparison.OrdinalIgnoreCase) ? "dark" : "light";
+            }
+            if (calendar is not null)
+            {
+                user.PreferredCalendar = calendar.Equals("Hijri", StringComparison.OrdinalIgnoreCase) ? "Hijri" : "Gregorian";
+            }
+            if (language is not null)
+            {
+                user.PreferredLanguage = language.Equals("ar", StringComparison.OrdinalIgnoreCase) ? "ar" : "en";
+            }
+            await _userManager.UpdateAsync(user);
+
+            response.IsSuccess = true;
+            response.Message = "Preferences saved.";
+            response.Result = new { Theme = user.PreferredTheme, Calendar = user.PreferredCalendar, Language = user.PreferredLanguage };
+            return response;
         }
 
         public async Task<ResponseDto?> AssignRole(string email, string roleName)

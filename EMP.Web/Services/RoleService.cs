@@ -38,6 +38,15 @@ namespace EMP.Web.Services
             });
         }
 
+        public async Task<ResponseDto> DeleteRoleAsync(string roleName)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = SD.ApiType.Delete,
+                Url = $"{SD.ApiBaseUrl}/api/Roles/{Uri.EscapeDataString(roleName)}"
+            });
+        }
+
         public Task<IList<string>> GetUserRolesAsync(string userId)
         {
             throw new NotImplementedException();

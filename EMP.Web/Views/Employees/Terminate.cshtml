@@ -18,20 +18,32 @@
             <div class="card-header"><h5 class="mb-0 text-danger">Termination Details</h5></div>
             <div class="card-body">
                 <form method="post" asp-controller="Employees" asp-action="Terminate" class="row g-5">
+                    <div asp-validation-summary="ModelOnly" class="text-danger col-12 mb-0"></div>
                     <input hidden asp-for="Id" />
                     <div class="col-12">
                         <label asp-for="EmployeeId" class="form-label">Employee</label>
-                        <select asp-for="EmployeeId" asp-items="@(new SelectList(employeeList, "Id", "Name", selectedEmployeeId))" class="form-select">
-                            <option value="">-- Select Employee --</option>
-                        </select>
+                        @if (selectedEmployeeId.HasValue && selectedEmployeeId.Value > 0)
+                        {
+                            var selEmp = employeeList.FirstOrDefault(e => e.Id == selectedEmployeeId.Value);
+                            <input type="hidden" asp-for="EmployeeId" />
+                            <input type="text" class="form-control" value="@(selEmp?.Name ?? $"Employee #{selectedEmployeeId}")" disabled />
+                        }
+                        else
+                        {
+                            <select asp-for="EmployeeId" asp-items="@(new SelectList(employeeList, "Id", "Name"))" class="form-select">
+                                <option value="">-- Select Employee --</option>
+                            </select>
+                        }
                         <span asp-validation-for="EmployeeId" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">
                         <label asp-for="TerminationType" class="form-label">Termination Type</label>
                         <select asp-for="TerminationType" class="form-select">
                             <option value="">Select Type</option>
-                            <option value="Termination">Termination</option>
-                            <option value="Resignation">Resignation</option>
+                            <option value="Voluntary">Voluntary (resignation)</option>
+                            <option value="Involuntary">Involuntary (dismissal / layoff)</option>
+                            <option value="Retirement">Retirement</option>
+                            <option value="ContractEnd">Contract End</option>
                         </select>
                         <span asp-validation-for="TerminationType" class="text-danger"></span>
                     </div>

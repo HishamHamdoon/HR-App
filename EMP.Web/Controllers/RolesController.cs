@@ -37,6 +37,21 @@ namespace EMP.Web.Controllers
                 return View(new List<string>());
             }
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                TempData["error"] = "Role name is required.";
+                return RedirectToAction(nameof(Index));
+            }
+            var response = await _roleService.DeleteRoleAsync(name);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.IsSuccess == true ? "Role deleted." : (response?.Message ?? "Failed to delete role.");
+            return RedirectToAction(nameof(Index));
+        }
+
         //Create (GET)
         public IActionResult Create()
         {

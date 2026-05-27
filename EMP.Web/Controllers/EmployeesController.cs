@@ -47,8 +47,9 @@ namespace EMP.Web.Controllers
             _authService = authService;
         }
 
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 1000)
         {
+            // Load the full set; the list uses client-side search + pagination.
             Emp.Web.Models.Dtos.ResponseDto response = await _employeeService.GetEmployeesAsync(page, pageSize);
             //var employeeList = new PagedEmployeesVM();
 
@@ -80,6 +81,18 @@ namespace EMP.Web.Controllers
             if (response is not null && response.IsSuccess)
             {
                 EmployeeVM employee = JsonConvert.DeserializeObject<EmployeeVM>(Convert.ToString(response?.Result));
+
+                // An employee's manager is the manager of their department.
+                if (employee is not null && employee.DepartmentId > 0)
+                {
+                    var deptResp = await _departmentService.GetDepartmentAsync(employee.DepartmentId);
+                    if (deptResp?.IsSuccess == true && deptResp.Result is not null)
+                    {
+                        var dept = JsonConvert.DeserializeObject<Emp.Web.Dtos.DepartmentDto>(Convert.ToString(deptResp.Result));
+                        employee.Manager = dept?.ManagerName;
+                    }
+                }
+
                 return View(employee);
             }
             return View();
@@ -251,13 +264,17 @@ namespace EMP.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int employeeId)
         {
-            var employee = await _employeeService.GetEmployeeAsync(employeeId);
-
-            Employee emp = JsonConvert.DeserializeObject<Employee?>(Convert.ToString(employee?.Result));
-            if (emp == null)
+            var response = await _employeeService.GetEmployeeAsync(employeeId);
+            if (response?.IsSuccess != true || response.Result is null)
             {
-                TempData["Error"] = "Employee not found!";
+                TempData["error"] = "Employee not found!";
+                return RedirectToAction("Index");
             }
+
+            // Deserialize into the view DTO (Manager is a string here, so no nav-object crash).
+            var emp = JsonConvert.DeserializeObject<EmployeeVM>(Convert.ToString(response.Result))
+                      ?? new EmployeeVM();
+
             var vm = new EmployeeFormViewModel
             {
                 Employee = new Employee
@@ -266,146 +283,109 @@ namespace EMP.Web.Controllers
                     Address = emp.Address,
                     Email = emp.Email,
                     BirthDate = emp.BirthDate,
-                    Country = emp.Country,
                     CountryId = emp.CountryId,
-                    Department = emp.Department,
                     DepartmentId = emp.DepartmentId,
                     HireDate = emp.HireDate,
-                    IsActive = emp.IsActive,
-                    JobTitle = emp.JobTitle,
+                    IsActive = emp.isActive,
                     JobTitleId = emp.JobTitleId,
                     LeavingDate = emp.LeavingDate,
-                    Manager = emp.Manager,
                     ManagerId = emp.ManagerId,
                     Name = emp.Name,
                     Phone = emp.Phone,
-                    Section = emp.Section,
-                    SectionId = emp.SectionId,
+                    SectionId = emp.SectionId
                 }
             };
-            var departments = await _setupService.GetDepartmentsList();
-            var countriesList = await _setupService.GetCountriesList();
-            var sectionData = await _setupService.GetSectionsList();
-            var jobTitlesList = await _setupService.GetJobTitleesList();
-            if (jobTitlesList.Result != null)
-            {
-                var jobTitles = JsonConvert.DeserializeObject<List<JobTitle>>(Convert.ToString(jobTitlesList?.Result));
-                if (jobTitles != null)
-                {
-                    vm.JobTitles = jobTitles;
-                }
-                else
-                {
-                    vm.JobTitles = new List<JobTitle>(); // Ensure it's not null
-                }
-            }
-            var countries = JsonConvert.DeserializeObject<List<Country>>(Convert.ToString(countriesList.Result));
-            if (countries != null)
-            {
-                vm.Countries = countries;
-            }
-            else
-            {
-                vm.Countries = new List<Country>();
-            }
-            var sections = JsonConvert.DeserializeObject<List<Section>>(Convert.ToString(sectionData.Result));
-            if (countries != null)
-            {
-                vm.Sections = sections;
-            }
-            else
-            {
-                vm.Sections = new List<Section>();
-            }
 
-            var departmentList = JsonConvert.DeserializeObject<List<Emp.Api.Models.Department>>(Convert.ToString(departments.Result));
-            if (departmentList != null)
-            {
-                vm.Departments = departmentList;
-            }
-            else
-            {
-                vm.Departments = new List<Emp.Api.Models.Department>();
-            }
+            await PopulateEmployeeFormAsync(vm);
+            return View(vm);
+        }
 
-            return View(vm); // shows the form
+        private async Task PopulateEmployeeFormAsync(EmployeeFormViewModel vm)
+        {
+            vm.JobTitles = await LoadDropdownAsync<JobTitle>(_setupService.GetJobTitleesList);
+            vm.Countries = await LoadDropdownAsync<Country>(_setupService.GetCountriesList);
+            vm.Sections = await LoadDropdownAsync<Section>(_setupService.GetSectionsList);
+            vm.Departments = await LoadDropdownAsync<Emp.Api.Models.Department>(_setupService.GetDepartmentsList);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(EmployeeFormViewModel employeeCreateDto)
         {
-            if (ModelState.IsValid)
+            if (employeeCreateDto?.Employee is null)
             {
-                Emp.Web.Models.Dtos.EmployeeCreateDto employee = new()
-                {
-                    Id = employeeCreateDto.Employee.Id,
-                    Email = employeeCreateDto.Employee.Email,
-                    BirthDate = employeeCreateDto.Employee.BirthDate,
-                    Address = employeeCreateDto.Employee.Address,
-                    CountryId = employeeCreateDto.Employee.CountryId,
-                    DepartmentId = employeeCreateDto.Employee.DepartmentId,
-                    HireDate = employeeCreateDto.Employee.HireDate,
-                    IsActive = employeeCreateDto.Employee.IsActive,
-                    JobTitleId = employeeCreateDto.Employee.JobTitleId,
-                    LeavingDate = employeeCreateDto.Employee.LeavingDate,
-                    ManagerId = employeeCreateDto.Employee.ManagerId,
-                    Name = employeeCreateDto.Employee.Name,
-                    Phone = employeeCreateDto.Employee.Phone
-                };
-                var response = await _employeeService.EditEmployeeAsync(employee);
-                TempData["success"] = response?.Message;
+                TempData["error"] = "No employee data submitted.";
                 return RedirectToAction("Index");
             }
 
-            else
+            var employee = new Emp.Web.Models.Dtos.EmployeeCreateDto
             {
-                return View(employeeCreateDto);
-            }
-            //return View(employee);
-        }
-        [HttpPost]
-        public async Task<IActionResult> SetManager(int employeeId, int managerId)
-        {
-            if (employeeId > 0 && managerId > 0)
+                Id = employeeCreateDto.Employee.Id,
+                Email = employeeCreateDto.Employee.Email,
+                BirthDate = employeeCreateDto.Employee.BirthDate,
+                Address = employeeCreateDto.Employee.Address,
+                CountryId = employeeCreateDto.Employee.CountryId,
+                DepartmentId = employeeCreateDto.Employee.DepartmentId,
+                HireDate = employeeCreateDto.Employee.HireDate,
+                IsActive = employeeCreateDto.Employee.IsActive,
+                JobTitleId = employeeCreateDto.Employee.JobTitleId,
+                LeavingDate = employeeCreateDto.Employee.LeavingDate,
+                ManagerId = employeeCreateDto.Employee.ManagerId,
+                Name = employeeCreateDto.Employee.Name,
+                Phone = employeeCreateDto.Employee.Phone
+            };
+
+            var response = await _employeeService.EditEmployeeAsync(employee);
+            if (response?.IsSuccess == true)
             {
-                var response = await _employeeService.SetManager(employeeId, managerId);
-                if (response.IsSuccess)
-                {
-                    TempData["Success"] = "Manager set ";//response.Message;
-                    return RedirectToAction("Index");
-                }
-            }
-            else
-            {
-                TempData["Error"] = "Something went wrong";
+                TempData["success"] = response.Message ?? "Employee updated successfully.";
                 return RedirectToAction("Index");
             }
-            return RedirectToAction("Index");
+
+            TempData["error"] = response?.Message ?? "Failed to update employee.";
+            await PopulateEmployeeFormAsync(employeeCreateDto);
+            return View(employeeCreateDto);
         }
         [HttpGet]
-        public async Task<IActionResult> Terminate()
+        public async Task<IActionResult> Terminate(int? employeeId)
         {
             var response = await _setupService.GetEmployeesList();
             var employeesList = JsonConvert.DeserializeObject<List<Emp.Api.Models.Employee>>(Convert.ToString(response.Result));
             ViewBag.Employees = employeesList;
-            return View();
+            // Preselect when opened for a specific employee (e.g. from the details page).
+            return View(new Emp.Web.Dtos.TerminationDto { EmployeeId = employeeId ?? 0 });
         }
         [HttpPost]
         public async Task<IActionResult> Terminate(Emp.Web.Dtos.TerminationDto terminationDto)
         {
+            if (terminationDto.EmployeeId <= 0 || string.IsNullOrWhiteSpace(terminationDto.TerminationType))
+            {
+                ModelState.AddModelError("", "Please select an employee and a termination type.");
+            }
 
-            var response = await _employeeService.TerminateEmployeeAsync(terminationDto.EmployeeId, terminationDto);
-            if (response.IsSuccess)
+            if (ModelState.IsValid)
             {
-                TempData["Success"] = response.Message;
-                return RedirectToAction(nameof(Index));
-                //return Json(new { success = true, message = response.Message });
+                var response = await _employeeService.TerminateEmployeeAsync(terminationDto.EmployeeId, terminationDto);
+                if (response.IsSuccess)
+                {
+                    TempData["success"] = response.Message ?? "Employee terminated successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", response.Message ?? "Termination failed.");
             }
-            else
-            {
-                return View(terminationDto);
-                //return Json(new { success = false, message = response.Message });
-            }
+
+            // Re-render with the employee dropdown repopulated.
+            var list = await _setupService.GetEmployeesList();
+            ViewBag.Employees = JsonConvert.DeserializeObject<List<Emp.Api.Models.Employee>>(Convert.ToString(list.Result));
+            return View(terminationDto);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Reactivate(int employeeId)
+        {
+            var response = await _employeeService.ReactivateEmployeeAsync(employeeId);
+            TempData[response?.IsSuccess == true ? "success" : "error"] =
+                response?.Message ?? (response?.IsSuccess == true ? "Employee reactivated." : "Reactivation failed.");
+            return RedirectToAction(nameof(EmployeeDetails), new { employeeId });
         }
     }
 }
