@@ -110,4 +110,97 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get notProvided => '—';
+
+  @override
+  String get leaveTitle => 'Leave';
+
+  @override
+  String get leaveBalanceTab => 'Balance';
+
+  @override
+  String get leaveHistoryTab => 'History';
+
+  @override
+  String get requestLeave => 'Request leave';
+
+  @override
+  String get leaveType => 'Leave type';
+
+  @override
+  String get startDate => 'Start date';
+
+  @override
+  String get endDate => 'End date';
+
+  @override
+  String get halfDay => 'Half day';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get attachment => 'Attachment';
+
+  @override
+  String get addAttachment => 'Add attachment';
+
+  @override
+  String get attachmentRequired => 'This leave type requires an attachment.';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String remainingDays(String days) {
+    return '$days left';
+  }
+
+  @override
+  String entitlementTakenRemaining(
+    String entitlement,
+    String taken,
+    String remaining,
+  ) {
+    return '$entitlement entitled · $taken taken · $remaining left';
+  }
+
+  @override
+  String get noLeaves => 'You have no leave requests yet.';
+
+  @override
+  String get noBalances => 'No leave types are configured.';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get endBeforeStart => 'The end date cannot be before the start date.';
+
+  @override
+  String get halfDaySameDay =>
+      'A half-day leave must start and end on the same day.';
+
+  @override
+  String minDaysRequired(int min, String requested) {
+    return 'This type needs at least $min day(s); you requested $requested.';
+  }
+
+  @override
+  String maxDaysAllowed(int max, String requested) {
+    return 'This type allows at most $max day(s); you requested $requested.';
+  }
+
+  @override
+  String get leaveSubmitted => 'Leave request submitted.';
+
+  @override
+  String daysCount(String days) {
+    return '$days day(s)';
+  }
 }

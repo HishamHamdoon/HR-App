@@ -110,4 +110,98 @@ class AppL10nAr extends AppL10n {
 
   @override
   String get notProvided => '—';
+
+  @override
+  String get leaveTitle => 'الإجازات';
+
+  @override
+  String get leaveBalanceTab => 'الرصيد';
+
+  @override
+  String get leaveHistoryTab => 'السجل';
+
+  @override
+  String get requestLeave => 'طلب إجازة';
+
+  @override
+  String get leaveType => 'نوع الإجازة';
+
+  @override
+  String get startDate => 'تاريخ البداية';
+
+  @override
+  String get endDate => 'تاريخ النهاية';
+
+  @override
+  String get halfDay => 'نصف يوم';
+
+  @override
+  String get note => 'ملاحظة';
+
+  @override
+  String get attachment => 'مرفق';
+
+  @override
+  String get addAttachment => 'إضافة مرفق';
+
+  @override
+  String get attachmentRequired => 'يتطلب هذا النوع من الإجازة إرفاق مستند.';
+
+  @override
+  String get submit => 'إرسال';
+
+  @override
+  String remainingDays(String days) {
+    return 'متبقّي $days';
+  }
+
+  @override
+  String entitlementTakenRemaining(
+    String entitlement,
+    String taken,
+    String remaining,
+  ) {
+    return 'المستحق $entitlement · المستخدم $taken · المتبقّي $remaining';
+  }
+
+  @override
+  String get noLeaves => 'لا توجد لديك طلبات إجازة بعد.';
+
+  @override
+  String get noBalances => 'لا توجد أنواع إجازات مُعدّة.';
+
+  @override
+  String get statusPending => 'قيد الانتظار';
+
+  @override
+  String get statusApproved => 'مقبول';
+
+  @override
+  String get statusRejected => 'مرفوض';
+
+  @override
+  String get endBeforeStart =>
+      'لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية.';
+
+  @override
+  String get halfDaySameDay =>
+      'يجب أن تبدأ إجازة نصف اليوم وتنتهي في نفس اليوم.';
+
+  @override
+  String minDaysRequired(int min, String requested) {
+    return 'يتطلب هذا النوع $min يوم على الأقل؛ لقد طلبت $requested.';
+  }
+
+  @override
+  String maxDaysAllowed(int max, String requested) {
+    return 'يسمح هذا النوع بحد أقصى $max يوم؛ لقد طلبت $requested.';
+  }
+
+  @override
+  String get leaveSubmitted => 'تم إرسال طلب الإجازة.';
+
+  @override
+  String daysCount(String days) {
+    return '$days يوم';
+  }
 }

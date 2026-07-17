@@ -37,5 +37,56 @@
   "birthDate": "Date of birth",
   "hireDate": "Hire date",
   "profileUpdated": "Profile updated.",
-  "notProvided": "—"
+  "notProvided": "—",
+  "leaveTitle": "Leave",
+  "leaveBalanceTab": "Balance",
+  "leaveHistoryTab": "History",
+  "requestLeave": "Request leave",
+  "leaveType": "Leave type",
+  "startDate": "Start date",
+  "endDate": "End date",
+  "halfDay": "Half day",
+  "note": "Note",
+  "attachment": "Attachment",
+  "addAttachment": "Add attachment",
+  "attachmentRequired": "This leave type requires an attachment.",
+  "submit": "Submit",
+  "remainingDays": "{days} left",
+  "@remainingDays": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "entitlementTakenRemaining": "{entitlement} entitled · {taken} taken · {remaining} left",
+  "@entitlementTakenRemaining": {
+    "placeholders": {
+      "entitlement": { "type": "String" },
+      "taken": { "type": "String" },
+      "remaining": { "type": "String" }
+    }
+  },
+  "noLeaves": "You have no leave requests yet.",
+  "noBalances": "No leave types are configured.",
+  "statusPending": "Pending",
+  "statusApproved": "Approved",
+  "statusRejected": "Rejected",
+  "endBeforeStart": "The end date cannot be before the start date.",
+  "halfDaySameDay": "A half-day leave must start and end on the same day.",
+  "minDaysRequired": "This type needs at least {min} day(s); you requested {requested}.",
+  "@minDaysRequired": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "requested": { "type": "String" }
+    }
+  },
+  "maxDaysAllowed": "This type allows at most {max} day(s); you requested {requested}.",
+  "@maxDaysAllowed": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "requested": { "type": "String" }
+    }
+  },
+  "leaveSubmitted": "Leave request submitted.",
+  "daysCount": "{days} day(s)",
+  "@daysCount": {
+    "placeholders": { "days": { "type": "String" } }
+  }
 }

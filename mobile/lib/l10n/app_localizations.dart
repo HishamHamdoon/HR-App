@@ -294,6 +294,166 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'—'**
   String get notProvided;
+
+  /// No description provided for @leaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leaveTitle;
+
+  /// No description provided for @leaveBalanceTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get leaveBalanceTab;
+
+  /// No description provided for @leaveHistoryTab.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get leaveHistoryTab;
+
+  /// No description provided for @requestLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Request leave'**
+  String get requestLeave;
+
+  /// No description provided for @leaveType.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave type'**
+  String get leaveType;
+
+  /// No description provided for @startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get endDate;
+
+  /// No description provided for @halfDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Half day'**
+  String get halfDay;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @attachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment'**
+  String get attachment;
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add attachment'**
+  String get addAttachment;
+
+  /// No description provided for @attachmentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This leave type requires an attachment.'**
+  String get attachmentRequired;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
+
+  /// No description provided for @remainingDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} left'**
+  String remainingDays(String days);
+
+  /// No description provided for @entitlementTakenRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{entitlement} entitled · {taken} taken · {remaining} left'**
+  String entitlementTakenRemaining(
+    String entitlement,
+    String taken,
+    String remaining,
+  );
+
+  /// No description provided for @noLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no leave requests yet.'**
+  String get noLeaves;
+
+  /// No description provided for @noBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'No leave types are configured.'**
+  String get noBalances;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get statusApproved;
+
+  /// No description provided for @statusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get statusRejected;
+
+  /// No description provided for @endBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The end date cannot be before the start date.'**
+  String get endBeforeStart;
+
+  /// No description provided for @halfDaySameDay.
+  ///
+  /// In en, this message translates to:
+  /// **'A half-day leave must start and end on the same day.'**
+  String get halfDaySameDay;
+
+  /// No description provided for @minDaysRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This type needs at least {min} day(s); you requested {requested}.'**
+  String minDaysRequired(int min, String requested);
+
+  /// No description provided for @maxDaysAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This type allows at most {max} day(s); you requested {requested}.'**
+  String maxDaysAllowed(int max, String requested);
+
+  /// No description provided for @leaveSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave request submitted.'**
+  String get leaveSubmitted;
+
+  /// No description provided for @daysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} day(s)'**
+  String daysCount(String days);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

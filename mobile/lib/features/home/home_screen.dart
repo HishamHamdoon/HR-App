@@ -59,6 +59,12 @@ class HomeScreen extends ConsumerWidget {
               Text('Roles: ${claims.roles.join(', ')}'),
             ],
             const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => context.push(Routes.leave),
+              icon: const Icon(Icons.event_available),
+              label: Text(l.leaveTitle),
+            ),
+            const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: () => context.push(Routes.profile),
               icon: const Icon(Icons.person),
