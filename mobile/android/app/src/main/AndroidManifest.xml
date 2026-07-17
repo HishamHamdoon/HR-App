@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in the main manifest so release builds can reach the API. Flutter only
+         adds INTERNET to the debug/profile manifests by default, which would leave a
+         release build with no network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="hr_app"
+        android:label="HR-App"
+        android:usesCleartextTraffic="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

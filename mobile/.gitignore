@@ -1,3 +1,11 @@
+# Secrets — never commit signing keys or their config.
+android/key.properties
+**/*.jks
+**/*.keystore
+*.p12
+.env
+.env.*
+
 # Miscellaneous
 *.class
 *.log
