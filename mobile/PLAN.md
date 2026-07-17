@@ -26,6 +26,13 @@ single line was read out of context.
 - **"My payslips" is not currently possible.** `SalaryController.cs:12` and `PayrollsController.cs:13`
   are both class-level `[Authorize(Roles = "Admin")]`. An employee cannot read their own salary. The
   feature needs new endpoints or it drops from scope.
+- **`POST api/Auth/change-password` returns no new token.** `AuthService.ChangePasswordAsync` clears the
+  server-side `MustChangePassword` flag and returns `Result = true` — but issues no fresh JWT. So after a
+  successful change the client's stored token still carries `MustChangePassword=true`, and the router
+  keeps pinning to the change-password screen. The forced-change flow therefore has to **log out and send
+  the user back to login** to obtain a clean token; it cannot silently refresh. (Login username is not
+  reconstructable from claims — `admin`'s username is `admin`, not their email — so auto re-login is not
+  reliable either.)
 
 ### Withdrawn claims
 

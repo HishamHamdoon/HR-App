@@ -15,6 +15,7 @@ class AuthController extends ChangeNotifier {
 
   JwtClaims? _claims;
   bool _bootstrapped = false;
+  String? _notice;
 
   JwtClaims? get claims => _claims;
 
@@ -53,5 +54,20 @@ class AuthController extends ChangeNotifier {
     await _tokenStore.clear();
     _claims = null;
     notifyListeners();
+  }
+
+  /// Ends the session and leaves a one-shot message for the login screen to show — used
+  /// when we sign the user out deliberately (e.g. after a forced password change, since
+  /// the API issues no fresh token and the stored one still says MustChangePassword).
+  Future<void> logoutWithNotice(String notice) async {
+    _notice = notice;
+    await logout();
+  }
+
+  /// Returns the pending notice and clears it, so it shows only once.
+  String? consumeNotice() {
+    final n = _notice;
+    _notice = null;
+    return n;
   }
 }

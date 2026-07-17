@@ -6,6 +6,7 @@ import 'providers.dart';
 import '../features/auth/change_password_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/splash/splash_screen.dart';
 
 /// Route table plus the redirect that enforces session state.
@@ -28,6 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ChangePasswordScreen(),
       ),
       GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
+      GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
     ],
   );
 });
@@ -49,10 +51,9 @@ String? _redirect(AuthController auth, GoRouterState state) {
     return loc == Routes.changePassword ? null : Routes.changePassword;
   }
 
-  // Logged in and healthy: keep off the pre-auth screens.
-  if (loc == Routes.login ||
-      loc == Routes.splash ||
-      loc == Routes.changePassword) {
+  // Logged in and healthy: keep off the pre-auth screens. change-password is NOT bounced
+  // here — a healthy user may open it voluntarily; the forced case is handled above.
+  if (loc == Routes.login || loc == Routes.splash) {
     return Routes.home;
   }
   return null;
@@ -64,4 +65,5 @@ class Routes {
   static const login = '/login';
   static const changePassword = '/change-password';
   static const home = '/home';
+  static const profile = '/profile';
 }
