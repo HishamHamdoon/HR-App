@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Emp.Web.Utility;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 
 namespace EMP.Web.Controllers
@@ -26,6 +28,8 @@ namespace EMP.Web.Controllers
         private readonly ILeavesTypeService _leaveTypeService;
         private readonly ISetupService _setupService;
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ITokenProvider _tokenProvider;
 
         public LeavesController(ILogger<HomeController> logger, HttpClient httpClient,
             IEmployeeService employeeService,
@@ -36,9 +40,13 @@ namespace EMP.Web.Controllers
             ILeaveService leaveService,
             ILeavesTypeService leavesTypeService,
             ISetupService setupService,
-            IWebHostEnvironment hostEnvironment
+            IWebHostEnvironment hostEnvironment,
+            IHttpClientFactory httpClientFactory,
+            ITokenProvider tokenProvider
            )
         {
+            _httpClientFactory = httpClientFactory;
+            _tokenProvider = tokenProvider;
             _httpClient = httpClient;
             _leavService = leaveService;
             _departmentService = departmentService;
@@ -51,6 +59,44 @@ namespace EMP.Web.Controllers
             _setupService = setupService;
             _hostEnvironment = hostEnvironment;
         }
+        /// <summary>
+        /// Proxies a leave attachment from the API. The browser carries a cookie, not a bearer token,
+        /// and the files are no longer reachable directly, so the read is made server-side with the
+        /// caller's token. The API decides whether this user may see it.
+        /// </summary>
+        [Authorize]
+        public async Task<IActionResult> Attachment(int id)
+        {
+            var client = _httpClientFactory.CreateClient("MainApi");
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{SD.ApiBaseUrl}/api/Leaves/{id}/attachment");
+
+            var token = _tokenProvider.GetToken();
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var apiResponse = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!apiResponse.IsSuccessStatusCode)
+            {
+                if (apiResponse.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    return Forbid();
+                }
+                return NotFound();
+            }
+
+            var stream = await apiResponse.Content.ReadAsStreamAsync();
+            var contentType = apiResponse.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var fileName = apiResponse.Content.Headers.ContentDisposition?.FileNameStar
+                           ?? apiResponse.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? $"attachment-{id}";
+
+            // Inline so the paperclip link keeps opening in a tab rather than forcing a download.
+            Response.Headers.ContentDisposition = $"inline; filename=\"{fileName}\"";
+            return File(stream, contentType);
+        }
+
         // The full leaves list is admin-only. A manager is sent to their team's leaves,
         // a regular employee to their own.
         [Authorize]

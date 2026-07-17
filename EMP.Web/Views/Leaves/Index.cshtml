@@ -91,7 +91,7 @@
                                     }
                                     @if (!string.IsNullOrEmpty(item.FilePath))
                                     {
-                                        <a href="@item.FilePath" target="_blank" class="btn btn-icon btn-text-secondary rounded-pill" title="Attachment">
+                                        <a asp-action="Attachment" asp-route-id="@item.Id" target="_blank" class="btn btn-icon btn-text-secondary rounded-pill" title="Attachment">
                                             <i class="icon-base ti tabler-paperclip"></i>
                                         </a>
                                     }

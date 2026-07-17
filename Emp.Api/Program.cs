@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Text.Json;
 using System.Reflection;
 using Emp.Api.Dtos;
 
@@ -85,7 +86,14 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ILicenseService, LicenseService>();
 builder.Services.AddSingleton<IFileService, FileService>();
 
-builder.Services.AddControllers();
+// camelCase is already the System.Text.Json default, but clients (the Flutter app especially) bind to
+// these names, so pin it rather than leave the wire format to a framework default.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -182,6 +190,21 @@ if (app.Environment.IsDevelopment())
 app.UseCors("MyPolicy");
 
 app.UseRouting();
+
+// Leave attachments live under wwwroot (the api-uploads volume mounts there), but they are private:
+// they were readable by anyone who could reach the API, and enumerable because each file was named
+// after its leave id. Serve them only through GET api/Leaves/{id}/attachment, which authorizes the
+// caller. This block must stay ahead of UseStaticFiles.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads/leaves"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+    await next();
+});
+
 app.UseStaticFiles();
 
 app.UseAuthentication();

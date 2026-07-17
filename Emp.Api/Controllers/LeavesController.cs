@@ -7,6 +7,7 @@ using Emp.Api.Services.IServices;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
@@ -270,20 +271,26 @@ namespace Emp.Api.Controllers
             await _dbContext.SaveChangesAsync();
             if (createLeaveDto.Attachment != null)
             {
-                //savedPath = await _fileService.SaveFileAsync(createLeaveDto.Attachment, "leaves");
-                string fileName = leaveModel.Id + Path.GetExtension(createLeaveDto.Attachment.FileName);
-                string filePath = @"wwwroot\uploads\leaves\" + fileName;
-                var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-                using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                // The name carries a random suffix: naming files by leave id alone made every
+                // attachment in the system guessable, and these hold medical certificates.
+                var ext = Path.GetExtension(createLeaveDto.Attachment.FileName);
+                ext = string.Concat(ext.Where(c => char.IsLetterOrDigit(c) || c == '.'));
+                var fileName = $"{leaveModel.Id}-{Guid.NewGuid():N}{ext}";
+
+                var directory = Path.Combine(_hostEnvironment.WebRootPath, "uploads", "leaves");
+                Directory.CreateDirectory(directory);
+                using (var fileStream = new FileStream(Path.Combine(directory, fileName), FileMode.Create))
                 {
-                    createLeaveDto?.Attachment?.CopyTo(fileStream);
+                    await createLeaveDto.Attachment.CopyToAsync(fileStream);
                 }
-                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                leaveModel.FilePath = baseUrl + "/uploads/leaves/" + fileName;
+
+                // Relative, not absolute: a URL built from the request host is wrong for every
+                // caller that isn't on that host. Clients read the file via GET {id}/attachment.
+                leaveModel.FilePath = "/uploads/leaves/" + fileName;
             }
             else
             {
-                leaveModel.FilePath = "https://placeholde.co/600x400";
+                leaveModel.FilePath = null;
             }
             _dbContext.Update(leaveModel);
             await _dbContext.SaveChangesAsync();
@@ -759,17 +766,50 @@ namespace Emp.Api.Controllers
             return response;
         }
 
-        [HttpPost("TestUpload")]
-        public async Task<IActionResult> TestUpload(IFormFile file)
+        /// <summary>
+        /// Streams a leave's attachment. Readable only by the employee who filed it, the manager it is
+        /// routed to, or an Admin. This is the only supported way to read an attachment: the files are
+        /// no longer served statically.
+        /// </summary>
+        [Authorize]
+        [HttpGet("{id}/attachment")]
+        public async Task<IActionResult> GetAttachment(int id)
         {
-            var path = Path.Combine(_hostEnvironment.WebRootPath, "uploads", "leaves", file.FileName);
+            var leave = await _dbContext.Leaves
+                .Where(l => l.Id == id && !l.IsDeleted)
+                .Select(l => new { l.EmployeeId, l.ManagerId, l.FilePath })
+                .FirstOrDefaultAsync();
 
-            using (var stream = new FileStream(path, FileMode.Create))
+            if (leave is null || string.IsNullOrWhiteSpace(leave.FilePath))
             {
-                await file.CopyToAsync(stream);
+                return NotFound();
             }
 
-            return Ok("Saved to: " + path);
+            int.TryParse(User.FindFirst("EmployeeId")?.Value, out var caller);
+            var isOwner = caller != 0 && caller == leave.EmployeeId;
+            var isApprover = caller != 0 && leave.ManagerId.HasValue && leave.ManagerId == caller;
+            if (!User.IsInRole("Admin") && !isOwner && !isApprover)
+            {
+                return Forbid();
+            }
+
+            // Resolve strictly inside the uploads root: FilePath is DB data, and a stored value like
+            // "../../appsettings.json" must not escape.
+            var uploadsRoot = Path.GetFullPath(Path.Combine(_hostEnvironment.WebRootPath, "uploads", "leaves"))
+                              + Path.DirectorySeparatorChar;
+            var physicalPath = Path.GetFullPath(Path.Combine(uploadsRoot, Path.GetFileName(leave.FilePath)));
+
+            if (!physicalPath.StartsWith(uploadsRoot, StringComparison.Ordinal) || !System.IO.File.Exists(physicalPath))
+            {
+                return NotFound();
+            }
+
+            if (!new FileExtensionContentTypeProvider().TryGetContentType(physicalPath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            return PhysicalFile(physicalPath, contentType, Path.GetFileName(physicalPath));
         }
     }
 }

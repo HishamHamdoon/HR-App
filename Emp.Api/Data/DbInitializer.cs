@@ -33,6 +33,15 @@ namespace Emp.Api.Data
             await context.Database.ExecuteSqlRawAsync(
                 "UPDATE Employees SET LeavingDate = NULL WHERE LeavingDate IS NOT NULL AND LeavingDate <= '0001-01-02'");
 
+            // Leave.FilePath used to hold an absolute URL built from the request host (so a leave filed
+            // on localhost stored a localhost URL no other client could resolve), and a placeholder
+            // string when there was no attachment. Both become a relative path / NULL.
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Leaves SET FilePath = NULL WHERE FilePath IS NULL OR FilePath NOT LIKE '%/uploads/leaves/%'");
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Leaves SET FilePath = SUBSTRING(FilePath, CHARINDEX('/uploads/leaves/', FilePath), LEN(FilePath)) " +
+                "WHERE FilePath LIKE '%/uploads/leaves/%' AND FilePath NOT LIKE '/uploads/leaves/%'");
+
             foreach (var role in new[] { AdminRole, EmployeeRole })
             {
                 if (!await roleManager.RoleExistsAsync(role))
