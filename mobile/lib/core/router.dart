@@ -9,6 +9,7 @@ import '../features/home/home_screen.dart';
 import '../features/leave/leave_screen.dart';
 import '../features/manager/my_team_screen.dart';
 import '../features/manager/team_leaves_screen.dart';
+import '../features/notifications/notifications_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/splash/splash_screen.dart';
 
@@ -39,6 +40,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const TeamLeavesScreen(),
       ),
       GoRoute(path: Routes.myTeam, builder: (_, _) => const MyTeamScreen()),
+      GoRoute(
+        path: Routes.notifications,
+        builder: (_, _) => const NotificationsScreen(),
+      ),
     ],
   );
 });
@@ -78,4 +83,5 @@ class Routes {
   static const leave = '/leave';
   static const teamLeaves = '/team-leaves';
   static const myTeam = '/my-team';
+  static const notifications = '/notifications';
 }

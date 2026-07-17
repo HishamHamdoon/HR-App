@@ -72,5 +72,9 @@
   "noPendingLeaves": "لا توجد إجازات بانتظار قرارك.",
   "noTeamLeaves": "لا توجد طلبات إجازة لفريقك.",
   "noTeamMembers": "ليس لديك أعضاء في الفريق.",
-  "approveConfirm": "الموافقة على إجازة {type} لـ {name}؟"
+  "approveConfirm": "الموافقة على إجازة {type} لـ {name}؟",
+  "notificationsTitle": "الإشعارات",
+  "markAllRead": "تعليم الكل كمقروء",
+  "noNotifications": "لا توجد لديك إشعارات.",
+  "allCaughtUp": "لا جديد."
 }

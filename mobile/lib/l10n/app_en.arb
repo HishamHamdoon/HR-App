@@ -108,5 +108,9 @@
       "name": { "type": "String" },
       "type": { "type": "String" }
     }
-  }
+  },
+  "notificationsTitle": "Notifications",
+  "markAllRead": "Mark all read",
+  "noNotifications": "You have no notifications.",
+  "allCaughtUp": "All caught up."
 }

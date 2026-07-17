@@ -247,4 +247,16 @@ class AppL10nEn extends AppL10n {
   String approveConfirm(String name, String type) {
     return 'Approve $name\'s $type leave?';
   }
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'You have no notifications.';
+
+  @override
+  String get allCaughtUp => 'All caught up.';
 }

@@ -248,4 +248,16 @@ class AppL10nAr extends AppL10n {
   String approveConfirm(String name, String type) {
     return 'الموافقة على إجازة $type لـ $name؟';
   }
+
+  @override
+  String get notificationsTitle => 'الإشعارات';
+
+  @override
+  String get markAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get noNotifications => 'لا توجد لديك إشعارات.';
+
+  @override
+  String get allCaughtUp => 'لا جديد.';
 }

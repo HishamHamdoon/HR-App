@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/router.dart';
 import '../../l10n/app_localizations.dart';
+import '../notifications/notification_bell.dart';
 
 /// Landing screen after login. Still a placeholder body (the leave/team/notifications
 /// shell lands in later phases), but now a real entry point to profile and password.
@@ -20,6 +21,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.homeTitle),
         actions: [
+          const NotificationBell(),
           IconButton(
             tooltip: l.profileTitle,
             icon: const Icon(Icons.person),

@@ -538,6 +538,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Approve {name}\'s {type} leave?'**
   String approveConfirm(String name, String type);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no notifications.'**
+  String get noNotifications;
+
+  /// No description provided for @allCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up.'**
+  String get allCaughtUp;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
