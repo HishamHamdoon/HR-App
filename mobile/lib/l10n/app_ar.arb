@@ -1,0 +1,16 @@
+{
+  "@@locale": "ar",
+  "appTitle": "تطبيق الموارد البشرية",
+  "loading": "جارٍ التحميل…",
+  "loginTitle": "تسجيل الدخول",
+  "username": "اسم المستخدم",
+  "password": "كلمة المرور",
+  "signIn": "تسجيل الدخول",
+  "changePasswordTitle": "تغيير كلمة المرور",
+  "currentPassword": "كلمة المرور الحالية",
+  "newPassword": "كلمة المرور الجديدة",
+  "save": "حفظ",
+  "signOut": "تسجيل الخروج",
+  "homeTitle": "الرئيسية",
+  "welcome": "مرحبًا، {name}"
+}

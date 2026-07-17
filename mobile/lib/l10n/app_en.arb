@@ -1,0 +1,33 @@
+{
+  "@@locale": "en",
+  "appTitle": "HR-App",
+  "@appTitle": {},
+  "loading": "Loading…",
+  "@loading": {},
+  "loginTitle": "Sign in",
+  "@loginTitle": {},
+  "username": "Username",
+  "@username": {},
+  "password": "Password",
+  "@password": {},
+  "signIn": "Sign in",
+  "@signIn": {},
+  "changePasswordTitle": "Change password",
+  "@changePasswordTitle": {},
+  "currentPassword": "Current password",
+  "@currentPassword": {},
+  "newPassword": "New password",
+  "@newPassword": {},
+  "save": "Save",
+  "@save": {},
+  "signOut": "Sign out",
+  "@signOut": {},
+  "homeTitle": "Home",
+  "@homeTitle": {},
+  "welcome": "Welcome, {name}",
+  "@welcome": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  }
+}
