@@ -259,4 +259,46 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get allCaughtUp => 'All caught up.';
+
+  @override
+  String get payslipTitle => 'Payslips';
+
+  @override
+  String get currentSalary => 'Current salary';
+
+  @override
+  String get basicSalary => 'Basic';
+
+  @override
+  String get allowances => 'Allowances';
+
+  @override
+  String get deductions => 'Deductions';
+
+  @override
+  String get netSalary => 'Net';
+
+  @override
+  String get grossSalary => 'Gross';
+
+  @override
+  String effectiveFrom(String date) {
+    return 'Effective from $date';
+  }
+
+  @override
+  String get payrollHistory => 'Payroll history';
+
+  @override
+  String get paid => 'Paid';
+
+  @override
+  String get unpaid => 'Unpaid';
+
+  @override
+  String get noSalaryConfigured =>
+      'No salary has been configured for your account.';
+
+  @override
+  String get noPayrolls => 'You have no payroll records yet.';
 }

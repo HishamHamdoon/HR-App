@@ -260,4 +260,45 @@ class AppL10nAr extends AppL10n {
 
   @override
   String get allCaughtUp => 'لا جديد.';
+
+  @override
+  String get payslipTitle => 'كشوف الرواتب';
+
+  @override
+  String get currentSalary => 'الراتب الحالي';
+
+  @override
+  String get basicSalary => 'الأساسي';
+
+  @override
+  String get allowances => 'البدلات';
+
+  @override
+  String get deductions => 'الاستقطاعات';
+
+  @override
+  String get netSalary => 'الصافي';
+
+  @override
+  String get grossSalary => 'الإجمالي';
+
+  @override
+  String effectiveFrom(String date) {
+    return 'ساري من $date';
+  }
+
+  @override
+  String get payrollHistory => 'سجل الرواتب';
+
+  @override
+  String get paid => 'مدفوع';
+
+  @override
+  String get unpaid => 'غير مدفوع';
+
+  @override
+  String get noSalaryConfigured => 'لم يتم تعيين راتب لحسابك.';
+
+  @override
+  String get noPayrolls => 'لا توجد لديك سجلات رواتب بعد.';
 }

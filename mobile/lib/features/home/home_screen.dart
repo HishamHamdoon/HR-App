@@ -68,6 +68,12 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             FilledButton.tonalIcon(
+              onPressed: () => context.push(Routes.payslip),
+              icon: const Icon(Icons.payments),
+              label: Text(l.payslipTitle),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
               onPressed: () => context.push(Routes.profile),
               icon: const Icon(Icons.person),
               label: Text(l.profileTitle),

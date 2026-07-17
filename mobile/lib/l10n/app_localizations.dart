@@ -562,6 +562,84 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'All caught up.'**
   String get allCaughtUp;
+
+  /// No description provided for @payslipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payslips'**
+  String get payslipTitle;
+
+  /// No description provided for @currentSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Current salary'**
+  String get currentSalary;
+
+  /// No description provided for @basicSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get basicSalary;
+
+  /// No description provided for @allowances.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowances'**
+  String get allowances;
+
+  /// No description provided for @deductions.
+  ///
+  /// In en, this message translates to:
+  /// **'Deductions'**
+  String get deductions;
+
+  /// No description provided for @netSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get netSalary;
+
+  /// No description provided for @grossSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross'**
+  String get grossSalary;
+
+  /// No description provided for @effectiveFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective from {date}'**
+  String effectiveFrom(String date);
+
+  /// No description provided for @payrollHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Payroll history'**
+  String get payrollHistory;
+
+  /// No description provided for @paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paid;
+
+  /// No description provided for @unpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get unpaid;
+
+  /// No description provided for @noSalaryConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No salary has been configured for your account.'**
+  String get noSalaryConfigured;
+
+  /// No description provided for @noPayrolls.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no payroll records yet.'**
+  String get noPayrolls;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

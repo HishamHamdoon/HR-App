@@ -10,6 +10,7 @@ import '../features/leave/leave_screen.dart';
 import '../features/manager/my_team_screen.dart';
 import '../features/manager/team_leaves_screen.dart';
 import '../features/notifications/notifications_screen.dart';
+import '../features/payslip/payslip_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/splash/splash_screen.dart';
 
@@ -44,6 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.notifications,
         builder: (_, _) => const NotificationsScreen(),
       ),
+      GoRoute(path: Routes.payslip, builder: (_, _) => const PayslipScreen()),
     ],
   );
 });
@@ -84,4 +86,5 @@ class Routes {
   static const teamLeaves = '/team-leaves';
   static const myTeam = '/my-team';
   static const notifications = '/notifications';
+  static const payslip = '/payslip';
 }

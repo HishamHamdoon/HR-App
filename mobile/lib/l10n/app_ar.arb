@@ -76,5 +76,18 @@
   "notificationsTitle": "الإشعارات",
   "markAllRead": "تعليم الكل كمقروء",
   "noNotifications": "لا توجد لديك إشعارات.",
-  "allCaughtUp": "لا جديد."
+  "allCaughtUp": "لا جديد.",
+  "payslipTitle": "كشوف الرواتب",
+  "currentSalary": "الراتب الحالي",
+  "basicSalary": "الأساسي",
+  "allowances": "البدلات",
+  "deductions": "الاستقطاعات",
+  "netSalary": "الصافي",
+  "grossSalary": "الإجمالي",
+  "effectiveFrom": "ساري من {date}",
+  "payrollHistory": "سجل الرواتب",
+  "paid": "مدفوع",
+  "unpaid": "غير مدفوع",
+  "noSalaryConfigured": "لم يتم تعيين راتب لحسابك.",
+  "noPayrolls": "لا توجد لديك سجلات رواتب بعد."
 }

@@ -112,5 +112,21 @@
   "notificationsTitle": "Notifications",
   "markAllRead": "Mark all read",
   "noNotifications": "You have no notifications.",
-  "allCaughtUp": "All caught up."
+  "allCaughtUp": "All caught up.",
+  "payslipTitle": "Payslips",
+  "currentSalary": "Current salary",
+  "basicSalary": "Basic",
+  "allowances": "Allowances",
+  "deductions": "Deductions",
+  "netSalary": "Net",
+  "grossSalary": "Gross",
+  "effectiveFrom": "Effective from {date}",
+  "@effectiveFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "payrollHistory": "Payroll history",
+  "paid": "Paid",
+  "unpaid": "Unpaid",
+  "noSalaryConfigured": "No salary has been configured for your account.",
+  "noPayrolls": "You have no payroll records yet."
 }
