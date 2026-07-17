@@ -205,6 +205,85 @@ namespace Emp.Api.Services
 
             await _userManager.ResetAccessFailedCountAsync(user);
 
+            var (token, refreshToken) = await IssueTokensAsync(user);
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                RefreshToken = refreshToken,
+                User = new UserDto
+                {
+                    Email = user.Email,
+                    Name = user.UserName,
+                    Id = user.Id,
+                    PhoneNumber = user.PhoneNumber
+                }
+            };
+        }
+
+        /// <summary>
+        /// Exchanges a valid refresh token for a new access token, rotating the refresh
+        /// token (the presented one is revoked and a new one issued). Returns a response
+        /// with an empty Token when the refresh token is missing, expired, or revoked.
+        /// </summary>
+        public async Task<LoginResponseDto?> Refresh(string refreshToken)
+        {
+            var hash = HashToken(refreshToken);
+            var stored = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.TokenHash == hash);
+
+            if (stored is null || stored.RevokedAt != null || stored.ExpiresAt <= DateTime.UtcNow)
+            {
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            var user = await _context.ApplicationUsers
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync(u => u.Id == stored.UserId);
+            if (user is null)
+            {
+                stored.RevokedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return new LoginResponseDto { Token = "", User = null };
+            }
+
+            // Rotate: revoke the presented token, then issue a fresh pair.
+            stored.RevokedAt = DateTime.UtcNow;
+            var (token, newRefresh) = await IssueTokensAsync(user);
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                RefreshToken = newRefresh,
+                User = new UserDto
+                {
+                    Email = user.Email,
+                    Name = user.UserName,
+                    Id = user.Id,
+                    PhoneNumber = user.PhoneNumber
+                }
+            };
+        }
+
+        /// <summary>Revokes a refresh token (sign-out). No-op if it is unknown or already revoked.</summary>
+        public async Task RevokeRefreshTokenAsync(string refreshToken)
+        {
+            var hash = HashToken(refreshToken);
+            var stored = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.TokenHash == hash && r.RevokedAt == null);
+            if (stored != null)
+            {
+                stored.RevokedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>
+        /// Builds the claim inputs, generates an access token, and issues+persists a new
+        /// refresh token. Shared by login and refresh so both produce identical claims.
+        /// </summary>
+        private async Task<(string accessToken, string refreshToken)> IssueTokensAsync(ApplicationUser user)
+        {
             var roles = await _userManager.GetRolesAsync(user);
 
             // A user is a manager if they own at least one department.
@@ -218,20 +297,28 @@ namespace Emp.Api.Services
             var calendar = string.IsNullOrWhiteSpace(user.PreferredCalendar) ? orgCalendar : user.PreferredCalendar;
             var lang = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage;
 
-            var token = await _jwtTokenGenerator.GenerateToken(user, roles, isManager, user.MustChangePassword, theme, calendar, lang);
+            var accessToken = await _jwtTokenGenerator.GenerateToken(
+                user, roles, isManager, user.MustChangePassword, theme, calendar, lang);
 
-            return new LoginResponseDto
+            // Opaque 256-bit token; only its hash is stored.
+            var raw = Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+            _context.RefreshTokens.Add(new RefreshToken
             {
-                Token = token,
-                User = new UserDto
-                {
-                    Email = user.Email,
-                    Name = user.UserName,
-                    Id = user.Id,
-                    PhoneNumber = user.PhoneNumber
-                }
-            };
+                UserId = user.Id,
+                TokenHash = HashToken(raw),
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30)
+            });
+            await _context.SaveChangesAsync();
+
+            return (accessToken, raw);
         }
+
+        private static string HashToken(string raw)
+            => Convert.ToBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(raw)));
+
+        private static string Base64UrlEncode(byte[] bytes)
+            => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
         public async Task<ResponseDto> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
         {

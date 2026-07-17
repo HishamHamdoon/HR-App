@@ -15,5 +15,7 @@ namespace Emp.Api.Services.IServices
         Task<ResponseDto?> AssignRole(string email,string roleName);
         Task<ResponseDto> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
         Task<ResponseDto> UpdatePreferencesAsync(string userId, string? theme, string? calendar, string? language);
+        Task<LoginResponseDto?> Refresh(string refreshToken);
+        Task RevokeRefreshTokenAsync(string refreshToken);
     }
 }

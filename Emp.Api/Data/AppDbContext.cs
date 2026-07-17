@@ -26,9 +26,14 @@ namespace Emp.Api.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<License> Licenses { get; set; }
         public DbSet<CompanySettings> CompanySettings { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Refresh tokens are looked up by their hash on every refresh.
+            builder.Entity<RefreshToken>()
+                .HasIndex(r => r.TokenHash);
 
             builder.Entity<Salary>()
     .HasOne(s => s.Employee)

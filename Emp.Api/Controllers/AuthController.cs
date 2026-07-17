@@ -120,6 +120,36 @@ namespace Emp.Api.Controllers
             return Ok(_response);
         }
 
+        /// <summary>Exchanges a refresh token for a new access token (rotates the refresh token).</summary>
+        [AllowAnonymous]
+        [HttpPost("refresh")]
+        public async Task<ResponseDto> Refresh([FromBody] RefreshRequestDto model)
+        {
+            if (string.IsNullOrWhiteSpace(model?.RefreshToken))
+            {
+                return new ResponseDto { IsSuccess = false, Message = "Refresh token is required." };
+            }
+
+            var result = await _authService.Refresh(model.RefreshToken);
+            if (result is null || string.IsNullOrEmpty(result.Token))
+            {
+                return new ResponseDto { IsSuccess = false, Message = "Invalid or expired refresh token." };
+            }
+            return new ResponseDto { IsSuccess = true, Result = result };
+        }
+
+        /// <summary>Revokes a refresh token so it can no longer be used (sign-out).</summary>
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ResponseDto> Logout([FromBody] RefreshRequestDto model)
+        {
+            if (!string.IsNullOrWhiteSpace(model?.RefreshToken))
+            {
+                await _authService.RevokeRefreshTokenAsync(model.RefreshToken);
+            }
+            return new ResponseDto { IsSuccess = true, Message = "Signed out." };
+        }
+
         [Authorize]
         [HttpPost("change-password")]
         public async Task<ResponseDto> ChangePassword(Dtos.Auth.ChangePasswordDto model)
