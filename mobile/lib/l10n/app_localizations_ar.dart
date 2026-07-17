@@ -204,4 +204,48 @@ class AppL10nAr extends AppL10n {
   String daysCount(String days) {
     return '$days يوم';
   }
+
+  @override
+  String get teamLeavesTitle => 'إجازات الفريق';
+
+  @override
+  String get myTeamTitle => 'فريقي';
+
+  @override
+  String get pendingTab => 'قيد الانتظار';
+
+  @override
+  String get allTab => 'الكل';
+
+  @override
+  String get approve => 'موافقة';
+
+  @override
+  String get reject => 'رفض';
+
+  @override
+  String get rejectReason => 'سبب الرفض';
+
+  @override
+  String get reasonRequired => 'يجب إدخال سبب للرفض.';
+
+  @override
+  String get leaveApproved => 'تمت الموافقة على الإجازة.';
+
+  @override
+  String get leaveRejected => 'تم رفض الإجازة.';
+
+  @override
+  String get noPendingLeaves => 'لا توجد إجازات بانتظار قرارك.';
+
+  @override
+  String get noTeamLeaves => 'لا توجد طلبات إجازة لفريقك.';
+
+  @override
+  String get noTeamMembers => 'ليس لديك أعضاء في الفريق.';
+
+  @override
+  String approveConfirm(String name, String type) {
+    return 'الموافقة على إجازة $type لـ $name؟';
+  }
 }

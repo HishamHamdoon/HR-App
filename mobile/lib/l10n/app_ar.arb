@@ -58,5 +58,19 @@
   "minDaysRequired": "يتطلب هذا النوع {min} يوم على الأقل؛ لقد طلبت {requested}.",
   "maxDaysAllowed": "يسمح هذا النوع بحد أقصى {max} يوم؛ لقد طلبت {requested}.",
   "leaveSubmitted": "تم إرسال طلب الإجازة.",
-  "daysCount": "{days} يوم"
+  "daysCount": "{days} يوم",
+  "teamLeavesTitle": "إجازات الفريق",
+  "myTeamTitle": "فريقي",
+  "pendingTab": "قيد الانتظار",
+  "allTab": "الكل",
+  "approve": "موافقة",
+  "reject": "رفض",
+  "rejectReason": "سبب الرفض",
+  "reasonRequired": "يجب إدخال سبب للرفض.",
+  "leaveApproved": "تمت الموافقة على الإجازة.",
+  "leaveRejected": "تم رفض الإجازة.",
+  "noPendingLeaves": "لا توجد إجازات بانتظار قرارك.",
+  "noTeamLeaves": "لا توجد طلبات إجازة لفريقك.",
+  "noTeamMembers": "ليس لديك أعضاء في الفريق.",
+  "approveConfirm": "الموافقة على إجازة {type} لـ {name}؟"
 }

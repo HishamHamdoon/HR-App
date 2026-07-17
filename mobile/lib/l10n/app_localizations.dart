@@ -454,6 +454,90 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{days} day(s)'**
   String daysCount(String days);
+
+  /// No description provided for @teamLeavesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Team leaves'**
+  String get teamLeavesTitle;
+
+  /// No description provided for @myTeamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My team'**
+  String get myTeamTitle;
+
+  /// No description provided for @pendingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pendingTab;
+
+  /// No description provided for @allTab.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allTab;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @rejectReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for rejection'**
+  String get rejectReason;
+
+  /// No description provided for @reasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A reason is required to reject.'**
+  String get reasonRequired;
+
+  /// No description provided for @leaveApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave approved.'**
+  String get leaveApproved;
+
+  /// No description provided for @leaveRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave rejected.'**
+  String get leaveRejected;
+
+  /// No description provided for @noPendingLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'No leaves are waiting for your decision.'**
+  String get noPendingLeaves;
+
+  /// No description provided for @noTeamLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Your team has no leave requests.'**
+  String get noTeamLeaves;
+
+  /// No description provided for @noTeamMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no team members.'**
+  String get noTeamMembers;
+
+  /// No description provided for @approveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve {name}\'s {type} leave?'**
+  String approveConfirm(String name, String type);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

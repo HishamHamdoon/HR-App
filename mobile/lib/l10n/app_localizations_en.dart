@@ -203,4 +203,48 @@ class AppL10nEn extends AppL10n {
   String daysCount(String days) {
     return '$days day(s)';
   }
+
+  @override
+  String get teamLeavesTitle => 'Team leaves';
+
+  @override
+  String get myTeamTitle => 'My team';
+
+  @override
+  String get pendingTab => 'Pending';
+
+  @override
+  String get allTab => 'All';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get rejectReason => 'Reason for rejection';
+
+  @override
+  String get reasonRequired => 'A reason is required to reject.';
+
+  @override
+  String get leaveApproved => 'Leave approved.';
+
+  @override
+  String get leaveRejected => 'Leave rejected.';
+
+  @override
+  String get noPendingLeaves => 'No leaves are waiting for your decision.';
+
+  @override
+  String get noTeamLeaves => 'Your team has no leave requests.';
+
+  @override
+  String get noTeamMembers => 'You have no team members.';
+
+  @override
+  String approveConfirm(String name, String type) {
+    return 'Approve $name\'s $type leave?';
+  }
 }

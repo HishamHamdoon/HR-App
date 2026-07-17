@@ -88,5 +88,25 @@
   "daysCount": "{days} day(s)",
   "@daysCount": {
     "placeholders": { "days": { "type": "String" } }
+  },
+  "teamLeavesTitle": "Team leaves",
+  "myTeamTitle": "My team",
+  "pendingTab": "Pending",
+  "allTab": "All",
+  "approve": "Approve",
+  "reject": "Reject",
+  "rejectReason": "Reason for rejection",
+  "reasonRequired": "A reason is required to reject.",
+  "leaveApproved": "Leave approved.",
+  "leaveRejected": "Leave rejected.",
+  "noPendingLeaves": "No leaves are waiting for your decision.",
+  "noTeamLeaves": "Your team has no leave requests.",
+  "noTeamMembers": "You have no team members.",
+  "approveConfirm": "Approve {name}'s {type} leave?",
+  "@approveConfirm": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "type": { "type": "String" }
+    }
   }
 }

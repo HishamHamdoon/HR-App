@@ -7,6 +7,8 @@ import '../features/auth/change_password_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/leave/leave_screen.dart';
+import '../features/manager/my_team_screen.dart';
+import '../features/manager/team_leaves_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/splash/splash_screen.dart';
 
@@ -32,6 +34,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
       GoRoute(path: Routes.leave, builder: (_, _) => const LeaveScreen()),
+      GoRoute(
+        path: Routes.teamLeaves,
+        builder: (_, _) => const TeamLeavesScreen(),
+      ),
+      GoRoute(path: Routes.myTeam, builder: (_, _) => const MyTeamScreen()),
     ],
   );
 });
@@ -69,4 +76,6 @@ class Routes {
   static const home = '/home';
   static const profile = '/profile';
   static const leave = '/leave';
+  static const teamLeaves = '/team-leaves';
+  static const myTeam = '/my-team';
 }

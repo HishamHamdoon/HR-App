@@ -70,6 +70,22 @@ class HomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.person),
               label: Text(l.profileTitle),
             ),
+            // Manager-only entry points, gated on the IsManager claim — mirrors how the
+            // server derives "manager" (owns >= 1 department), since there is no such role.
+            if (claims?.isManager ?? false) ...[
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: () => context.push(Routes.teamLeaves),
+                icon: const Icon(Icons.fact_check),
+                label: Text(l.teamLeavesTitle),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: () => context.push(Routes.myTeam),
+                icon: const Icon(Icons.groups),
+                label: Text(l.myTeamTitle),
+              ),
+            ],
           ],
         ),
       ),
