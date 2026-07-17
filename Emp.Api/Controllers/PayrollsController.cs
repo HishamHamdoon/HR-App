@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Emp.Api.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    // Base policy is any authenticated user; every admin action re-asserts the Admin role,
+    // and only the self-service "mine" action is open to any employee.
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PayrollsController : ControllerBase
@@ -29,6 +31,7 @@ namespace Emp.Api.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("generate-monthly-payroll")]
         public async Task<ResponseDto> GenerateMonthlyPayroll(DateTime forMonth)
         {
@@ -50,6 +53,7 @@ namespace Emp.Api.Controllers
             }
             return response;
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<bool> PaySalary(int payrollId)
         {
@@ -60,6 +64,7 @@ namespace Emp.Api.Controllers
             await _dbContext.SaveChangesAsync();
             return true;
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("current-month-payrolls")]
         public async Task<ResponseDto> GetCurrentMonthPayrolls()
         {
@@ -97,6 +102,46 @@ namespace Emp.Api.Controllers
                 response.Message = ex.Message;
             }
 
+            return response;
+        }
+
+        /// <summary>
+        /// The signed-in employee's own payroll history (self-service), newest first.
+        /// Returns an empty list when none have been generated.
+        /// </summary>
+        [Authorize]
+        [HttpGet("mine")]
+        public async Task<ResponseDto> GetMyPayrolls()
+        {
+            var response = new ResponseDto();
+            int.TryParse(User.FindFirst("EmployeeId")?.Value, out var employeeId);
+            if (employeeId == 0)
+            {
+                response.IsSuccess = false;
+                response.Message = "No employee is associated with this account.";
+                return response;
+            }
+
+            var payrolls = await _dbContext.Payrolls
+                .Where(p => p.EmployeeId == employeeId)
+                .OrderByDescending(p => p.SalaryMonth)
+                .Select(p => new PayrollDto
+                {
+                    Id = p.Id,
+                    EmployeeId = p.EmployeeId,
+                    EmployeeName = p.Employee != null ? p.Employee.Name : string.Empty,
+                    GrossSalary = p.GrossSalary,
+                    Deductions = p.Deductions,
+                    NetSalary = p.NetSalary,
+                    SalaryMonth = p.SalaryMonth,
+                    IsPaid = p.IsPaid,
+                    GeneratedAt = p.GeneratedAt
+                })
+                .ToListAsync();
+
+            response.Result = payrolls;
+            response.IsSuccess = true;
+            response.Message = "";
             return response;
         }
 
