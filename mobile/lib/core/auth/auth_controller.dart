@@ -19,36 +19,48 @@ class AuthController extends ChangeNotifier {
 
   JwtClaims? get claims => _claims;
 
-  /// False until [bootstrap] has read storage, so the router can hold on a splash
-  /// instead of flashing the login screen before the stored token is loaded.
+  /// False until startup finishes (including any silent refresh), so the router can hold
+  /// on a splash instead of flashing the login screen.
   bool get isBootstrapped => _bootstrapped;
 
   bool get isLoggedIn => _claims != null && !_claims!.isExpired;
 
   bool get mustChangePassword => _claims?.mustChangePassword ?? false;
 
-  /// Load any persisted token on launch. Call once at startup.
+  /// Reads the persisted access token and adopts it if still valid. Does NOT mark
+  /// bootstrap complete — startup may still attempt a refresh (see [hasRefreshToken] and
+  /// [markBootstrapped]) before the router is allowed off the splash.
   Future<void> bootstrap() async {
     final token = await _tokenStore.readAccessToken();
-    _claims = JwtClaims.tryParse(token);
-    if (_claims != null && _claims!.isExpired) {
-      await _tokenStore.clear();
-      _claims = null;
-    }
+    final claims = JwtClaims.tryParse(token);
+    _claims = (claims != null && !claims.isExpired) ? claims : null;
+  }
+
+  Future<bool> hasRefreshToken() async =>
+      (await _tokenStore.readRefreshToken())?.isNotEmpty ?? false;
+
+  Future<String?> readRefreshToken() => _tokenStore.readRefreshToken();
+
+  /// Marks startup complete and lets the router evaluate the final state.
+  void markBootstrapped() {
     _bootstrapped = true;
     notifyListeners();
   }
 
-  /// Persist a freshly issued token and adopt its claims.
-  Future<void> onLoggedIn(String token) async {
+  /// Persist a freshly issued token pair and adopt the access token's claims.
+  Future<void> onLoggedIn(String token, {String? refreshToken}) async {
     await _tokenStore.saveAccessToken(token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _tokenStore.saveRefreshToken(refreshToken);
+    }
     _claims = JwtClaims.tryParse(token);
     notifyListeners();
   }
 
-  /// The password-change endpoint clears the server-side flag; refresh local claims from
-  /// the new token so the router stops pinning to the change-password screen.
-  Future<void> onTokenRefreshed(String token) => onLoggedIn(token);
+  /// After a password change (which clears MustChangePassword server-side) or a silent
+  /// refresh: adopt the new token so the router re-evaluates.
+  Future<void> onTokenRefreshed(String token, {String? refreshToken}) =>
+      onLoggedIn(token, refreshToken: refreshToken);
 
   Future<void> logout() async {
     await _tokenStore.clear();

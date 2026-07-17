@@ -5,12 +5,23 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/router.dart';
 import '../../l10n/app_localizations.dart';
+import '../auth/auth_providers.dart';
 import '../notifications/notification_bell.dart';
 
 /// Landing screen after login. Still a placeholder body (the leave/team/notifications
 /// shell lands in later phases), but now a real entry point to profile and password.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  /// Revoke the refresh token server-side (best-effort), then clear the local session.
+  Future<void> _signOut(WidgetRef ref) async {
+    final auth = ref.read(authControllerProvider);
+    final refreshToken = await auth.readRefreshToken();
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await ref.read(authRepositoryProvider).revokeRefreshToken(refreshToken);
+    }
+    await auth.logout();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +44,7 @@ class HomeScreen extends ConsumerWidget {
                 case 'password':
                   context.push(Routes.changePassword);
                 case 'signout':
-                  ref.read(authControllerProvider).logout();
+                  _signOut(ref);
               }
             },
             itemBuilder: (_) => [

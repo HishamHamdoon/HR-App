@@ -21,9 +21,19 @@ class _HrAppState extends ConsumerState<HrApp> {
   void initState() {
     super.initState();
     // After first frame so the provider container is ready.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(authControllerProvider).bootstrap();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _boot());
+  }
+
+  /// Load the stored session; if the access token is gone/expired but a refresh token
+  /// remains, silently refresh before letting the router off the splash — so a returning
+  /// user isn't bounced to login within the refresh token's lifetime.
+  Future<void> _boot() async {
+    final auth = ref.read(authControllerProvider);
+    await auth.bootstrap();
+    if (!auth.isLoggedIn && await auth.hasRefreshToken()) {
+      await ref.read(apiClientProvider).refreshSession();
+    }
+    auth.markBootstrapped();
   }
 
   @override

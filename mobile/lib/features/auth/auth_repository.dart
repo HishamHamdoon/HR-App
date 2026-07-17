@@ -8,9 +8,12 @@ class AuthRepository {
 
   final ApiClient _api;
 
-  /// Exchanges credentials for a JWT. `username` is the login identifier (an email for
-  /// most users, but `admin` for the seeded admin — not always the email).
-  Future<String> login(String username, String password) async {
+  /// Exchanges credentials for an access token plus a refresh token (A5). `username` is
+  /// the login identifier (an email for most users, but `admin` for the seeded admin).
+  Future<({String token, String? refreshToken})> login(
+    String username,
+    String password,
+  ) async {
     final result = await _api.post(
       '/api/Auth/login',
       body: {'username': username, 'password': password},
@@ -19,7 +22,18 @@ class AuthRepository {
     if (token == null || token.isEmpty) {
       throw const ApiException('Sign-in did not return a token.');
     }
-    return token;
+    final refresh = result is Map ? result['refreshToken'] as String? : null;
+    return (token: token, refreshToken: refresh);
+  }
+
+  /// Best-effort server-side revoke of the refresh token on sign-out. Failures are
+  /// swallowed — the local session is cleared regardless.
+  Future<void> revokeRefreshToken(String refreshToken) async {
+    try {
+      await _api.post('/api/Auth/logout', body: {'refreshToken': refreshToken});
+    } on ApiException {
+      // Ignore: local logout still proceeds.
+    }
   }
 
   /// Changes the password. Succeeds silently; throws with the server's message on

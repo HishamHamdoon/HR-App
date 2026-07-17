@@ -44,10 +44,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      final token = await ref
+      final result = await ref
           .read(authRepositoryProvider)
           .login(_username.text.trim(), _password.text);
-      await ref.read(authControllerProvider).onLoggedIn(token);
+      await ref
+          .read(authControllerProvider)
+          .onLoggedIn(result.token, refreshToken: result.refreshToken);
       // The router redirect takes over from here (home, or change-password if forced).
     } on ApiException catch (e) {
       setState(() => _error = e.message);

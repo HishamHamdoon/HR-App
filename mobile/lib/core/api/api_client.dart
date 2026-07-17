@@ -10,6 +10,9 @@ import 'api_envelope.dart';
 /// Endpoints return the `{result, isSuccess, message}` envelope with a 200 even on
 /// business failure, so [_send] validates `isSuccess` rather than trusting the status
 /// code and throws [ApiException] on failure — callers deal in payloads, not envelopes.
+///
+/// On a 401 it tries to refresh the session once (A5) and replays the request; concurrent
+/// 401s share a single refresh via [_refreshing].
 class ApiClient {
   ApiClient({required this.tokenStore, required this.auth, Dio? dio})
     : _dio =
@@ -33,15 +36,6 @@ class ApiClient {
           }
           handler.next(options);
         },
-        onResponse: (response, handler) async {
-          // With no refresh endpoint yet (A5), a 401 means the session is over: clear it
-          // so the router redirects to login. When A5 lands, this is where refresh-and-
-          // retry-once goes, guarded by a mutex against concurrent 401s.
-          if (response.statusCode == 401) {
-            await auth.logout();
-          }
-          handler.next(response);
-        },
       ),
     );
   }
@@ -49,6 +43,10 @@ class ApiClient {
   final Dio _dio;
   final TokenStore tokenStore;
   final AuthController auth;
+
+  /// Single-flight guard: the in-progress refresh, shared by all callers that hit a 401
+  /// at once so the refresh token is rotated exactly once.
+  Future<bool>? _refreshing;
 
   Future<Object?> get(String path, {Map<String, dynamic>? query}) =>
       _send(() => _dio.get(path, queryParameters: query));
@@ -65,19 +63,18 @@ class ApiClient {
   Future<Object?> patch(String path, {Map<String, dynamic>? query}) =>
       _send(() => _dio.patch(path, queryParameters: query));
 
-  /// Runs [request], unwraps the envelope, and returns `result` — or throws
-  /// [ApiException] carrying the server's message on any failure.
+  /// Attempts to exchange the stored refresh token for a new session. Used at startup to
+  /// revive an expired access token. Returns true on success.
+  Future<bool> refreshSession() => _refresh();
+
+  /// Runs [request], refreshing-and-retrying once on a 401, then unwraps the envelope and
+  /// returns `result` — or throws [ApiException] carrying the server's message.
   Future<Object?> _send(Future<Response<dynamic>> Function() request) async {
-    final Response<dynamic> response;
-    try {
-      response = await request();
-    } on DioException catch (e) {
-      throw ApiException(
-        e.type == DioExceptionType.connectionError ||
-                e.type == DioExceptionType.connectionTimeout
-            ? 'Cannot reach the server. Check your connection.'
-            : e.message ?? 'Network error.',
-      );
+    var response = await _run(request);
+
+    if (response.statusCode == 401 && await _refresh()) {
+      // The onRequest interceptor picks up the new access token on the replay.
+      response = await _run(request);
     }
 
     final envelope = parseEnvelope(response.statusCode, response.data);
@@ -88,5 +85,57 @@ class ApiClient {
       );
     }
     return envelope.result;
+  }
+
+  Future<Response<dynamic>> _run(
+    Future<Response<dynamic>> Function() request,
+  ) async {
+    try {
+      return await request();
+    } on DioException catch (e) {
+      throw ApiException(
+        e.type == DioExceptionType.connectionError ||
+                e.type == DioExceptionType.connectionTimeout
+            ? 'Cannot reach the server. Check your connection.'
+            : e.message ?? 'Network error.',
+      );
+    }
+  }
+
+  /// Refreshes the session, coalescing concurrent callers onto one attempt. On failure the
+  /// session is cleared so the router sends the user to login.
+  Future<bool> _refresh() {
+    return _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
+  }
+
+  Future<bool> _doRefresh() async {
+    final refreshToken = await tokenStore.readRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      await auth.logout();
+      return false;
+    }
+    try {
+      // Bypass _send (no bearer needed, must not recurse into refresh).
+      final resp = await _dio.post(
+        '/api/Auth/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+      final envelope = parseEnvelope(resp.statusCode, resp.data);
+      final result = envelope.result;
+      final newAccess = result is Map ? result['token'] as String? : null;
+      final newRefresh = result is Map
+          ? result['refreshToken'] as String?
+          : null;
+      if (!envelope.isSuccess || newAccess == null || newAccess.isEmpty) {
+        await auth.logout();
+        return false;
+      }
+      await auth.onTokenRefreshed(newAccess, refreshToken: newRefresh);
+      return true;
+    } on DioException {
+      // A network error is not an auth failure — keep the session and let the caller
+      // surface the connectivity problem rather than logging the user out.
+      return false;
+    }
   }
 }
