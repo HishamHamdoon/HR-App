@@ -172,4 +172,12 @@
   <data name="AccessDenied" xml:space="preserve"><value>Access Denied</value></data>
   <data name="AccessDeniedMessage" xml:space="preserve"><value>Sorry, you don't have permission to view this page. Please contact your administrator if you believe this is an error.</value></data>
   <data name="GoBackHome" xml:space="preserve"><value>Go Back Home</value></data>
+  <data name="SessionTimeout" xml:space="preserve"><value>Session timeout</value></data>
+  <data name="Minutes" xml:space="preserve"><value>minutes</value></data>
+  <data name="SessionExpiringTitle" xml:space="preserve"><value>Your session is about to end</value></data>
+  <data name="SessionExpiringLead" xml:space="preserve"><value>You have been inactive for a while.</value></data>
+  <data name="SignedOutIn" xml:space="preserve"><value>You will be signed out in</value></data>
+  <data name="SecondsSuffix" xml:space="preserve"><value>seconds.</value></data>
+  <data name="ExtendSession" xml:space="preserve"><value>Extend session</value></data>
+  <data name="TerminateSession" xml:space="preserve"><value>Terminate session</value></data>
 </root>

@@ -38,6 +38,8 @@ namespace Emp.Api.Controllers
             settings.Email = dto.Email;
             settings.RequirePasswordChangeOnFirstLogin = dto.RequirePasswordChangeOnFirstLogin;
             settings.DefaultCalendar = string.IsNullOrWhiteSpace(dto.DefaultCalendar) ? "Gregorian" : dto.DefaultCalendar;
+            // 0 disables the idle check; anything above a day is meaningless for a console session.
+            settings.SessionTimeoutMinutes = Math.Clamp(dto.SessionTimeoutMinutes, 0, 1440);
             if (dto.LogoBase64 is not null)
             {
                 // Empty string clears the logo; null leaves it unchanged.
@@ -69,6 +71,7 @@ namespace Emp.Api.Controllers
             LogoBase64 = s.LogoBase64,
             RequirePasswordChangeOnFirstLogin = s.RequirePasswordChangeOnFirstLogin,
             DefaultCalendar = s.DefaultCalendar,
+            SessionTimeoutMinutes = s.SessionTimeoutMinutes,
         };
     }
 }

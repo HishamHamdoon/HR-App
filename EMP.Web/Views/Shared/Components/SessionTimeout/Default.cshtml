@@ -1,0 +1,166 @@
+@model int
+@*
+    Idle-session warning. After @Model minutes without activity the dialog opens and
+    counts down; the user either extends the session or ends it. Doing nothing signs
+    them out when the countdown reaches zero. A model of 0 disables the feature.
+*@
+@if (Model > 0)
+{
+    <div class="modal fade" id="sessionTimeoutModal" tabindex="-1"
+         data-bs-backdrop="static" data-bs-keyboard="false"
+         aria-labelledby="sessionTimeoutTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionTimeoutTitle">
+                        <i class="icon-base ti tabler-clock-exclamation me-2 text-warning"></i>@L["SessionExpiringTitle"]
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">@L["SessionExpiringLead"]</p>
+                    <p class="mb-0">
+                        @L["SignedOutIn"]
+                        <strong id="sessionTimeoutCountdown" class="text-danger">60</strong>
+                        @L["SecondsSuffix"]
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0" id="sessionTimeoutLogoutForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="timedOut" value="true" />
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="icon-base ti tabler-power me-1"></i>@L["TerminateSession"]
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-primary" id="sessionTimeoutExtend">
+                        <i class="icon-base ti tabler-refresh me-1"></i>@L["ExtendSession"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var IDLE_MS = @(Model) * 60000;
+            var GRACE_SECONDS = 60;
+            var ACTIVITY_KEY = 'hr-app:last-activity';
+            var WRITE_THROTTLE_MS = 5000;
+
+            var modalEl = document.getElementById('sessionTimeoutModal');
+            var countdownEl = document.getElementById('sessionTimeoutCountdown');
+            var logoutForm = document.getElementById('sessionTimeoutLogoutForm');
+            var extendBtn = document.getElementById('sessionTimeoutExtend');
+            if (!modalEl || typeof bootstrap === 'undefined') { return; }
+
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            var keepAliveUrl = '@Url.Action("KeepAlive", "Account")';
+            var token = logoutForm.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            var idleTimer = null;
+            var countdownTimer = null;
+            var remaining = GRACE_SECONDS;
+            var warning = false;
+            var lastWrite = 0;
+
+            function readLastActivity() {
+                try { return parseInt(localStorage.getItem(ACTIVITY_KEY) || '0', 10) || 0; }
+                catch (e) { return 0; }
+            }
+
+            function writeLastActivity() {
+                try { localStorage.setItem(ACTIVITY_KEY, String(Date.now())); } catch (e) { /* private mode */ }
+            }
+
+            function armIdleTimer(delay) {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(checkIdle, delay);
+            }
+
+            // The timer may fire while another tab is still being used, so the shared
+            // timestamp decides whether the user is really idle.
+            function checkIdle() {
+                var last = readLastActivity();
+                var elapsed = Date.now() - last;
+                if (last && elapsed < IDLE_MS) {
+                    armIdleTimer(IDLE_MS - elapsed);
+                    return;
+                }
+                openWarning();
+            }
+
+            function renderCountdown() {
+                countdownEl.textContent = remaining;
+            }
+
+            function openWarning() {
+                warning = true;
+                remaining = GRACE_SECONDS;
+                renderCountdown();
+                modal.show();
+                clearInterval(countdownTimer);
+                countdownTimer = setInterval(function () {
+                    remaining -= 1;
+                    if (remaining <= 0) {
+                        clearInterval(countdownTimer);
+                        logoutForm.submit();
+                        return;
+                    }
+                    renderCountdown();
+                }, 1000);
+            }
+
+            function closeWarning() {
+                warning = false;
+                clearInterval(countdownTimer);
+                modal.hide();
+                writeLastActivity();
+                armIdleTimer(IDLE_MS);
+            }
+
+            function extend() {
+                clearInterval(countdownTimer);
+                fetch(keepAliveUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'RequestVerificationToken': token }
+                }).then(function (response) {
+                    if (response.status === 401 || response.redirected) {
+                        // The cookie is already gone — go through the normal sign-out path.
+                        logoutForm.submit();
+                        return;
+                    }
+                    closeWarning();
+                }).catch(function () {
+                    // A network blip shouldn't sign anyone out; keep the session and retry later.
+                    closeWarning();
+                });
+            }
+
+            function onActivity() {
+                if (warning) { return; }   // while the dialog is up the choice must be explicit
+                var now = Date.now();
+                if (now - lastWrite > WRITE_THROTTLE_MS) {
+                    lastWrite = now;
+                    writeLastActivity();
+                }
+                armIdleTimer(IDLE_MS);
+            }
+
+            ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (evt) {
+                document.addEventListener(evt, onActivity, { passive: true });
+            });
+
+            // Extending or working in one tab keeps every other tab alive too.
+            window.addEventListener('storage', function (e) {
+                if (e.key !== ACTIVITY_KEY) { return; }
+                if (warning) { closeWarning(); } else { armIdleTimer(IDLE_MS); }
+            });
+
+            extendBtn.addEventListener('click', extend);
+
+            writeLastActivity();
+            armIdleTimer(IDLE_MS);
+        })();
+    </script>
+}

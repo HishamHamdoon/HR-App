@@ -535,5 +535,6 @@
 
     @await RenderSectionAsync("Scripts", required: false)
     @await Html.PartialAsync("_Notifications")
+    @await Component.InvokeAsync("SessionTimeout")
 </body>
 </html>

@@ -76,6 +76,18 @@
                             </div>
                         </div>
 
+                        <div class="col-md-6">
+                            <label asp-for="SessionTimeoutMinutes" class="form-label">@L["SessionTimeout"]</label>
+                            <div class="input-group">
+                                <input asp-for="SessionTimeoutMinutes" class="form-control" type="number" min="0" max="1440" step="1" />
+                                <span class="input-group-text">@L["Minutes"]</span>
+                            </div>
+                            <div class="form-text">
+                                After this much inactivity a dialog asks the user to extend the session; if nothing is
+                                chosen within a minute they are signed out. Set to 0 to switch the check off.
+                            </div>
+                        </div>
+
                         <div class="col-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">
                                 <i class="icon-base ti tabler-device-floppy me-1"></i> @L["Save"]
