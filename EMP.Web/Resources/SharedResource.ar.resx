@@ -172,4 +172,12 @@
   <data name="AccessDenied" xml:space="preserve"><value>تم رفض الوصول</value></data>
   <data name="AccessDeniedMessage" xml:space="preserve"><value>عذراً، ليس لديك صلاحية لعرض هذه الصفحة. يرجى التواصل مع المسؤول إذا كنت تعتقد أن هذا خطأ.</value></data>
   <data name="GoBackHome" xml:space="preserve"><value>العودة للرئيسية</value></data>
+  <data name="SessionTimeout" xml:space="preserve"><value>مهلة انتهاء الجلسة</value></data>
+  <data name="Minutes" xml:space="preserve"><value>دقيقة</value></data>
+  <data name="SessionExpiringTitle" xml:space="preserve"><value>جلستك على وشك الانتهاء</value></data>
+  <data name="SessionExpiringLead" xml:space="preserve"><value>لم يصدر منك أي نشاط منذ فترة.</value></data>
+  <data name="SignedOutIn" xml:space="preserve"><value>سيتم تسجيل خروجك خلال</value></data>
+  <data name="SecondsSuffix" xml:space="preserve"><value>ثانية.</value></data>
+  <data name="ExtendSession" xml:space="preserve"><value>تمديد الجلسة</value></data>
+  <data name="TerminateSession" xml:space="preserve"><value>إنهاء الجلسة</value></data>
 </root>

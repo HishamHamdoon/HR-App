@@ -152,11 +152,28 @@ namespace EMP.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(bool timedOut = false)
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             _tokenProvider.ClearToken();
+            if (timedOut)
+            {
+                TempData["Info"] = "Your session ended after a period of inactivity.";
+            }
             return RedirectToAction("Login", "Account");
+        }
+
+        /// <summary>
+        /// Called by the session-timeout dialog when the user chooses to extend. Touching an
+        /// authorized endpoint renews the sliding auth cookie; the 401 an expired session
+        /// produces is what tells the dialog to give up and sign out.
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult KeepAlive()
+        {
+            return NoContent();
         }
 
         private async Task SignIn(Emp.Web.Dtos.Auth.LoginResponseDto model)

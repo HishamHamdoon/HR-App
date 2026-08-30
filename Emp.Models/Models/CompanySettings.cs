@@ -17,5 +17,11 @@ namespace Emp.Api.Models
 
         /// <summary>Organisation default calendar: "Gregorian" or "Hijri".</summary>
         public string DefaultCalendar { get; set; } = "Gregorian";
+
+        /// <summary>
+        /// Minutes of inactivity before the web console warns that the session is about to end.
+        /// The warning dialog counts down and signs the user out unless they extend. 0 disables it.
+        /// </summary>
+        public int SessionTimeoutMinutes { get; set; } = 30;
     }
 }
